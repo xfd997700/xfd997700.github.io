@@ -6,6 +6,7 @@ const publicationsSortButton = document.getElementById("publications-sort-btn");
 const graphAbsModal = document.getElementById("graph-abs-modal");
 const graphAbsModalImage = document.getElementById("graph-abs-modal-img");
 const graphAbsModalCloseButton = document.getElementById("graph-abs-modal-close");
+const DOI_ICON_SRC = "assets/doi-mark.svg";
 
 const state = {
   input: "",
@@ -142,6 +143,14 @@ function handleTerminalKey(event) {
     state.input += key;
     terminalInput.textContent = state.input;
   }
+}
+
+function handleTerminalPointer(event) {
+  if (state.entered || state.locked) return;
+  if (event && event.pointerType && event.pointerType !== "touch" && event.pointerType !== "pen") {
+    return;
+  }
+  enterMain();
 }
 
 async function loadConfig() {
@@ -715,9 +724,12 @@ function renderPublications(items) {
       titleLink.href = pub.doi_link;
       titleLink.target = "_blank";
       titleLink.rel = "noreferrer";
-      const doiIcon = document.createElement("i");
-      doiIcon.className = "fa-solid fa-link publication-title-doi-icon";
-      doiIcon.setAttribute("aria-hidden", "true");
+      const doiIcon = document.createElement("img");
+      doiIcon.className = "publication-title-doi-icon";
+      doiIcon.src = DOI_ICON_SRC;
+      doiIcon.alt = "DOI";
+      doiIcon.loading = "lazy";
+      doiIcon.decoding = "async";
       titleLink.appendChild(doiIcon);
     }
     head.appendChild(titleLink);
@@ -794,6 +806,10 @@ function renderProjects(items) {
 
 async function init() {
   document.addEventListener("keydown", handleTerminalKey);
+  if (terminalScreen) {
+    terminalScreen.addEventListener("pointerdown", handleTerminalPointer);
+    terminalScreen.addEventListener("touchstart", handleTerminalPointer, { passive: true });
+  }
   if (publicationsSortButton) {
     publicationsSortButton.addEventListener("click", () => {
       publicationState.sortMode = publicationState.sortMode === "year" ? "default" : "year";
