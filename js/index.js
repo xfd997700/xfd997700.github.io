@@ -393,10 +393,10 @@ function renderCareer(career) {
     metaEl.textContent = metaParts.join(" | ");
 
     detailEl.appendChild(orgEl);
-    detailEl.appendChild(subEl);
     if (metaParts.length) {
       detailEl.appendChild(metaEl);
     }
+    detailEl.appendChild(subEl);
 
     item.appendChild(yearEl);
     item.appendChild(detailEl);

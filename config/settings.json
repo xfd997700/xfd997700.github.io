@@ -1,13 +1,13 @@
 {
   "background": {
-    "blur_px": 10,
+    "blur_px": 6,
     "overlay_color": "rgba(7, 10, 18, 0.62)"
   },
   "glass": {
     "blur_px": 18
   },
   "career": {
-    "logo_height_px": 22,
+    "logo_height_px": 26,
     "logo_max_width_px": 88
   },
   "publications": {
