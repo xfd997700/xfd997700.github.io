@@ -293,6 +293,7 @@ function renderProfile(info, siteBrand) {
     if (!meta || !meta.url) return;
     const anchor = document.createElement("a");
     anchor.className = "icon-btn";
+    anchor.classList.add(`icon-btn--${key.replace(/_/g, "-")}`);
     anchor.href = meta.url;
     anchor.target = "_blank";
     anchor.rel = "noreferrer";

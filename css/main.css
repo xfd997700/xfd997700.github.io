@@ -119,6 +119,61 @@ main {
   border-color: rgba(255, 255, 255, 0.4);
 }
 
+.icon-btn--github {
+  background: rgba(36, 41, 46, 0.45);
+  border-color: rgba(110, 118, 129, 0.55);
+  color: #f0f6fc;
+}
+
+.icon-btn--bilibili {
+  background: rgba(0, 174, 236, 0.28);
+  border-color: rgba(0, 174, 236, 0.6);
+  color: #d7f5ff;
+}
+
+.icon-btn--google-scholar {
+  background: rgba(66, 133, 244, 0.3);
+  border-color: rgba(66, 133, 244, 0.6);
+  color: #e5eeff;
+}
+
+.icon-btn--csdn {
+  background: rgba(252, 85, 49, 0.3);
+  border-color: rgba(252, 85, 49, 0.62);
+  color: #ffebe6;
+}
+
+.icon-btn--orcid {
+  background: rgba(166, 206, 57, 0.3);
+  border-color: rgba(166, 206, 57, 0.62);
+  color: #f3ffe0;
+}
+
+.icon-btn--github:hover {
+  background: rgba(36, 41, 46, 0.68);
+  border-color: rgba(110, 118, 129, 0.78);
+}
+
+.icon-btn--bilibili:hover {
+  background: rgba(0, 174, 236, 0.46);
+  border-color: rgba(0, 174, 236, 0.82);
+}
+
+.icon-btn--google-scholar:hover {
+  background: rgba(66, 133, 244, 0.46);
+  border-color: rgba(66, 133, 244, 0.82);
+}
+
+.icon-btn--csdn:hover {
+  background: rgba(252, 85, 49, 0.46);
+  border-color: rgba(252, 85, 49, 0.82);
+}
+
+.icon-btn--orcid:hover {
+  background: rgba(166, 206, 57, 0.46);
+  border-color: rgba(166, 206, 57, 0.82);
+}
+
 .section-title {
   display: flex;
   align-items: center;
