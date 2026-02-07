@@ -289,6 +289,9 @@ a.publication-title:hover {
 
 .publication-author-highlight {
   font-weight: 700;
+  text-decoration: underline;
+  text-underline-offset: 2px;
+  text-decoration-thickness: 1.5px;
 }
 
 .publication-venue {
