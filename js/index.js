@@ -416,7 +416,7 @@ function renderCareer(career) {
       link.rel = "noreferrer";
       const text = document.createElement("span");
       text.className = "career-link-text";
-      text.textContent = "Group";
+      text.textContent = "Group page";
       link.appendChild(text);
       const icon = document.createElement("i");
       icon.className = "fa-solid fa-arrow-up-right-from-square";
