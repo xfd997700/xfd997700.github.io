@@ -20,6 +20,15 @@
   pointer-events: none;
 }
 
+:root {
+  --pub-graph-abs-width: 520px;
+  --pub-graph-abs-height: 240px;
+}
+
+body.modal-open {
+  overflow: hidden;
+}
+
 .terminal-line {
   font-size: clamp(16px, 2vw, 20px);
 }
@@ -77,6 +86,24 @@
   font-family: var(--font-display);
   font-size: clamp(26px, 4vw, 42px);
   letter-spacing: 1px;
+}
+
+.publications-sort-btn {
+  margin-left: auto;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  background: rgba(255, 255, 255, 0.08);
+  color: var(--text-primary);
+  border-radius: 999px;
+  padding: 6px 12px;
+  font-size: 12px;
+  cursor: pointer;
+  transition: background 0.2s ease, border 0.2s ease, transform 0.2s ease;
+}
+
+.publications-sort-btn:hover {
+  background: rgba(255, 255, 255, 0.18);
+  border-color: rgba(255, 255, 255, 0.4);
+  transform: translateY(-1px);
 }
 
 .layout {
@@ -263,14 +290,63 @@ a.publication-title:hover {
   overflow: hidden;
   border: 1px solid rgba(255, 255, 255, 0.16);
   background: rgba(255, 255, 255, 0.04);
+  width: min(100%, var(--pub-graph-abs-width));
+  height: var(--pub-graph-abs-height);
+  padding: 0;
+  cursor: zoom-in;
+  text-align: left;
 }
 
 .publication-graph-abs img {
   width: 100%;
-  max-height: 240px;
-  object-fit: contain;
+  height: 100%;
+  object-fit: cover;
   object-position: center;
   display: block;
+}
+
+.graph-abs-modal {
+  position: fixed;
+  inset: 0;
+  background: rgba(8, 12, 24, 0.72);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  display: grid;
+  place-items: center;
+  padding: clamp(16px, 4vw, 40px);
+  z-index: 40;
+}
+
+.graph-abs-modal-panel {
+  position: relative;
+  width: min(1100px, 92vw);
+  max-height: 90vh;
+  padding: clamp(10px, 2vw, 18px);
+  border-radius: 16px;
+  display: grid;
+  align-items: center;
+}
+
+#graph-abs-modal-img {
+  width: 100%;
+  max-height: calc(90vh - 56px);
+  object-fit: contain;
+  object-position: center;
+  border-radius: 10px;
+  display: block;
+}
+
+.graph-abs-modal-close {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  width: 34px;
+  height: 34px;
+  border-radius: 50%;
+  border: 1px solid rgba(255, 255, 255, 0.24);
+  background: rgba(255, 255, 255, 0.12);
+  color: var(--text-primary);
+  cursor: pointer;
 }
 
 .placeholder-list {
@@ -306,5 +382,9 @@ a.publication-title:hover {
   .publication-head {
     flex-direction: column;
     gap: 8px;
+  }
+
+  .publications-sort-btn {
+    margin-left: 0;
   }
 }

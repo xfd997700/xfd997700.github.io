@@ -1,4 +1,4 @@
-{
+﻿{
   "template": {
     "doi": "",
     "title": "",
@@ -23,11 +23,11 @@
     {
       "doi": "10.1016/j.actphy.2025.100209",
       "title": "MolUNet++: Adaptive-grained explicit substructure and interaction aware molecular representation learning",
-      "authors": "",
-      "year": "",
-      "journal": "",
+      "authors": "Fanding Xu, Zhiwei Yang, Sirui Wu, Wu Su, Lizhuo Wang, Deyu Meng, Jiangang Long",
+      "year": "2025",
+      "journal": "Acta Physico-Chimica Sinica",
       "volume": "",
-      "page": "",
+      "page": "100209",
       "graph_abs": "imgs/molunet.png"
     },
     {
@@ -102,7 +102,7 @@
     },
     {
       "doi": "10.16476/j.pibb.2024.0530",
-      "title": "基于人工智能蛋白质热力学稳定性预测",
+      "title": "",
       "authors": "",
       "year": "",
       "journal": "",
@@ -112,7 +112,7 @@
     },
     {
       "doi": "10.3969/j.issn.0258-8021.2021.03.14",
-      "title": "基于隐马尔可夫模型的全外显子测序拷贝数变异检测算法研究",
+      "title": "",
       "authors": "",
       "year": "",
       "journal": "",

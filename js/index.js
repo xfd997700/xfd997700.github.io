@@ -2,11 +2,20 @@
 const terminalInput = document.getElementById("terminal-input");
 const terminalMessage = document.getElementById("terminal-message");
 const mainContent = document.getElementById("main-content");
+const publicationsSortButton = document.getElementById("publications-sort-btn");
+const graphAbsModal = document.getElementById("graph-abs-modal");
+const graphAbsModalImage = document.getElementById("graph-abs-modal-img");
+const graphAbsModalCloseButton = document.getElementById("graph-abs-modal-close");
 
 const state = {
   input: "",
   locked: false,
   entered: false
+};
+
+const publicationState = {
+  items: [],
+  sortMode: "default"
 };
 
 function resetTerminal() {
@@ -113,6 +122,7 @@ function applySettings(settings) {
   const rootStyle = document.documentElement.style;
   const background = settings && settings.background ? settings.background : {};
   const glass = settings && settings.glass ? settings.glass : {};
+  const publications = settings && settings.publications ? settings.publications : {};
 
   if (background.blur_px !== undefined) {
     const blurPx = normalizeNonNegativeNumber(background.blur_px, 0);
@@ -126,6 +136,16 @@ function applySettings(settings) {
   if (glass.blur_px !== undefined) {
     const blurPx = normalizeNonNegativeNumber(glass.blur_px, 18);
     rootStyle.setProperty("--glass-blur", `${blurPx}px`);
+  }
+
+  if (publications.graph_abs_width_px !== undefined) {
+    const width = Math.max(120, normalizeNonNegativeNumber(publications.graph_abs_width_px, 520));
+    rootStyle.setProperty("--pub-graph-abs-width", `${width}px`);
+  }
+
+  if (publications.graph_abs_height_px !== undefined) {
+    const height = Math.max(120, normalizeNonNegativeNumber(publications.graph_abs_height_px, 240));
+    rootStyle.setProperty("--pub-graph-abs-height", `${height}px`);
   }
 }
 
@@ -447,20 +467,66 @@ async function resolvePublications(catalog, settings) {
     })
   );
 
-  resolved.sort((a, b) => {
-    const ay = parseInt(a.year, 10) || 0;
-    const by = parseInt(b.year, 10) || 0;
-    return by - ay;
-  });
-
   return resolved;
+}
+
+function parsePublicationYear(pub) {
+  const text = cleanText(pub && pub.year);
+  const match = text.match(/\d{4}/);
+  return match ? parseInt(match[0], 10) : 0;
+}
+
+function getOrderedPublications(items, sortMode) {
+  const safeItems = Array.isArray(items) ? items : [];
+  if (sortMode !== "year") {
+    return safeItems;
+  }
+
+  return safeItems
+    .map((item, index) => ({ item, index }))
+    .sort((a, b) => {
+      const ay = parsePublicationYear(a.item);
+      const by = parsePublicationYear(b.item);
+      if (by !== ay) return by - ay;
+      return a.index - b.index;
+    })
+    .map((entry) => entry.item);
+}
+
+function updatePublicationsSortButton() {
+  if (!publicationsSortButton) return;
+  const isYearMode = publicationState.sortMode === "year";
+  publicationsSortButton.textContent = isYearMode ? "Show JSON Order" : "Sort by Year";
+  publicationsSortButton.setAttribute("aria-pressed", isYearMode ? "true" : "false");
+}
+
+function isGraphAbsModalOpen() {
+  return Boolean(graphAbsModal && !graphAbsModal.hidden);
+}
+
+function openGraphAbsModal(imageSrc, imageAlt) {
+  if (!graphAbsModal || !graphAbsModalImage || !imageSrc) return;
+  graphAbsModalImage.src = imageSrc;
+  graphAbsModalImage.alt = imageAlt || "Graphical abstract";
+  graphAbsModal.hidden = false;
+  document.body.classList.add("modal-open");
+}
+
+function closeGraphAbsModal() {
+  if (!graphAbsModal || !graphAbsModalImage || graphAbsModal.hidden) return;
+  graphAbsModal.hidden = true;
+  graphAbsModalImage.src = "";
+  graphAbsModalImage.alt = "Graphical abstract";
+  document.body.classList.remove("modal-open");
 }
 
 function renderPublications(items) {
   const list = document.getElementById("publications-list");
   list.innerHTML = "";
 
-  if (!items || !items.length) {
+  const orderedItems = getOrderedPublications(items, publicationState.sortMode);
+
+  if (!orderedItems.length) {
     const empty = document.createElement("div");
     empty.className = "placeholder-item";
     empty.textContent = "No publications loaded yet.";
@@ -468,7 +534,7 @@ function renderPublications(items) {
     return;
   }
 
-  items.forEach((pub) => {
+  orderedItems.forEach((pub) => {
     const item = document.createElement("article");
     item.className = "publication-item";
 
@@ -530,14 +596,19 @@ function renderPublications(items) {
     }
 
     if (pub.graph_abs) {
-      const graphWrap = document.createElement("figure");
+      const graphWrap = document.createElement("button");
+      graphWrap.type = "button";
       graphWrap.className = "publication-graph-abs";
+      graphWrap.setAttribute("aria-label", `Open graphical abstract for ${pub.title || "publication"}`);
       const graphImg = document.createElement("img");
       graphImg.src = pub.graph_abs;
       graphImg.alt = `${pub.title || "Publication"} graphical abstract`;
       graphImg.loading = "lazy";
       graphImg.decoding = "async";
       graphWrap.appendChild(graphImg);
+      graphWrap.addEventListener("click", () => {
+        openGraphAbsModal(pub.graph_abs, graphImg.alt);
+      });
       item.appendChild(graphWrap);
     }
 
@@ -569,6 +640,29 @@ function renderProjects(items) {
 
 async function init() {
   document.addEventListener("keydown", handleTerminalKey);
+  if (publicationsSortButton) {
+    publicationsSortButton.addEventListener("click", () => {
+      publicationState.sortMode = publicationState.sortMode === "year" ? "default" : "year";
+      renderPublications(publicationState.items);
+      updatePublicationsSortButton();
+    });
+    updatePublicationsSortButton();
+  }
+  if (graphAbsModalCloseButton) {
+    graphAbsModalCloseButton.addEventListener("click", closeGraphAbsModal);
+  }
+  if (graphAbsModal) {
+    graphAbsModal.addEventListener("click", (event) => {
+      if (event.target === graphAbsModal) {
+        closeGraphAbsModal();
+      }
+    });
+  }
+  document.addEventListener("keydown", (event) => {
+    if (event.key === "Escape" && isGraphAbsModalOpen()) {
+      closeGraphAbsModal();
+    }
+  });
 
   try {
     const [config, settings, publicationsCatalog] = await Promise.all([
@@ -582,8 +676,9 @@ async function init() {
     renderCareer(config.career);
     renderProjects(config.projects);
     const publicationSource = publicationsCatalog || { publications: config.publications || [] };
-    const publications = await resolvePublications(publicationSource, settings);
-    renderPublications(publications);
+    publicationState.items = await resolvePublications(publicationSource, settings);
+    renderPublications(publicationState.items);
+    updatePublicationsSortButton();
   } catch (error) {
     console.error(error);
   }

@@ -7,6 +7,8 @@
     "blur_px": 18
   },
   "publications": {
-    "doi_timeout_ms": 12000
+    "doi_timeout_ms": 114000,
+    "graph_abs_width_px": 520,
+    "graph_abs_height_px": 240
   }
 }
