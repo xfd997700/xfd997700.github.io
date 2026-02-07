@@ -1,6 +1,6 @@
 {
   "background": {
-    "blur_px": 6,
+    "blur_px": 3,
     "overlay_color": "rgba(7, 10, 18, 0.62)"
   },
   "glass": {
