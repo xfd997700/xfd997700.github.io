@@ -105,7 +105,7 @@ function enterMain() {
 function showEasterEgg() {
   if (state.locked) return;
   state.locked = true;
-  terminalMessage.innerHTML = "<div>Hello word!</div><div>bye bye</div>";
+  terminalMessage.innerHTML = "<div>Hello world!</div><div>bye bye</div>";
   setTimeout(() => {
     state.locked = false;
     resetTerminal();
