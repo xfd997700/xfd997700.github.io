@@ -18,6 +18,55 @@ const publicationState = {
   sortMode: "default"
 };
 
+const siteBrandTypingState = {
+  timer: null
+};
+
+function stopSiteBrandTyping() {
+  if (siteBrandTypingState.timer) {
+    clearTimeout(siteBrandTypingState.timer);
+    siteBrandTypingState.timer = null;
+  }
+}
+
+function startSiteBrandTyping(element, text) {
+  if (!element) return;
+  stopSiteBrandTyping();
+
+  const content = String(text || "").trim();
+  if (!content) {
+    element.textContent = "";
+    return;
+  }
+
+  if (window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
+    element.textContent = content;
+    return;
+  }
+
+  const typingSpeedMs = 100;
+  const holdMs = 2600;
+  const restartGapMs = 350;
+  let index = 0;
+
+  const step = () => {
+    if (index <= content.length) {
+      element.textContent = content.slice(0, index);
+      index += 1;
+      siteBrandTypingState.timer = setTimeout(step, typingSpeedMs);
+      return;
+    }
+
+    siteBrandTypingState.timer = setTimeout(() => {
+      element.textContent = "";
+      index = 0;
+      siteBrandTypingState.timer = setTimeout(step, restartGapMs);
+    }, holdMs);
+  };
+
+  step();
+}
+
 function resetTerminal() {
   state.input = "";
   terminalInput.textContent = "";
@@ -174,8 +223,9 @@ function renderProfile(info, siteBrand) {
   const tagsWrap = document.getElementById("profile-tags");
   const customBrand = typeof siteBrand === "string" ? siteBrand.trim() : "";
   const fallbackName = profile.nickname || profile.name || "Personal Page";
+  const brandText = customBrand || fallbackName;
 
-  brand.textContent = customBrand || fallbackName;
+  startSiteBrandTyping(brand, brandText);
   name.textContent = fallbackName;
   signature.textContent = profile.signature || "";
   if (profile.avatar) {
