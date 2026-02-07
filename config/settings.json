@@ -7,6 +7,7 @@
     "blur_px": 18
   },
   "publications": {
+    "resolve_doi_enabled": false,
     "doi_timeout_ms": 114000,
     "doi_request_interval_ms": 300,
     "doi_stop_after_failures": 5,

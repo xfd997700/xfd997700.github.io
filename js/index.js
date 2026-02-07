@@ -476,6 +476,10 @@ async function resolvePublications(catalog, settings, onUpdate) {
   const localPublications = rawPublications.map(normalizePublicationLocal).filter(Boolean);
   const resolved = localPublications.map((item) => ({ ...item }));
   const publicationSettings = (settings && settings.publications) || {};
+  const resolveDoiEnabled =
+    publicationSettings.resolve_doi_enabled === undefined
+      ? true
+      : Boolean(publicationSettings.resolve_doi_enabled);
   const doiTimeoutMs =
     publicationSettings.doi_timeout_ms !== undefined ? publicationSettings.doi_timeout_ms : 12000;
   const doiRequestIntervalMs =
@@ -493,6 +497,10 @@ async function resolvePublications(catalog, settings, onUpdate) {
 
   if (typeof onUpdate === "function") {
     onUpdate([...resolved]);
+  }
+
+  if (!resolveDoiEnabled) {
+    return resolved;
   }
 
   let consecutiveFailures = 0;
