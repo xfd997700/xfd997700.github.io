@@ -29,20 +29,41 @@ function stopSiteBrandTyping() {
   }
 }
 
+function ensureSiteBrandTypingNodes(element) {
+  let typed = element.querySelector(".site-brand-typed");
+  let cursor = element.querySelector(".site-brand-cursor");
+
+  if (!typed || !cursor) {
+    element.textContent = "";
+    typed = document.createElement("span");
+    typed.className = "site-brand-typed";
+    cursor = document.createElement("span");
+    cursor.className = "site-brand-cursor blink";
+    cursor.textContent = "_";
+    element.appendChild(typed);
+    element.appendChild(cursor);
+  }
+
+  return { typed, cursor };
+}
+
 function startSiteBrandTyping(element, text) {
   if (!element) return;
   stopSiteBrandTyping();
 
   const content = String(text || "").trim();
+  const nodes = ensureSiteBrandTypingNodes(element);
   if (!content) {
-    element.textContent = "";
+    nodes.typed.textContent = "";
     return;
   }
 
   if (window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
-    element.textContent = content;
+    nodes.typed.textContent = content;
+    nodes.cursor.classList.remove("blink");
     return;
   }
+  nodes.cursor.classList.add("blink");
 
   const typingSpeedMs = 100;
   const holdMs = 2600;
@@ -51,14 +72,14 @@ function startSiteBrandTyping(element, text) {
 
   const step = () => {
     if (index <= content.length) {
-      element.textContent = content.slice(0, index);
+      nodes.typed.textContent = content.slice(0, index);
       index += 1;
       siteBrandTypingState.timer = setTimeout(step, typingSpeedMs);
       return;
     }
 
     siteBrandTypingState.timer = setTimeout(() => {
-      element.textContent = "";
+      nodes.typed.textContent = "";
       index = 0;
       siteBrandTypingState.timer = setTimeout(step, restartGapMs);
     }, holdMs);

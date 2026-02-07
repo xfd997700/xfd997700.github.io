@@ -83,9 +83,19 @@ body.modal-open {
 }
 
 .site-brand {
-  font-family: var(--font-display);
-  font-size: clamp(26px, 4vw, 42px);
-  letter-spacing: 1px;
+  font-family: var(--font-mono);
+  font-size: clamp(24px, 3.8vw, 38px);
+  letter-spacing: 0.4px;
+  color: #d1ffe8;
+  display: inline-flex;
+  align-items: center;
+  white-space: nowrap;
+}
+
+.site-brand-cursor {
+  color: #7ef5ff;
+  margin-left: 2px;
+  display: inline-block;
 }
 
 .publications-sort-btn {
