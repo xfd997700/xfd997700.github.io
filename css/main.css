@@ -126,9 +126,9 @@ main {
 }
 
 .icon-btn--bilibili {
-  background: rgba(0, 174, 236, 0.28);
-  border-color: rgba(0, 174, 236, 0.6);
-  color: #d7f5ff;
+  background: rgba(251, 114, 153, 0.28);
+  border-color: rgba(251, 114, 153, 0.62);
+  color: #ffe8f1;
 }
 
 .icon-btn--google-scholar {
@@ -155,8 +155,8 @@ main {
 }
 
 .icon-btn--bilibili:hover {
-  background: rgba(0, 174, 236, 0.46);
-  border-color: rgba(0, 174, 236, 0.82);
+  background: rgba(251, 114, 153, 0.46);
+  border-color: rgba(251, 114, 153, 0.84);
 }
 
 .icon-btn--google-scholar:hover {
