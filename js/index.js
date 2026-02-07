@@ -627,7 +627,7 @@ async function fetchByDoi(doi, options) {
   return { status: lastStatus, data: null };
 }
 
-function normalizePublicationLocal(pub) {
+function normalizePublicationLocal(pub, refKey) {
   if (!pub || typeof pub !== "object") return null;
 
   const doi = normalizeDoi(pub.doi);
@@ -642,6 +642,7 @@ function normalizePublicationLocal(pub) {
   if (!doi && !title) return null;
 
   return {
+    ref_key: cleanText(refKey),
     doi,
     title,
     authors,
@@ -655,13 +656,17 @@ function normalizePublicationLocal(pub) {
 }
 
 async function resolvePublications(catalog, settings, onUpdate) {
-  const rawPublications = Array.isArray(catalog && catalog.publications)
-    ? catalog.publications
-    : Array.isArray(catalog)
-      ? catalog
-      : [];
+  const rawPublicationEntries = Array.isArray(catalog && catalog.publications)
+    ? catalog.publications.map((item, index) => [String(index), item])
+    : catalog && catalog.publications && typeof catalog.publications === "object"
+      ? Object.entries(catalog.publications)
+      : Array.isArray(catalog)
+        ? catalog.map((item, index) => [String(index), item])
+        : [];
 
-  const localPublications = rawPublications.map(normalizePublicationLocal).filter(Boolean);
+  const localPublications = rawPublicationEntries
+    .map(([refKey, item]) => normalizePublicationLocal(item, refKey))
+    .filter(Boolean);
   const resolved = localPublications.map((item) => ({ ...item }));
   const publicationSettings = (settings && settings.publications) || {};
   const resolveDoiEnabled =
@@ -709,6 +714,7 @@ async function resolvePublications(catalog, settings, onUpdate) {
       const crossref = result.data;
       const doi = crossref.doi || localItem.doi;
       resolved[index] = {
+        ref_key: localItem.ref_key,
         doi,
         title: crossref.title || localItem.title,
         authors: crossref.authors || localItem.authors,
@@ -819,6 +825,9 @@ function renderPublications(items) {
   orderedItems.forEach((pub) => {
     const item = document.createElement("article");
     item.className = "publication-item";
+    if (pub.ref_key) {
+      item.dataset.pubKey = pub.ref_key;
+    }
 
     const head = document.createElement("div");
     head.className = "publication-head";

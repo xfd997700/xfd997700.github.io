@@ -9,8 +9,8 @@
     "page": "",
     "graph_abs": ""
   },
-  "publications": [
-    {
+  "publications": {
+    "xufanding2024mespool": {
       "doi": "10.1093/bib/bbad423",
       "title": "MESPool: Molecular Edge Shrinkage Pooling for hierarchical molecular representation learning and property prediction",
       "authors": "Fanding Xu, Zhiwei Yang, Lizhuo Wang, Deyu Meng, Jiangang Long",
@@ -20,7 +20,7 @@
       "page": "bbad423",
       "graph_abs": "imgs/mespool.png"
     },
-    {
+    "xufanding2025molunet": {
       "doi": "10.1016/j.actphy.2025.100209",
       "title": "MolUNet++: Adaptive-grained explicit substructure and interaction aware molecular representation learning",
       "authors": "Fanding Xu, Zhiwei Yang, Sirui Wu, Wu Su, Lizhuo Wang, Deyu Meng, Jiangang Long",
@@ -30,7 +30,7 @@
       "page": "100209",
       "graph_abs": "imgs/molunet.png"
     },
-    {
+    "xufanding2023comparative": {
       "doi": "10.1016/j.dsp.2023.103937",
       "title": "Comparative study of non-convex penalties and related algorithms in compressed sensing",
       "authors": "Fanding Xu, Junbo Duan, Wenyu Liu",
@@ -40,7 +40,7 @@
       "page": "103937",
       "graph_abs": "imgs/nonconvex.jpg"
     },
-    {
+    "zhengxinzhe2025pring": {
       "doi": "10.48550/arXiv.2507.05101",
       "title": "Pring: Rethinking protein-protein interaction prediction from pairs to graphs",
       "authors": "Xinzhe Zheng, Hao Du, Fanding Xu, Jinzhe Li, Zhiyuan Liu, Wenkang Wang, Tao Chen, Wanli Ouyang, Stan Z Li, Yan Lu, Nanqing Dong, Yang Zhang",
@@ -50,7 +50,7 @@
       "page": "",
       "graph_abs": "imgs/pring.png"
     },
-    {
+    "suwu2024screening": {
       "doi": "10.1021/acsami.3c18102",
       "title": "Screening of CPT1A-Targeting Lipid Metabolism Modulators Using Mitochondrial Membrane Chromatography",
       "authors": "Wu Su, Fanding Xu, Jinjin Zhong, Ranrui Hu, Lizhuo Wang, Hua Li, Zhiwei Yang, Shuai Ge, Huaizhen He, Shengli Han, Xiuying Xie, Hui Guo, Langchong He, Jiankang Liu, Tao Yi, Yu Kong, Jiangang Long",
@@ -60,7 +60,7 @@
       "page": "13234-13246",
       "graph_abs": ""
     },
-    {
+    "suwu2024twin": {
       "doi": "10.1021/acs.analchem.4c02402",
       "title": "Twin strep-tag modified CPT1A mitochondrial membrane chromatography in screening lipid metabolism regulators",
       "authors": "Wu Su, Peng Yang, Fanding Xu, Tingrong Zhang, Lizhuo Wang, Hua Li, Li Cui, Zhiwei Yang, Huaizhen He, Shengli Han, Langchong He, Jiankang Liu, Yu Kong, Jiangang Long",
@@ -70,7 +70,7 @@
       "page": "10851-10859",
       "graph_abs": ""
     },
-    {
+    "yeqiushi2024comutations": {
       "doi": "10.3390/ijms25094662",
       "title": "Co-Mutations and Possible Variation Tendency of the Spike RBD and Membrane Protein in SARS-CoV-2 by Machine Learning",
       "authors": "Qiushi Ye, He Wang, Fanding Xu, Sijia Zhang, Shengli Zhang, Zhiwei Yang, Lei Zhang",
@@ -80,7 +80,7 @@
       "page": "4662",
       "graph_abs": ""
     },
-    {
+    "yangpeng2025from": {
       "doi": "10.1016/j.freeradbiomed.2025.05.389",
       "title": "From aldehyde metabolism to delay aging: targeting ALDH as a novel strategy",
       "authors": "Peng Yang, Wu Su, Lizhuo Wang, Fanding Xu, Yu Kong, Jiangang Long",
@@ -90,7 +90,7 @@
       "page": "70-86",
       "graph_abs": ""
     },
-    {
+    "liuwenyu2021smoothing": {
       "doi": "10.1109/ACCESS.2021.3132641",
       "title": "Smoothing of time-varying graph with the generalized LASSO",
       "authors": "Wenyu Liu, Hao Yan, Qing Wang, Nan Hu, Ni Liu, Fanding Xu, Junbo Duan",
@@ -100,7 +100,7 @@
       "page": "162348-162358",
       "graph_abs": ""
     },
-    {
+    "taolinjie2025ai": {
       "doi": "10.16476/j.pibb.2024.0530",
       "title": "基于人工智能蛋白质热力学稳定性预测",
       "authors": "陶林节， 徐凡丁， 郭宇， 龙建纲， 鲁卓阳",
@@ -110,7 +110,7 @@
       "page": "1972",
       "graph_abs": ""
     },
-    {
+    "liuni2021hmm": {
       "doi": "10.3969/j.issn.0258-8021.2021.03.14",
       "title": "基于隐马尔可夫模型的全外显子测序拷贝数变异检测算法研究",
       "authors": "刘妮， 刘晗， 赵阿曼， 徐凡丁， 刘文宇， 段君博",
@@ -120,7 +120,7 @@
       "page": "380-384",
       "graph_abs": ""
     },
-    {
+    "duyiming2020experimental": {
       "doi": "10.16156/j.1004-7220.2020.05.012",
       "title": "Experimental study on axial dynamic impact of rabbit single vertebra",
       "authors": "杜一铭， 张绪树， 郭媛， 徐凡丁， 盛文倩",
@@ -130,5 +130,5 @@
       "page": "463-469",
       "graph_abs": ""
     }
-  ]
+  }
 }
