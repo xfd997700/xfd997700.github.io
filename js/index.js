@@ -329,7 +329,8 @@ function renderCareer(career) {
         city: item.city || "",
         role: item.role || "",
         org_logo: item.org_logo || "",
-        link: item.link || ""
+        org_link: item.org_link || "",
+        group_link: item.group_link || item.link || ""
       }))
     : Object.entries(career || {}).map(([year, detail]) => ({
         year,
@@ -338,7 +339,8 @@ function renderCareer(career) {
         city: (detail && detail.city) || "",
         role: (detail && detail.role) || "",
         org_logo: (detail && detail.org_logo) || "",
-        link: (detail && detail.link) || ""
+        org_link: (detail && detail.org_link) || "",
+        group_link: (detail && (detail.group_link || detail.link)) || ""
       }));
 
   entries.sort((a, b) => {
@@ -396,8 +398,15 @@ function renderCareer(career) {
     sideEl.className = "career-side";
 
     if (detail.org_logo) {
-      const logoShell = document.createElement("div");
+      const logoShell = detail.org_link ? document.createElement("a") : document.createElement("div");
       logoShell.className = "career-logo-shell";
+      if (detail.org_link) {
+        logoShell.classList.add("career-logo-shell-link");
+        logoShell.href = detail.org_link;
+        logoShell.target = "_blank";
+        logoShell.rel = "noreferrer";
+        logoShell.setAttribute("aria-label", `Open ${detail.organization || "organization"} website`);
+      }
       const logoEl = document.createElement("img");
       logoEl.className = "career-org-logo";
       logoEl.src = detail.org_logo;
@@ -408,10 +417,10 @@ function renderCareer(career) {
       sideEl.appendChild(logoShell);
     }
 
-    if (detail.link) {
+    if (detail.group_link) {
       const link = document.createElement("a");
       link.className = "career-link";
-      link.href = detail.link;
+      link.href = detail.group_link;
       link.target = "_blank";
       link.rel = "noreferrer";
       const text = document.createElement("span");

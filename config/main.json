@@ -44,7 +44,8 @@
       "city": "Singapore",
       "role": "Visiting Ph.D",
       "org_logo": "https://nus.edu.sg/images/default-source/base/logo.png",
-      "link": "https://zhanggroup.org/"
+      "org_link": "https://www.nus.edu.sg/",
+      "group_link": "https://zhanggroup.org/"
     },
     {
       "year": "2021-2026",
@@ -53,7 +54,8 @@
       "city": "Xi'an, China",
       "role": "Ph.D Student",
       "org_logo": "https://www.xjtu.edu.cn/img/logo_pic99.png",
-      "link": "https://gr.xjtu.edu.cn/en/web/jglong"
+      "org_link": "https://www.xjtu.edu.cn/en/",
+      "group_link": "https://gr.xjtu.edu.cn/en/web/jglong"
     },
     {
       "year": "2019-2021",
@@ -62,7 +64,8 @@
       "city": "Xi'an, China",
       "role": "Master's student",
       "org_logo": "https://www.xjtu.edu.cn/img/logo_pic99.png",
-      "link": "https://gr.xjtu.edu.cn/en/web/junbo.duan"
+      "org_link": "https://www.xjtu.edu.cn/en/",
+      "group_link": "https://gr.xjtu.edu.cn/en/web/junbo.duan"
     },
     {
       "year": "2015-2019",
@@ -71,7 +74,8 @@
       "city": "Taiyuan, China",
       "role": "Bachelor's student",
       "org_logo": "https://www.tyut.edu.cn/images/logo.png",
-      "link": ""
+      "org_link": "https://www.tyut.edu.cn/",
+      "group_link": ""
     }
   ],
   "publications": [],
