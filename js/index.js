@@ -743,23 +743,6 @@ function renderPublications(items) {
       item.appendChild(venue);
     }
 
-    if (pub.doi) {
-      const doiRow = document.createElement("div");
-      doiRow.className = "publication-doi";
-      const doiLabel = document.createElement("span");
-      doiLabel.className = "publication-doi-label";
-      doiLabel.textContent = "DOI";
-      doiRow.appendChild(doiLabel);
-
-      const doiAnchor = document.createElement("a");
-      doiAnchor.href = pub.doi_link || buildDoiUrl(pub.doi);
-      doiAnchor.target = "_blank";
-      doiAnchor.rel = "noreferrer";
-      doiAnchor.textContent = pub.doi;
-      doiRow.appendChild(doiAnchor);
-      item.appendChild(doiRow);
-    }
-
     if (pub.graph_abs) {
       const graphWrap = document.createElement("button");
       graphWrap.type = "button";
