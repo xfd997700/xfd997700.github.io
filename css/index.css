@@ -256,21 +256,12 @@ body.modal-open {
   padding: 10px;
   border-radius: 12px;
   border: 1px solid rgba(255, 255, 255, 0.18);
-  background: linear-gradient(160deg, rgba(255, 255, 255, 0.16), rgba(255, 255, 255, 0.06));
+  background: rgba(255, 255, 255, 0.14);
   box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.16), 0 6px 18px rgba(0, 0, 0, 0.15);
   display: grid;
   place-items: center;
   position: relative;
   overflow: hidden;
-}
-
-.career-logo-shell::before {
-  content: "";
-  position: absolute;
-  inset: 0;
-  border-radius: inherit;
-  background: linear-gradient(120deg, rgba(255, 255, 255, 0.1), transparent 50%);
-  pointer-events: none;
 }
 
 .career-logo-shell-link {
