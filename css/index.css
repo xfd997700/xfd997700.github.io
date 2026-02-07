@@ -185,6 +185,62 @@
   color: var(--accent);
 }
 
+.publication-item {
+  padding: 14px 16px;
+  border-radius: 12px;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  background: rgba(255, 255, 255, 0.06);
+  display: grid;
+  gap: 8px;
+}
+
+.publication-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.publication-title {
+  font-size: 16px;
+  line-height: 1.4;
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+a.publication-title:hover {
+  color: var(--accent);
+}
+
+.publication-detail {
+  color: var(--text-muted);
+  font-size: 13px;
+  line-height: 1.5;
+}
+
+.publication-meta {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex: 0 0 auto;
+}
+
+.publication-badge {
+  font-size: 11px;
+  line-height: 1;
+  padding: 6px 8px;
+  border-radius: 999px;
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  color: var(--text-muted);
+  background: rgba(255, 255, 255, 0.08);
+  white-space: nowrap;
+}
+
+.publication-open {
+  font-size: 13px;
+  color: var(--accent);
+}
+
 .placeholder-list {
   display: grid;
   gap: 14px;
@@ -213,5 +269,10 @@
   .career-item {
     grid-template-columns: 1fr;
     gap: 6px;
+  }
+
+  .publication-header {
+    flex-direction: column;
+    align-items: flex-start;
   }
 }

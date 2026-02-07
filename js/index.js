@@ -271,6 +271,159 @@ function renderCareer(career) {
   });
 }
 
+function cleanText(value) {
+  return String(value || "").replace(/\s+/g, " ").trim();
+}
+
+function normalizePositiveInteger(value, fallback, maxValue) {
+  const n = parseInt(value, 10);
+  if (!Number.isFinite(n) || n <= 0) return fallback;
+  return Math.min(n, maxValue);
+}
+
+function toAbsoluteScholarUrl(href) {
+  const raw = cleanText(href);
+  if (!raw) return "";
+  if (/^https?:\/\//i.test(raw)) return raw;
+  if (raw.startsWith("/")) return `https://scholar.google.com${raw}`;
+  return `https://scholar.google.com/${raw}`;
+}
+
+function extractScholarUserId(config) {
+  const source = (config && config.publications_source && config.publications_source.google_scholar) || {};
+  const configured = cleanText(source.user_id);
+  if (configured) return configured;
+
+  const scholarLink =
+    config &&
+    config.personal_info &&
+    config.personal_info.links &&
+    config.personal_info.links.google_scholar &&
+    config.personal_info.links.google_scholar.url;
+
+  if (!scholarLink) return "";
+
+  try {
+    const parsed = new URL(scholarLink);
+    return cleanText(parsed.searchParams.get("user"));
+  } catch (error) {
+    console.warn("Failed to parse Google Scholar URL.", error);
+    return "";
+  }
+}
+
+async function fetchHtmlThroughProxy(targetUrl, proxyPrefix, timeoutMs) {
+  const url = cleanText(proxyPrefix)
+    ? `${cleanText(proxyPrefix)}${encodeURIComponent(targetUrl)}`
+    : targetUrl;
+  const controller = new AbortController();
+  const timeout = normalizePositiveInteger(timeoutMs, 12000, 60000);
+  const timer = setTimeout(() => controller.abort(), timeout);
+
+  try {
+    const response = await fetch(url, { cache: "no-store", signal: controller.signal });
+    if (!response.ok) {
+      throw new Error(`Publication fetch failed: ${response.status}`);
+    }
+    return response.text();
+  } finally {
+    clearTimeout(timer);
+  }
+}
+
+function parseScholarPublicationsFromHtml(html) {
+  const doc = new DOMParser().parseFromString(html, "text/html");
+  const rows = Array.from(doc.querySelectorAll("tr.gsc_a_tr"));
+
+  return rows
+    .map((row) => {
+      const titleEl = row.querySelector(".gsc_a_at");
+      const grayRows = row.querySelectorAll(".gs_gray");
+      const yearEl = row.querySelector(".gsc_a_y span, .gsc_a_y");
+      const citationEl = row.querySelector(".gsc_a_c a");
+
+      const title = cleanText(titleEl ? titleEl.textContent : "");
+      if (!title) return null;
+
+      const citationText = cleanText(citationEl ? citationEl.textContent : "");
+      const citationMatch = citationText.match(/\d+/);
+
+      return {
+        title,
+        authors: cleanText(grayRows[0] ? grayRows[0].textContent : ""),
+        venue: cleanText(grayRows[1] ? grayRows[1].textContent : ""),
+        year: cleanText(yearEl ? yearEl.textContent : ""),
+        citations: citationMatch ? parseInt(citationMatch[0], 10) : null,
+        link: toAbsoluteScholarUrl(titleEl ? titleEl.getAttribute("href") : "")
+      };
+    })
+    .filter(Boolean);
+}
+
+async function fetchGoogleScholarPublications(config) {
+  const source = (config && config.publications_source && config.publications_source.google_scholar) || {};
+  const userId = extractScholarUserId(config);
+  if (!userId) return [];
+
+  const maxItems = normalizePositiveInteger(source.max_items, 20, 100);
+  const pageSize = normalizePositiveInteger(source.pagesize, 20, 100);
+  const timeoutMs = normalizePositiveInteger(source.timeout_ms, 12000, 60000);
+  const proxyPrefix = source.proxy_url_prefix || "";
+  const allItems = [];
+  const seen = new Set();
+
+  for (let start = 0; start < maxItems; start += pageSize) {
+    const url =
+      "https://scholar.google.com/citations?hl=en&view_op=list_works" +
+      `&user=${encodeURIComponent(userId)}&sortby=pubdate&cstart=${start}&pagesize=${pageSize}`;
+
+    const html = await fetchHtmlThroughProxy(url, proxyPrefix, timeoutMs);
+    const pageItems = parseScholarPublicationsFromHtml(html);
+
+    if (!pageItems.length) break;
+
+    pageItems.forEach((item) => {
+      const dedupeKey = item.link || `${item.title}|${item.year}|${item.venue}`;
+      if (seen.has(dedupeKey)) return;
+      seen.add(dedupeKey);
+      allItems.push(item);
+    });
+
+    if (pageItems.length < pageSize || allItems.length >= maxItems) break;
+  }
+
+  return allItems.slice(0, maxItems);
+}
+
+function normalizePublicationItem(pub) {
+  if (!pub || typeof pub !== "object") return null;
+  const citationNumber = Number(pub.citations);
+  return {
+    title: cleanText(pub.title),
+    authors: cleanText(pub.authors),
+    venue: cleanText(pub.venue || pub.journal || pub.booktitle),
+    year: cleanText(pub.year),
+    citations: Number.isFinite(citationNumber) ? citationNumber : null,
+    link: cleanText(pub.link || pub.url)
+  };
+}
+
+async function loadPublications(config) {
+  const source = (config && config.publications_source) || {};
+  const wantsScholar = source.enabled !== false && source.type === "google_scholar";
+
+  if (wantsScholar) {
+    try {
+      const scholarItems = await fetchGoogleScholarPublications(config);
+      if (scholarItems.length) return scholarItems;
+    } catch (error) {
+      console.warn("Google Scholar fetch failed, fallback to local publications.", error);
+    }
+  }
+
+  return (config.publications || []).map(normalizePublicationItem).filter((item) => item && item.title);
+}
+
 function renderPublications(items) {
   const list = document.getElementById("publications-list");
   list.innerHTML = "";
@@ -284,12 +437,69 @@ function renderPublications(items) {
   }
 
   items.forEach((pub) => {
-    const item = document.createElement("div");
-    item.className = "placeholder-item";
-    const title = pub.title || "Untitled";
-    const venue = pub.venue ? ` | ${pub.venue}` : "";
-    const year = pub.year ? ` (${pub.year})` : "";
-    item.textContent = `${title}${venue}${year}`;
+    const normalized = normalizePublicationItem(pub);
+    if (!normalized || !normalized.title) return;
+
+    const item = document.createElement("article");
+    item.className = "publication-item";
+
+    const header = document.createElement("div");
+    header.className = "publication-header";
+
+    if (normalized.link) {
+      const titleLink = document.createElement("a");
+      titleLink.className = "publication-title";
+      titleLink.href = normalized.link;
+      titleLink.target = "_blank";
+      titleLink.rel = "noreferrer";
+      titleLink.textContent = normalized.title;
+      header.appendChild(titleLink);
+    } else {
+      const titleText = document.createElement("div");
+      titleText.className = "publication-title";
+      titleText.textContent = normalized.title;
+      header.appendChild(titleText);
+    }
+
+    const metaWrap = document.createElement("div");
+    metaWrap.className = "publication-meta";
+
+    if (normalized.year) {
+      const yearBadge = document.createElement("span");
+      yearBadge.className = "publication-badge";
+      yearBadge.textContent = normalized.year;
+      metaWrap.appendChild(yearBadge);
+    }
+
+    if (normalized.citations !== null) {
+      const citationBadge = document.createElement("span");
+      citationBadge.className = "publication-badge";
+      citationBadge.textContent = `Cited ${normalized.citations}`;
+      metaWrap.appendChild(citationBadge);
+    }
+
+    if (normalized.link) {
+      const openLink = document.createElement("a");
+      openLink.className = "publication-open";
+      openLink.href = normalized.link;
+      openLink.target = "_blank";
+      openLink.rel = "noreferrer";
+      openLink.setAttribute("aria-label", `Open publication: ${normalized.title}`);
+      openLink.innerHTML = "<i class=\"fa-solid fa-arrow-up-right-from-square\"></i>";
+      metaWrap.appendChild(openLink);
+    }
+
+    header.appendChild(metaWrap);
+
+    const detail = document.createElement("div");
+    detail.className = "publication-detail";
+    const detailParts = [normalized.authors, normalized.venue].filter(Boolean);
+    detail.textContent = detailParts.join(" | ");
+
+    item.appendChild(header);
+    if (detail.textContent) {
+      item.appendChild(detail);
+    }
     list.appendChild(item);
   });
 }
@@ -325,7 +535,8 @@ async function init() {
     applyBackground(config);
     renderProfile(config.personal_info, config.site_brand);
     renderCareer(config.career);
-    renderPublications(config.publications);
+    const publications = await loadPublications(config);
+    renderPublications(publications);
     renderProjects(config.projects);
   } catch (error) {
     console.error(error);
