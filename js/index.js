@@ -775,6 +775,22 @@ function renderPublications(items) {
       item.appendChild(graphWrap);
     }
 
+    if (pub.doi) {
+      const doiLine = document.createElement("div");
+      doiLine.className = "publication-doi-line";
+      const doiLabel = document.createElement("span");
+      doiLabel.textContent = "DOI: ";
+      doiLine.appendChild(doiLabel);
+
+      const doiLink = document.createElement("a");
+      doiLink.href = pub.doi_link || buildDoiUrl(pub.doi);
+      doiLink.target = "_blank";
+      doiLink.rel = "noreferrer";
+      doiLink.textContent = pub.doi;
+      doiLine.appendChild(doiLink);
+      item.appendChild(doiLine);
+    }
+
     list.appendChild(item);
   });
 }
