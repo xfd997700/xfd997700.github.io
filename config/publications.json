@@ -12,17 +12,17 @@
   "publications": [
     {
       "doi": "10.1093/bib/bbad423",
-      "title": "",
+      "title": "MESPool: Molecular Edge Shrinkage Pooling for hierarchical molecular representation learning and property prediction",
       "authors": "",
       "year": "",
       "journal": "",
       "volume": "",
       "page": "",
-      "graph_abs": ""
+      "graph_abs": "imgs/mespool.pdf"
     },
     {
       "doi": "10.1016/j.actphy.2025.100209",
-      "title": "",
+      "title": "MolUNet++: Adaptive-grained explicit substructure and interaction aware molecular representation learning",
       "authors": "",
       "year": "",
       "journal": "",
@@ -36,6 +36,96 @@
       "authors": "Fanding Xu, Junbo Duan, Wenyu Liu",
       "year": "2023",
       "journal": "Digital Signal Processing",
+      "volume": "",
+      "page": "",
+      "graph_abs": ""
+    },
+    {
+      "doi": "10.48550/arXiv.2507.05101",
+      "title": "Pring: Rethinking protein-protein interaction prediction from pairs to graphs",
+      "authors": "",
+      "year": "",
+      "journal": "",
+      "volume": "",
+      "page": "",
+      "graph_abs": ""
+    },
+    {
+      "doi": "10.1021/acsami.3c18102",
+      "title": "Screening of CPT1A-Targeting Lipid Metabolism Modulators Using Mitochondrial Membrane Chromatography",
+      "authors": "",
+      "year": "",
+      "journal": "",
+      "volume": "",
+      "page": "",
+      "graph_abs": ""
+    },
+    {
+      "doi": "10.1021/acs.analchem.4c02402",
+      "title": "Twin strep-tag modified CPT1A mitochondrial membrane chromatography in screening lipid metabolism regulators",
+      "authors": "",
+      "year": "",
+      "journal": "",
+      "volume": "",
+      "page": "",
+      "graph_abs": ""
+    },
+    {
+      "doi": "10.3390/ijms25094662",
+      "title": "Co-Mutations and Possible Variation Tendency of the Spike RBD and Membrane Protein in SARS-CoV-2 by Machine Learning",
+      "authors": "",
+      "year": "",
+      "journal": "",
+      "volume": "",
+      "page": "",
+      "graph_abs": ""
+    },
+    {
+      "doi": "10.1016/j.freeradbiomed.2025.05.389",
+      "title": "From aldehyde metabolism to delay aging: targeting ALDH as a novel strategy",
+      "authors": "",
+      "year": "",
+      "journal": "",
+      "volume": "",
+      "page": "",
+      "graph_abs": ""
+    },
+    {
+      "doi": "10.1109/ACCESS.2021.3132641",
+      "title": "Smoothing of time-varying graph with the generalized LASSO",
+      "authors": "",
+      "year": "",
+      "journal": "",
+      "volume": "",
+      "page": "",
+      "graph_abs": ""
+    },
+    {
+      "doi": "10.16476/j.pibb.2024.0530",
+      "title": "基于人工智能蛋白质热力学稳定性预测",
+      "authors": "",
+      "year": "",
+      "journal": "",
+      "volume": "",
+      "page": "",
+      "graph_abs": ""
+    },
+    {
+      "doi": "10.3969/j.issn.0258-8021.2021.03.14",
+      "title": "基于隐马尔可夫模型的全外显子测序拷贝数变异检测算法研究",
+      "authors": "",
+      "year": "",
+      "journal": "",
+      "volume": "",
+      "page": "",
+      "graph_abs": ""
+    },
+    {
+      "doi": "10.16156/j.1004-7220.2020.05.012",
+      "title": "Experimental study on axial dynamic impact of rabbit single vertebra",
+      "authors": "Yiming Du, Xushu Zhang, Yuan Guo, Fanding Xu, Wenqian Sheng",
+      "year": "",
+      "journal": "Journal of medical biomechanics",
       "volume": "",
       "page": "",
       "graph_abs": ""
