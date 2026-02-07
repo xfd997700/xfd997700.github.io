@@ -590,7 +590,7 @@ function getOrderedPublications(items, sortMode) {
 function updatePublicationsSortButton() {
   if (!publicationsSortButton) return;
   const isYearMode = publicationState.sortMode === "year";
-  publicationsSortButton.textContent = isYearMode ? "Show JSON Order" : "Sort by Year";
+  publicationsSortButton.textContent = isYearMode ? "Sort by Default" : "Sort by Year";
   publicationsSortButton.setAttribute("aria-pressed", isYearMode ? "true" : "false");
 }
 
