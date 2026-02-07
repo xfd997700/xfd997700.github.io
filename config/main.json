@@ -1,0 +1,52 @@
+﻿{
+  "background_img_api": "https://images.unsplash.com/flagged/photo-1575555201693-7cd442b8023d?auto=format&fit=crop&w=1920&q=80",
+  "background_img_local": "",
+  "personal_info": {
+    "name": "Fanding Xu",
+    "nickname": "Fanding XU",
+    "signature": "Researcher | Systems & AI | Crafting robust, elegant solutions",
+    "avatar": "assets/avatar.svg",
+    "links": {
+      "github": {
+        "label": "GitHub",
+        "url": "https://github.com/your-username"
+      },
+      "bilibili": {
+        "label": "Bilibili",
+        "url": "https://space.bilibili.com/your-id"
+      },
+      "google_scholar": {
+        "label": "Google Scholar",
+        "url": "https://scholar.google.com/citations?user=your-id"
+      },
+      "csdn": {
+        "label": "CSDN",
+        "url": "https://blog.csdn.net/your-id"
+      },
+      "orcid": {
+        "label": "ORCID",
+        "url": "https://orcid.org/0000-0000-0000-0000"
+      }
+    },
+    "tags": [
+      "Ph.D Candidate",
+      "Machine Learning",
+      "Distributed Systems",
+      "Open Source"
+    ]
+  },
+  "career": {
+    "2024-2026": {
+      "organization": "National University of Singapore",
+      "role": "Visiting Ph.D",
+      "link": "https://www.nus.edu.sg/"
+    },
+    "2022-2024": {
+      "organization": "Your Lab / University",
+      "role": "Research Assistant",
+      "link": ""
+    }
+  },
+  "publications": [],
+  "projects": []
+}
