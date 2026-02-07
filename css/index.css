@@ -260,6 +260,13 @@ a.publication-title:hover {
   color: var(--accent);
 }
 
+.publication-title-doi-icon {
+  margin-left: 6px;
+  font-size: 12px;
+  vertical-align: middle;
+  opacity: 0.9;
+}
+
 .publication-year {
   position: absolute;
   top: 0;

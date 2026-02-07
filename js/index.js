@@ -708,11 +708,17 @@ function renderPublications(items) {
 
     const titleLink = document.createElement(pub.doi_link ? "a" : "div");
     titleLink.className = "publication-title";
-    titleLink.textContent = pub.title || "Untitled";
+    const titleText = document.createElement("span");
+    titleText.textContent = pub.title || "Untitled";
+    titleLink.appendChild(titleText);
     if (pub.doi_link) {
       titleLink.href = pub.doi_link;
       titleLink.target = "_blank";
       titleLink.rel = "noreferrer";
+      const doiIcon = document.createElement("i");
+      doiIcon.className = "fa-solid fa-link publication-title-doi-icon";
+      doiIcon.setAttribute("aria-hidden", "true");
+      titleLink.appendChild(doiIcon);
     }
     head.appendChild(titleLink);
 
