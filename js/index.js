@@ -268,6 +268,8 @@ function renderProfile(info, siteBrand) {
   const signature = document.getElementById("profile-signature");
   const linksWrap = document.getElementById("link-buttons");
   const tagsWrap = document.getElementById("profile-tags");
+  const contactsWrap = document.getElementById("profile-contacts");
+  const addressesWrap = document.getElementById("profile-addresses");
   const customBrand = typeof siteBrand === "string" ? siteBrand.trim() : "";
   const fallbackName = profile.nickname || profile.name || "Personal Page";
   const brandText = customBrand || fallbackName;
@@ -313,6 +315,55 @@ function renderProfile(info, siteBrand) {
     span.textContent = tag;
     tagsWrap.appendChild(span);
   });
+
+  function renderProfileList(target, values, placeholderText, isContact) {
+    if (!target) return;
+    target.innerHTML = "";
+
+    const source = Array.isArray(values) ? values : [];
+    let visibleCount = 0;
+
+    source.forEach((entry) => {
+      let text = "";
+      let href = "";
+
+      if (typeof entry === "string") {
+        text = cleanText(entry);
+      } else if (entry && typeof entry === "object") {
+        text = cleanText(entry.value || entry.text || entry.label || "");
+        href = cleanText(entry.url || "");
+      }
+
+      if (!text) return;
+      if (!href && isContact && /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(text)) {
+        href = `mailto:${text}`;
+      }
+
+      const li = document.createElement("li");
+      if (href) {
+        const anchor = document.createElement("a");
+        anchor.href = href;
+        anchor.target = href.startsWith("mailto:") ? "_self" : "_blank";
+        anchor.rel = href.startsWith("mailto:") ? "" : "noreferrer";
+        anchor.textContent = text;
+        li.appendChild(anchor);
+      } else {
+        li.textContent = text;
+      }
+      target.appendChild(li);
+      visibleCount += 1;
+    });
+
+    if (visibleCount === 0) {
+      const li = document.createElement("li");
+      li.className = "profile-extra-placeholder";
+      li.textContent = placeholderText;
+      target.appendChild(li);
+    }
+  }
+
+  renderProfileList(contactsWrap, profile.contacts, "Not set yet / 待填写", true);
+  renderProfileList(addressesWrap, profile.addresses, "Not set yet / 待填写", false);
 }
 
 function renderCareer(career) {

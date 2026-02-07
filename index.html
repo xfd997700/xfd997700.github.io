@@ -55,6 +55,16 @@
             </div>
             <div class="link-grid" id="link-buttons"></div>
             <div class="tags" id="profile-tags"></div>
+            <div class="profile-extra-row">
+              <div class="profile-extra">
+                <div class="profile-extra-title">Contacts | 联系方式</div>
+                <ul class="profile-extra-list" id="profile-contacts"></ul>
+              </div>
+              <div class="profile-extra">
+                <div class="profile-extra-title">Address | 地址</div>
+                <ul class="profile-extra-list" id="profile-addresses"></ul>
+              </div>
+            </div>
           </div>
 
           <div class="card glass">
@@ -91,7 +101,10 @@
           <div class="card glass right-standalone-card" id="projects-overview-card" hidden>
             <div class="section-title section-title--projects">
               <span>Projects | 项目</span>
-              <div id="projects-overview-lang-toggle"></div>
+              <div class="project-detail-actions">
+                <div id="projects-overview-lang-toggle"></div>
+                <button type="button" class="project-back-btn" id="projects-overview-home-btn">Back to Home</button>
+              </div>
             </div>
             <div id="projects-overview-view"></div>
           </div>
@@ -99,7 +112,10 @@
           <div class="card glass right-standalone-card" id="project-detail-card" hidden>
             <div class="section-title section-title--projects">
               <span id="project-detail-title">Project</span>
-              <button type="button" class="project-back-btn" id="project-detail-back-btn">Back to Projects</button>
+              <div class="project-detail-actions">
+                <div id="project-detail-lang-toggle"></div>
+                <button type="button" class="project-back-btn" id="project-detail-back-btn">Back to Projects</button>
+              </div>
             </div>
             <div id="project-detail-frame-wrap" class="project-detail-frame-wrap"></div>
           </div>

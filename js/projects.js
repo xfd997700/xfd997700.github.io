@@ -14,7 +14,11 @@
     initialized: false,
     projects: [],
     projectMap: new Map(),
-    lang: "en",
+    projectDocCache: new Map(),
+    detailRenderToken: 0,
+    publicationsMap: new Map(),
+    publicationAuthorKeywords: ["Fanding Xu", "徐凡丁"],
+    lang: "zh",
     intervals: [],
     homePageIndex: 0,
     settings: { ...DEFAULT_PROJECT_SETTINGS },
@@ -51,6 +55,26 @@
     if (raw.startsWith("/")) return raw;
     if (!basePrefix) return raw.replace(/^\.\//, "");
     return `${basePrefix}${raw.replace(/^\.\//, "")}`;
+  }
+
+  function rebaseRelativeUrls(root, relativeTo) {
+    if (!root) return;
+    const baseUrl = new URL(relativeTo, window.location.href);
+    const nodes = root.querySelectorAll("[src], [href]");
+    nodes.forEach((node) => {
+      const attr = node.hasAttribute("src") ? "src" : "href";
+      const raw = cleanText(node.getAttribute(attr));
+      if (!raw) return;
+      if (raw.startsWith("#")) return;
+      if (/^(https?:)?\/\//i.test(raw)) return;
+      if (/^(mailto:|tel:|javascript:|data:)/i.test(raw)) return;
+
+      try {
+        node.setAttribute(attr, new URL(raw, baseUrl).href);
+      } catch (error) {
+        console.warn("Failed to rebase project asset path.", raw, error);
+      }
+    });
   }
 
   async function loadJson(path) {
@@ -98,6 +122,9 @@
       title_zh: cleanText(value.title_zh),
       abs_en: cleanText(value.abs_en),
       abs_zh: cleanText(value.abs_zh),
+      funding_en: cleanText(value.funding_en || value.funding),
+      funding_zh: cleanText(value.funding_zh || value.funding),
+      funding_no: cleanText(value.funding_no),
       imgs,
       related_publications: relatedPublications
     };
@@ -171,6 +198,28 @@
     return project.abs_en || project.abs_zh || "";
   }
 
+  function hasProjectFunding(project) {
+    if (!project) return false;
+    return Boolean(cleanText(project.funding_en) || cleanText(project.funding_zh) || cleanText(project.funding_no));
+  }
+
+  function formatProjectFunding(project, lang) {
+    if (!hasProjectFunding(project)) return "";
+    const fundingEn = cleanText(project.funding_en);
+    const fundingZh = cleanText(project.funding_zh);
+    const funding = lang === "zh" ? fundingZh || fundingEn : fundingEn || fundingZh;
+    const fundingNo = cleanText(project.funding_no);
+    if (lang === "zh") {
+      if (funding && fundingNo) return `基金：${funding}（${fundingNo}）`;
+      if (funding) return `基金：${funding}`;
+      return `基金编号：${fundingNo}`;
+    }
+
+    if (funding && fundingNo) return `Funding: ${funding} (${fundingNo})`;
+    if (funding) return `Funding: ${funding}`;
+    return `Funding No.: ${fundingNo}`;
+  }
+
   function createImagePlaceholderDataUri(text) {
     const safeText = encodeURIComponent(cleanText(text) || "Project");
     const svg = `<svg xmlns='http://www.w3.org/2000/svg' width='1200' height='720' viewBox='0 0 1200 720'><rect width='1200' height='720' fill='#132139'/><text x='80' y='380' fill='#dde9ff' font-size='56' font-family='JetBrains Mono,Consolas,monospace'>${safeText}</text></svg>`;
@@ -237,6 +286,14 @@
     abs.className = "project-card-abs";
     abs.textContent = getProjectAbstract(project, lang) || "No abstract provided yet.";
 
+    const fundingText = formatProjectFunding(project, lang);
+    let funding = null;
+    if (fundingText) {
+      funding = document.createElement("p");
+      funding.className = "project-card-funding";
+      funding.textContent = fundingText;
+    }
+
     if (onOpen) {
       card.addEventListener("click", () => onOpen(project));
       card.addEventListener("keydown", (event) => {
@@ -250,6 +307,9 @@
     card.appendChild(media);
     card.appendChild(title);
     card.appendChild(abs);
+    if (funding) {
+      card.appendChild(funding);
+    }
     return card;
   }
 
@@ -422,16 +482,19 @@
   }
   function collectIndexRefs() {
     return {
+      rightColumn: document.getElementById("right-column"),
       routeNav: document.getElementById("route-nav"),
       projectsSectionNav: document.getElementById("projects-section-nav"),
       projectsHomeLangToggle: document.getElementById("projects-home-lang-toggle"),
       projectsOverviewLangToggle: document.getElementById("projects-overview-lang-toggle"),
+      projectsOverviewHomeBtn: document.getElementById("projects-overview-home-btn"),
       homeView: document.getElementById("projects-home-view"),
       overviewView: document.getElementById("projects-overview-view"),
       defaultStack: document.getElementById("right-default-stack"),
       overviewCard: document.getElementById("projects-overview-card"),
       detailCard: document.getElementById("project-detail-card"),
       detailTitle: document.getElementById("project-detail-title"),
+      detailLangToggle: document.getElementById("project-detail-lang-toggle"),
       detailBackButton: document.getElementById("project-detail-back-btn"),
       detailFrameWrap: document.getElementById("project-detail-frame-wrap")
     };
@@ -512,6 +575,10 @@
     const homeIsCurrent = route.view === "home";
     nav.appendChild(createRouteItem("Home", homeIsCurrent, () => navigateToRoute({ view: "home" })));
 
+    if (route.view === "home") {
+      return;
+    }
+
     addRouteSeparator(nav);
     const projectsIsCurrent = route.view === "projects";
     nav.appendChild(createRouteItem("Projects", projectsIsCurrent, () => navigateToRoute({ view: "projects" })));
@@ -523,9 +590,160 @@
     }
   }
 
-  function renderProjectDetail(project) {
+  function applyProjectContentLanguage(container, lang) {
+    if (!container) return;
+    container.classList.toggle("lang-en", lang !== "zh");
+    container.classList.toggle("lang-zh", lang === "zh");
+  }
+
+  function openIndexGraphAbsModal(imageSrc, imageAlt) {
+    const modal = document.getElementById("graph-abs-modal");
+    const modalImage = document.getElementById("graph-abs-modal-img");
+    if (!modal || !modalImage || !imageSrc) return;
+    modalImage.src = imageSrc;
+    modalImage.alt = imageAlt || "Graphical abstract";
+    modal.hidden = false;
+    document.body.classList.add("modal-open");
+  }
+
+  async function loadProjectDocumentNode(projectKey) {
+    if (indexState.projectDocCache.has(projectKey)) {
+      const cached = indexState.projectDocCache.get(projectKey);
+      return cached.cloneNode(true);
+    }
+
+    const filePath = `projects/${encodeURIComponent(projectKey)}.html`;
+    const response = await fetch(filePath, { cache: "no-store" });
+    if (!response.ok) {
+      throw new Error(`Failed to load ${filePath}`);
+    }
+
+    const text = await response.text();
+    const doc = new DOMParser().parseFromString(text, "text/html");
+    const root =
+      doc.querySelector("[data-project-doc]") ||
+      doc.querySelector("#project-doc") ||
+      doc.querySelector("main") ||
+      doc.body;
+    const node = root.cloneNode(true);
+    node.querySelectorAll("script").forEach((script) => script.remove());
+    rebaseRelativeUrls(node, filePath);
+    indexState.projectDocCache.set(projectKey, node.cloneNode(true));
+    return node;
+  }
+
+  function ensureAutoSummarySection(projectRoot, project) {
+    if (!projectRoot || !project) return;
+    const existing = projectRoot.querySelector("[data-project-slot='auto-summary']");
+    if (existing) {
+      existing.remove();
+    }
+
+    const section = document.createElement("section");
+    section.className = "project-doc-section";
+    section.setAttribute("data-project-slot", "auto-summary");
+
+    const summaryEn = document.createElement("h3");
+    summaryEn.className = "project-doc-heading proj-en";
+    summaryEn.textContent = "Project Summary";
+    section.appendChild(summaryEn);
+
+    const summaryZh = document.createElement("h3");
+    summaryZh.className = "project-doc-heading proj-zh";
+    summaryZh.textContent = "项目摘要";
+    section.appendChild(summaryZh);
+
+    const titleEn = document.createElement("p");
+    titleEn.className = "project-doc-text project-doc-emphasis proj-en";
+    titleEn.textContent = getProjectTitle(project, "en");
+    section.appendChild(titleEn);
+
+    const titleZh = document.createElement("p");
+    titleZh.className = "project-doc-text project-doc-emphasis proj-zh";
+    titleZh.textContent = getProjectTitle(project, "zh");
+    section.appendChild(titleZh);
+
+    const overrideAbsEn = readProjectOverrideText(projectRoot, "abs_en");
+    const overrideAbsZh = readProjectOverrideText(projectRoot, "abs_zh");
+
+    const absEn = document.createElement("p");
+    absEn.className = "project-doc-text proj-en";
+    absEn.textContent = overrideAbsEn || getProjectAbstract(project, "en") || "No English abstract provided yet.";
+    section.appendChild(absEn);
+
+    const absZh = document.createElement("p");
+    absZh.className = "project-doc-text proj-zh";
+    absZh.textContent = overrideAbsZh || getProjectAbstract(project, "zh") || "暂无中文摘要。";
+    section.appendChild(absZh);
+
+    const fundingEnText = formatProjectFunding(project, "en");
+    if (fundingEnText) {
+      const fundingEn = document.createElement("p");
+      fundingEn.className = "project-doc-text project-doc-funding proj-en";
+      fundingEn.textContent = fundingEnText;
+      section.appendChild(fundingEn);
+    }
+
+    const fundingZhText = formatProjectFunding(project, "zh");
+    if (fundingZhText) {
+      const fundingZh = document.createElement("p");
+      fundingZh.className = "project-doc-text project-doc-funding proj-zh";
+      fundingZh.textContent = fundingZhText;
+      section.appendChild(fundingZh);
+    }
+
+    const firstSection = projectRoot.querySelector(".project-doc-section");
+    if (firstSection) {
+      projectRoot.insertBefore(section, firstSection);
+    } else {
+      projectRoot.appendChild(section);
+    }
+  }
+
+  function readProjectOverrideText(projectRoot, key) {
+    if (!projectRoot || !key) return "";
+    const selector = `[data-project-override="${key}"]`;
+    const node = projectRoot.querySelector(selector);
+    if (!node) return "";
+
+    if (node.tagName && node.tagName.toLowerCase() === "template") {
+      return cleanText(node.content ? node.content.textContent : node.textContent);
+    }
+    return cleanText(node.textContent);
+  }
+
+  function ensureRelatedPublicationsSlot(projectRoot) {
+    if (!projectRoot) return null;
+    let slot = projectRoot.querySelector("[data-project-slot='related-publications']");
+    if (slot) return slot;
+
+    const section = document.createElement("section");
+    section.className = "project-doc-section";
+    section.setAttribute("data-project-slot", "auto-related");
+
+    const headingEn = document.createElement("h3");
+    headingEn.className = "project-doc-heading proj-en";
+    headingEn.textContent = "Related Publications";
+    section.appendChild(headingEn);
+
+    const headingZh = document.createElement("h3");
+    headingZh.className = "project-doc-heading proj-zh";
+    headingZh.textContent = "相关论文";
+    section.appendChild(headingZh);
+
+    slot = document.createElement("div");
+    slot.className = "placeholder-list";
+    slot.setAttribute("data-project-slot", "related-publications");
+    section.appendChild(slot);
+
+    projectRoot.appendChild(section);
+    return slot;
+  }
+
+  async function renderProjectDetail(project) {
     const { detailTitle, detailFrameWrap } = indexState.refs;
     if (!detailFrameWrap || !detailTitle) return;
+    const renderToken = ++indexState.detailRenderToken;
 
     detailFrameWrap.innerHTML = "";
     if (!project) {
@@ -538,12 +756,42 @@
     }
 
     detailTitle.textContent = getProjectTitle(project, indexState.lang);
-    const frame = document.createElement("iframe");
-    frame.className = "project-detail-frame";
-    frame.src = `projects/${encodeURIComponent(project.key)}.html#embedded`;
-    frame.title = `${project.key} project page`;
-    frame.loading = "lazy";
-    detailFrameWrap.appendChild(frame);
+    const loading = document.createElement("div");
+    loading.className = "placeholder-item";
+    loading.textContent = "Loading project content...";
+    detailFrameWrap.appendChild(loading);
+
+    try {
+      const docNode = await loadProjectDocumentNode(project.key);
+      if (renderToken !== indexState.detailRenderToken) return;
+
+      const shell = document.createElement("div");
+      shell.className = "project-detail-content";
+      applyProjectContentLanguage(shell, indexState.lang);
+      shell.appendChild(docNode);
+      detailFrameWrap.innerHTML = "";
+      detailFrameWrap.appendChild(shell);
+
+      const projectRoot = shell.querySelector("[data-project-doc]") || shell;
+      ensureAutoSummarySection(projectRoot, project);
+      const publicationSlot = ensureRelatedPublicationsSlot(projectRoot);
+      const relatedItems = project.related_publications
+        .map((key) => indexState.publicationsMap.get(key))
+        .filter(Boolean);
+      renderPublicationList(publicationSlot, relatedItems, {
+        authorKeywords: indexState.publicationAuthorKeywords,
+        onOpenGraphAbs: null,
+        showGraphAbs: false
+      });
+    } catch (error) {
+      if (renderToken !== indexState.detailRenderToken) return;
+      detailFrameWrap.innerHTML = "";
+      const failed = document.createElement("div");
+      failed.className = "placeholder-item";
+      failed.textContent = `Failed to load projects/${project.key}.html`;
+      detailFrameWrap.appendChild(failed);
+      console.error(error);
+    }
   }
 
   function applyRoute(route) {
@@ -556,9 +804,22 @@
       nextRoute = { view: "projects" };
     }
 
-    refs.defaultStack.hidden = nextRoute.view !== "home";
-    refs.overviewCard.hidden = nextRoute.view !== "projects";
-    refs.detailCard.hidden = nextRoute.view !== "project";
+    const isHome = nextRoute.view === "home";
+    const isProjects = nextRoute.view === "projects";
+    const isProjectDetail = nextRoute.view === "project";
+
+    refs.defaultStack.hidden = !isHome;
+    refs.defaultStack.style.display = isHome ? "" : "none";
+    refs.overviewCard.hidden = !isProjects;
+    refs.overviewCard.style.display = isProjects ? "" : "none";
+    refs.detailCard.hidden = !isProjectDetail;
+    refs.detailCard.style.display = isProjectDetail ? "" : "none";
+
+    if (refs.rightColumn) {
+      refs.rightColumn.classList.toggle("route-home", isHome);
+      refs.rightColumn.classList.toggle("route-projects", isProjects);
+      refs.rightColumn.classList.toggle("route-project", isProjectDetail);
+    }
     indexState.currentRoute = nextRoute;
 
     if (nextRoute.view === "project") {
@@ -571,17 +832,17 @@
   function navigateToRoute(route, options) {
     const replaceState = options && options.replaceState;
     const hash = buildHash(route);
+
+    applyRoute(route);
+
     if (replaceState) {
       replaceHash(route);
-      applyRoute(route);
       return;
     }
 
     if (window.location.hash !== hash) {
       window.location.hash = hash;
-      return;
     }
-    applyRoute(route);
   }
 
   function rerenderIndexProjectViews() {
@@ -627,10 +888,19 @@
     const settings = options && options.settings ? options.settings : {};
     applyProjectSettings(settings);
 
-    const catalog = await loadProjectsCatalog("");
+    const [catalog, publicationCatalog] = await Promise.all([
+      loadProjectsCatalog(""),
+      loadPublicationsCatalog("")
+    ]);
     const projects = normalizeProjectsCatalog(catalog, "");
     indexState.projects = projects;
     indexState.projectMap = new Map(projects.map((project) => [project.key, project]));
+    const publicationItems = normalizePublicationsCatalog(publicationCatalog || {}, "");
+    indexState.publicationsMap = new Map(publicationItems.map((pub) => [pub.ref_key, pub]));
+    indexState.publicationAuthorKeywords =
+      settings && settings.publications && Array.isArray(settings.publications.author_highlight_keywords)
+        ? settings.publications.author_highlight_keywords.map((name) => cleanText(name)).filter(Boolean)
+        : ["Fanding Xu", "徐凡丁"];
     indexState.refs = refs;
 
     function setLang(nextLang) {
@@ -638,11 +908,15 @@
       indexState.lang = nextLang;
       createLanguageToggle(refs.projectsHomeLangToggle, indexState.lang, setLang);
       createLanguageToggle(refs.projectsOverviewLangToggle, indexState.lang, setLang);
+      createLanguageToggle(refs.detailLangToggle, indexState.lang, setLang);
+      const detailContent = refs.detailFrameWrap && refs.detailFrameWrap.querySelector(".project-detail-content");
+      applyProjectContentLanguage(detailContent, indexState.lang);
       rerenderIndexProjectViews();
     }
 
     createLanguageToggle(refs.projectsHomeLangToggle, indexState.lang, setLang);
     createLanguageToggle(refs.projectsOverviewLangToggle, indexState.lang, setLang);
+    createLanguageToggle(refs.detailLangToggle, indexState.lang, setLang);
 
     if (!indexState.initialized) {
       if (refs.projectsSectionNav) {
@@ -653,6 +927,11 @@
       if (refs.detailBackButton) {
         refs.detailBackButton.addEventListener("click", () => {
           navigateToRoute({ view: "projects" });
+        });
+      }
+      if (refs.projectsOverviewHomeBtn) {
+        refs.projectsOverviewHomeBtn.addEventListener("click", () => {
+          navigateToRoute({ view: "home" });
         });
       }
 
@@ -669,7 +948,11 @@
     }
 
     rerenderIndexProjectViews();
-    applyRoute(parseHashRoute(window.location.hash));
+    const initialRoute = parseHashRoute(window.location.hash);
+    applyRoute(initialRoute);
+    if (!window.location.hash) {
+      replaceHash(initialRoute);
+    }
     indexState.initialized = true;
   }
   function normalizeAuthorKeyword(value) {
@@ -735,6 +1018,7 @@
 
     const keywords = Array.isArray(options.authorKeywords) ? options.authorKeywords : [];
     const onOpenGraphAbs = typeof options.onOpenGraphAbs === "function" ? options.onOpenGraphAbs : null;
+    const showGraphAbs = options.showGraphAbs !== false;
 
     publications.forEach((pub) => {
       const item = document.createElement("article");
@@ -786,7 +1070,7 @@
         item.appendChild(venue);
       }
 
-      if (pub.graph_abs) {
+      if (showGraphAbs && pub.graph_abs) {
         const graphWrap = document.createElement("button");
         graphWrap.type = "button";
         graphWrap.className = "publication-graph-abs";
@@ -832,6 +1116,66 @@
       nav.appendChild(createRouteItem(entry.label, Boolean(entry.current), entry.onClick));
     });
   }
+
+  async function initProjectDocOnlyPage() {
+    const projectDoc = document.querySelector("[data-project-doc]");
+    if (!projectDoc) return;
+    if (document.getElementById("main-content")) return;
+    if (document.getElementById("projects-standalone-root")) return;
+    if (document.getElementById("project-standalone-root")) return;
+
+    const basePrefix = getBasePrefix();
+    const [settings, projectCatalog, publicationCatalog] = await Promise.all([
+      loadSettings(basePrefix),
+      loadProjectsCatalog(basePrefix),
+      loadPublicationsCatalog(basePrefix)
+    ]);
+
+    const projects = normalizeProjectsCatalog(projectCatalog, basePrefix);
+    const projectMap = new Map(projects.map((project) => [project.key, project]));
+    const publicationItems = normalizePublicationsCatalog(publicationCatalog || {}, basePrefix);
+    const publicationMap = new Map(publicationItems.map((pub) => [pub.ref_key, pub]));
+    const authorKeywords =
+      settings && settings.publications && Array.isArray(settings.publications.author_highlight_keywords)
+        ? settings.publications.author_highlight_keywords.map((name) => cleanText(name)).filter(Boolean)
+        : ["Fanding Xu", "徐凡丁"];
+
+    const keyFromDoc = cleanText(projectDoc.getAttribute("data-project-key"));
+    const keyFromBody = cleanText(document.body && document.body.getAttribute("data-project-key"));
+    const keyFromPath = cleanText((window.location.pathname.split("/").pop() || "").replace(/\.html$/i, ""));
+    const projectKey = keyFromDoc || keyFromBody || keyFromPath;
+    const project = projectMap.get(projectKey);
+    if (!project) return;
+
+    document.title = `${getProjectTitle(project, "en")} | Project`;
+    ensureAutoSummarySection(projectDoc, project);
+    const publicationSlot = ensureRelatedPublicationsSlot(projectDoc);
+    const relatedItems = project.related_publications
+      .map((key) => publicationMap.get(key))
+      .filter(Boolean);
+    renderPublicationList(publicationSlot, relatedItems, {
+      authorKeywords,
+      onOpenGraphAbs: null,
+      showGraphAbs: false
+    });
+
+    let currentLang = "zh";
+    document.body.classList.add("project-doc-page");
+    document.body.classList.add("lang-zh");
+
+    const toggleHost = document.querySelector("[data-project-slot='lang-toggle']");
+    if (toggleHost) {
+      function setLang(nextLang) {
+        if (nextLang === currentLang) return;
+        currentLang = nextLang;
+        document.body.classList.toggle("lang-en", currentLang !== "zh");
+        document.body.classList.toggle("lang-zh", currentLang === "zh");
+        createLanguageToggle(toggleHost, currentLang, setLang);
+      }
+      createLanguageToggle(toggleHost, currentLang, setLang);
+    }
+  }
+
   async function initStandaloneProjectsPage() {
     const root = document.getElementById("projects-standalone-root");
     if (!root) return;
@@ -840,7 +1184,7 @@
     applyProjectSettings(settings);
     const projects = normalizeProjectsCatalog(catalog, "");
 
-    const langState = { lang: "en", intervals: [] };
+    const langState = { lang: "zh", intervals: [] };
     const langToggle = document.getElementById("projects-standalone-lang-toggle");
     const view = document.getElementById("projects-standalone-overview-view");
     const nav = document.getElementById("projects-standalone-route-nav");
@@ -1033,12 +1377,18 @@
         .filter(Boolean);
       renderPublicationList(publicationsWrap, related, {
         authorKeywords,
-        onOpenGraphAbs: openGraphAbsModal
+        onOpenGraphAbs: null,
+        showGraphAbs: false
       });
     }
   }
 
   function bootstrapStandalonePages() {
+    const docOnlyRoot = document.querySelector("[data-project-doc]");
+    if (docOnlyRoot) {
+      initProjectDocOnlyPage().catch((error) => console.error(error));
+    }
+
     const standaloneProjectsRoot = document.getElementById("projects-standalone-root");
     if (standaloneProjectsRoot) {
       initStandaloneProjectsPage().catch((error) => console.error(error));

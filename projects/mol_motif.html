@@ -1,71 +1,62 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>mol_motif | Project</title>
-    <link rel="preconnect" href="https://fonts.googleapis.com" />
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-    <link
-      href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@400;600&family=JetBrains+Mono:wght@400;600&family=Space+Grotesk:wght@400;500;600&display=swap"
-      rel="stylesheet"
-    />
-    <link
-      rel="stylesheet"
-      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css"
-      integrity="sha512-DTOQO9RWCH3ppGqcWaEA1BIZOC6xxalwEsw9c2QQeAIftl+Vegovlnee1c9QX4TctnWMn13TZye+giMm8e2LwA=="
-      crossorigin="anonymous"
-      referrerpolicy="no-referrer"
-    />
+    <title>mol_motif</title>
     <link rel="stylesheet" href="../css/main.css" />
     <link rel="stylesheet" href="../css/index.css" />
     <link rel="stylesheet" href="../css/projects.css" />
   </head>
-  <body>
-    <main id="project-standalone-root" class="project-standalone-main" data-project-key="mol_motif">
-      <header class="site-header">
-        <div class="site-brand">Project Detail</div>
-        <nav class="route-nav glass" id="project-standalone-route-nav" aria-label="Route navigation"></nav>
-      </header>
+  <body class="project-doc-page lang-zh" data-project-key="mol_motif">
+    <article id="project-doc" data-project-doc data-project-key="mol_motif" class="project-doc">
+      <template data-project-override="abs_en">
+        This project aims to bridge the gap between atomic-scale structural recognition and network-scale systems interpretation in drug discovery. To address two major challenges—(i) the lack of verifiable chemical substructure extraction in molecular graph neural networks and (ii) the fragmented and heterogeneous nature of multimodal biomedical data—we advance both methodology and data resources. On the methodological side, we propose MolUNet++, which enables hierarchical substructure identification via molecular edge-contraction pooling and performs multi-scale feature fusion and interactive structural selection through a nested U-Net architecture, thereby automatically learning task-relevant key chemical fragments. Coupled with a substructure-masking strategy, MolUNet++ provides quantitative attribution of fragment contributions, improving molecular property and interaction prediction while enhancing chemical interpretability. On the data side, we construct UniBioMap, a unified biomedical knowledge graph that integrates more than 30 public databases and yields over 20 million standardized relations through entity normalization and ontology alignment. We further calibrate relation reliability using a confidence-learning framework and train a graph completion model on a high-quality subset to expand the graph with more than 30 million high-confidence predicted relations, achieving a better balance between coverage and reliability and offering an interactive query service. Together, MolUNet++ and UniBioMap provide the methodological and data foundation for synergistic modeling of structural evidence and systems-level knowledge.
+      </template>
+      <template data-project-override="abs_zh">
+        本项目旨在弥合药物发现中原子尺度结构识别与网络尺度系统解释之间的鸿沟。针对分子图神经网络缺乏可验证化学片段抽取、以及多源生物医学数据分散异构的两大挑战，研究工作从方法与数据资源两方面推进。方法上，项目组提出了 MolUNet++。该方法通过分子边收缩池化实现层级子结构识别，并利用嵌套式UNet进行多尺度特征融合与交互式结构选择，以自动学习任务相关的关键化学片段。结合子结构遮蔽策略，实现了对片段贡献的定量归因，在提升分子性质与互作预测性能的同时，增强了模型的化学可解释性。数据上，构建了统一生物医学知识图谱 UniBioMap。该资源整合了30余个公共数据库，通过规范化与本体对齐，形成超2000万条标准化关系。进一步采用置信学习框架对关系进行可靠性校准，并基于高质量子集训练图补全模型，扩展生成超3000万条高置信预测关系，在覆盖度与可靠性间取得了更好平衡，并提供了可交互检索服务。MolUNet++ 与 UniBioMap 为结构证据与系统知识的协同建模提供了方法学与数据基础。项目已发表高水平论文1篇，另有2篇在审，并建成2个开放数据库服务平台。
+      </template>
+      <div data-project-slot="lang-toggle"></div>
+      <!-- <figure class="project-doc-banner">
+        <img src="../imgs/projects/mol_motif/1.svg" alt="mol_motif cover" />
+      </figure> -->
 
-      <section class="card glass project-single-card">
-        <div class="section-title section-title--projects">
-          <span id="project-single-title">Project</span>
-          <button type="button" class="project-back-btn" id="project-single-back-btn">Back</button>
-        </div>
-
-        <div class="project-single-copy">
-          <p id="project-single-abs-en" class="project-single-abs"></p>
-          <p id="project-single-abs-zh" class="project-single-abs"></p>
-        </div>
-
-        <div id="project-single-gallery" class="project-single-gallery"></div>
-
-        <section class="project-related-section">
-          <div class="section-title section-title--projects section-title--compact">
-            <span>Related Publications</span>
-          </div>
-          <div id="project-single-publications" class="placeholder-list">
-            <div class="placeholder-item">No related publications linked yet.</div>
-          </div>
-        </section>
+      <section class="project-doc-section">
+        <h3 class="project-doc-heading proj-en">Background</h3>
+        <h3 class="project-doc-heading proj-zh">背景</h3>
+        <p class="project-doc-text proj-en">
+          Mol Motif focuses on finding repeated and activity-related substructures in molecular datasets. It provides a
+          compact workflow from motif extraction to downstream interpretation.
+        </p>
+        <p class="project-doc-text proj-zh">
+          Mol Motif focuses on key reusable substructures in molecular datasets and builds a compact workflow from motif
+          extraction to interpretation.
+        </p>
       </section>
-    </main>
 
-    <div id="project-graph-abs-modal" class="graph-abs-modal" hidden>
-      <div class="graph-abs-modal-panel glass" role="dialog" aria-modal="true" aria-label="Graphical abstract">
-        <button
-          id="project-graph-abs-modal-close"
-          class="graph-abs-modal-close"
-          type="button"
-          aria-label="Close graphical abstract"
-        >
-          <i class="fa-solid fa-xmark"></i>
-        </button>
-        <img id="project-graph-abs-modal-img" src="" alt="Graphical abstract" />
-      </div>
-    </div>
+      <section class="project-doc-section">
+        <h3 class="project-doc-heading proj-en">Method and Workflow (EN)</h3>
+        <h3 class="project-doc-heading proj-zh">Method and Workflow (ZH)</h3>
+        <ul class="project-doc-list proj-en">
+          <li>Extract graph motifs from atom-bond neighborhoods.</li>
+          <li>Cluster motifs with structural similarity constraints.</li>
+          <li>Map motifs back to molecules for model interpretation.</li>
+        </ul>
+        <ul class="project-doc-list proj-zh">
+          <li>Extract motif candidates from local molecular neighborhoods.</li>
+          <li>Group motifs by structural similarity constraints.</li>
+          <li>Map motifs back to molecules for interpretation.</li>
+        </ul>
+      </section>
 
+      <section class="project-doc-section">
+        <h3 class="project-doc-heading proj-en">Figures and Notes (EN)</h3>
+        <h3 class="project-doc-heading proj-zh">Figures and Notes (ZH)</h3>
+        <figure class="project-doc-banner">
+          <img src="../imgs/projects/mol_motif/2.svg" alt="mol_motif example" />
+        </figure>
+      </section>
+    </article>
     <script src="../js/projects.js" defer></script>
   </body>
 </html>

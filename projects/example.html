@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>project_example</title>
+    <link rel="stylesheet" href="../css/main.css" />
+    <link rel="stylesheet" href="../css/index.css" />
+    <link rel="stylesheet" href="../css/projects.css" />
+  </head>
+  <body class="project-doc-page lang-zh" data-project-key="example">
+    <article id="project-doc" data-project-doc data-project-key="example" class="project-doc">
+      <template data-project-override="abs_en">
+        Optional EN abstract override from this HTML. If empty, fallback to config/projects.json.
+      </template>
+      <template data-project-override="abs_zh">
+        Optional ZH abstract override from this HTML. If empty, fallback to config/projects.json.
+      </template>
+      <div data-project-slot="lang-toggle"></div>
+      <figure class="project-doc-banner">
+        <img src="../imgs/projects/mol_motif/1.svg" alt="project cover" />
+      </figure>
+
+      <section class="project-doc-section">
+        <h3 class="project-doc-heading proj-en">Background (EN)</h3>
+        <h3 class="project-doc-heading proj-zh">Background (ZH)</h3>
+        <p class="project-doc-text proj-en">
+          Write your project background here. Keep this section short and readable.
+        </p>
+        <p class="project-doc-text proj-zh">
+          Write your project background in Chinese here.
+        </p>
+      </section>
+
+      <section class="project-doc-section">
+        <h3 class="project-doc-heading proj-en">Method and Workflow (EN)</h3>
+        <h3 class="project-doc-heading proj-zh">Method and Workflow (ZH)</h3>
+        <ul class="project-doc-list proj-en">
+          <li>Step A in English.</li>
+          <li>Step B in English.</li>
+          <li>Step C in English.</li>
+        </ul>
+        <ul class="project-doc-list proj-zh">
+          <li>Step A in Chinese.</li>
+          <li>Step B in Chinese.</li>
+          <li>Step C in Chinese.</li>
+        </ul>
+      </section>
+
+      <section class="project-doc-section">
+        <h3 class="project-doc-heading proj-en">Figures and Notes (EN)</h3>
+        <h3 class="project-doc-heading proj-zh">Figures and Notes (ZH)</h3>
+        <figure class="project-doc-banner">
+          <img src="../imgs/projects/mol_motif/2.svg" alt="project figure" />
+        </figure>
+      </section>
+    </article>
+    <script src="../js/projects.js" defer></script>
+  </body>
+</html>

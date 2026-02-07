@@ -186,6 +186,51 @@ body.modal-open {
   color: var(--text-muted);
 }
 
+.profile-extra-row {
+  margin-top: 14px;
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+}
+
+.profile-extra {
+  display: grid;
+  gap: 8px;
+  align-content: start;
+}
+
+.profile-extra-title {
+  font-size: 12px;
+  color: var(--text-muted);
+  letter-spacing: 0.2px;
+  font-weight: 600;
+}
+
+.profile-extra-list {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  display: grid;
+  gap: 6px;
+}
+
+.profile-extra-list li {
+  font-size: 13px;
+  line-height: 1.45;
+  color: var(--text-primary);
+  word-break: break-word;
+}
+
+.profile-extra-list a {
+  color: var(--accent);
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+
+.profile-extra-placeholder {
+  color: var(--text-muted);
+}
+
 .career-list {
   display: grid;
   gap: 14px;
@@ -465,6 +510,10 @@ a.publication-title:hover {
     flex-direction: column;
     align-items: flex-start;
     gap: 14px;
+  }
+
+  .profile-extra-row {
+    grid-template-columns: 1fr;
   }
 
   .career-item {
