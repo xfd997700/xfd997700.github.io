@@ -44,10 +44,21 @@ body.modal-open {
   gap: 10px;
 }
 
+.terminal-input-wrap {
+  display: inline-flex;
+  align-items: center;
+  gap: 0;
+}
+
 .terminal-input {
-  min-width: 60px;
+  min-width: 1ch;
   display: inline-block;
+  white-space: pre;
   color: #7ef5ff;
+}
+
+.terminal-cursor {
+  margin-left: 0;
 }
 
 .blink {
