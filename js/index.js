@@ -142,10 +142,27 @@ function renderCareer(career) {
   const list = document.getElementById("career-list");
   list.innerHTML = "";
 
-  const entries = Object.entries(career || {});
+  const entries = Array.isArray(career)
+    ? career
+        .filter((item) => item && typeof item === "object")
+      .map((item) => ({
+        year: item.year || "",
+        organization: item.organization || "",
+        role: item.role || "",
+        org_logo: item.org_logo || "",
+        link: item.link || ""
+      }))
+    : Object.entries(career || {}).map(([year, detail]) => ({
+        year,
+        organization: (detail && detail.organization) || "",
+        role: (detail && detail.role) || "",
+        org_logo: (detail && detail.org_logo) || "",
+        link: (detail && detail.link) || ""
+      }));
+
   entries.sort((a, b) => {
-    const ay = parseInt((a[0] || "").split("-")[0], 10) || 0;
-    const by = parseInt((b[0] || "").split("-")[0], 10) || 0;
+    const ay = parseInt((a.year || "").split("-")[0], 10) || 0;
+    const by = parseInt((b.year || "").split("-")[0], 10) || 0;
     return by - ay;
   });
 
@@ -157,23 +174,38 @@ function renderCareer(career) {
     return;
   }
 
-  entries.forEach(([year, detail]) => {
+  entries.forEach((detail) => {
     const item = document.createElement("div");
     item.className = "career-item";
 
     const yearEl = document.createElement("div");
     yearEl.className = "career-year";
-    yearEl.textContent = year;
+    yearEl.textContent = detail.year;
 
     const detailEl = document.createElement("div");
-    const org = detail.organization || "";
-    const role = detail.role || "";
+    detailEl.className = "career-detail";
+
+    const orgEl = document.createElement("div");
+    orgEl.className = "career-org";
+
+    if (detail.org_logo) {
+      const logoEl = document.createElement("img");
+      logoEl.className = "career-org-logo";
+      logoEl.src = detail.org_logo;
+      logoEl.alt = `${detail.organization || "Organization"} logo`;
+      logoEl.loading = "lazy";
+      logoEl.decoding = "async";
+      orgEl.appendChild(logoEl);
+    }
+
     const roleEl = document.createElement("div");
-    roleEl.textContent = org;
+    roleEl.textContent = detail.organization || "";
+    orgEl.appendChild(roleEl);
+
     const subEl = document.createElement("div");
     subEl.className = "career-role";
-    subEl.textContent = role;
-    detailEl.appendChild(roleEl);
+    subEl.textContent = detail.role || "";
+    detailEl.appendChild(orgEl);
     detailEl.appendChild(subEl);
 
     item.appendChild(yearEl);

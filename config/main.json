@@ -3,50 +3,68 @@
   "background_img_local": "",
   "personal_info": {
     "name": "Fanding Xu",
-    "nickname": "Fanding XU",
-    "signature": "Researcher | Systems & AI | Crafting robust, elegant solutions",
-    "avatar": "assets/avatar.svg",
+    "nickname": "Fanding XU (徐凡丁)",
+    "signature": "Researcher | AI4S",
+    "avatar": "assets/avatar.png",
     "links": {
       "github": {
         "label": "GitHub",
-        "url": "https://github.com/your-username"
+        "url": "https://github.com/xfd997700"
       },
       "bilibili": {
         "label": "Bilibili",
-        "url": "https://space.bilibili.com/your-id"
+        "url": "https://space.bilibili.com/605829"
       },
       "google_scholar": {
         "label": "Google Scholar",
-        "url": "https://scholar.google.com/citations?user=your-id"
+        "url": "https://scholar.google.com/citations?user=IWlerhMAAAAJ"
       },
       "csdn": {
         "label": "CSDN",
-        "url": "https://blog.csdn.net/your-id"
+        "url": "https://blog.csdn.net/weixin_44606110"
       },
       "orcid": {
         "label": "ORCID",
-        "url": "https://orcid.org/0000-0000-0000-0000"
+        "url": "https://orcid.org/0000-0001-7220-8693"
       }
     },
     "tags": [
-      "Ph.D Candidate",
+      "Systems Biology",
       "Machine Learning",
-      "Distributed Systems",
-      "Open Source"
+      "Drug Discovery",
+      "Databases"
     ]
   },
-  "career": {
-    "2024-2026": {
+  "career": [
+    {
+      "year": "2024-2026",
       "organization": "National University of Singapore",
       "role": "Visiting Ph.D",
-      "link": "https://www.nus.edu.sg/"
+      "org_logo": "https://nus.edu.sg/images/default-source/base/logo.png",
+      "link": "https://zhanggroup.org/"
     },
-    "2022-2024": {
-      "organization": "Your Lab / University",
-      "role": "Research Assistant",
+    {
+      "year": "2021-Now",
+      "organization": "Xi'an Jiaotong University",
+      "role": "Ph.D Student",
+      "org_logo": "https://isso.xjtu.edu.cn/static/images/logo_pic99_blue.png",
+      "link": "https://gr.xjtu.edu.cn/en/web/jglong"
+    },
+    {
+      "year": "2019-2021",
+      "organization": "Xi'an Jiaotong University",
+      "role": "Master's student",
+      "org_logo": "https://isso.xjtu.edu.cn/static/images/logo_pic99_blue.png",
+      "link": ""
+    },
+    {
+      "year": "2015-2019",
+      "organization": "Taiyuan University of Technology",
+      "role": "Bachelor's student",
+      "org_logo": "https://www.tyut.edu.cn/images/logo.png",
       "link": ""
     }
-  },
+  ],
   "publications": [],
   "projects": []
 }
