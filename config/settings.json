@@ -8,6 +8,10 @@
   },
   "publications": {
     "resolve_doi_enabled": false,
+    "author_highlight_keywords": [
+      "Fanding Xu",
+      "\u5f90\u51e1\u4e01"
+    ],
     "doi_timeout_ms": 114000,
     "doi_request_interval_ms": 300,
     "doi_stop_after_failures": 5,

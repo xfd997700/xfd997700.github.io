@@ -15,7 +15,8 @@ const state = {
 
 const publicationState = {
   items: [],
-  sortMode: "default"
+  sortMode: "default",
+  authorHighlightKeywords: ["Fanding Xu", "徐凡丁"]
 };
 
 const siteBrandTypingState = {
@@ -225,6 +226,12 @@ function applySettings(settings) {
     const height = Math.max(120, normalizeNonNegativeNumber(publications.graph_abs_height_px, 240));
     rootStyle.setProperty("--pub-graph-abs-height", `${height}px`);
   }
+
+  if (Array.isArray(publications.author_highlight_keywords)) {
+    publicationState.authorHighlightKeywords = publications.author_highlight_keywords
+      .map((name) => cleanText(name))
+      .filter(Boolean);
+  }
 }
 
 function applyBackground(config) {
@@ -401,6 +408,57 @@ function normalizeDoi(doi) {
     .replace(/^https?:\/\/(dx\.)?doi\.org\//i, "")
     .replace(/^doi:\s*/i, "")
     .trim();
+}
+
+function normalizeAuthorKeyword(value) {
+  return cleanText(value)
+    .toLowerCase()
+    .replace(/[.*†‡]/g, "")
+    .replace(/\s+/g, "");
+}
+
+function shouldHighlightAuthor(authorName, keywords) {
+  const normalizedAuthor = normalizeAuthorKeyword(authorName);
+  if (!normalizedAuthor) return false;
+
+  return keywords.some((keyword) => {
+    const normalizedKeyword = normalizeAuthorKeyword(keyword);
+    if (!normalizedKeyword) return false;
+    return normalizedAuthor === normalizedKeyword || normalizedAuthor.includes(normalizedKeyword);
+  });
+}
+
+function buildAuthorsFragment(authorsText, keywords) {
+  const text = cleanText(authorsText);
+  const fragment = document.createDocumentFragment();
+  if (!text) return fragment;
+
+  const parts = text
+    .split(/[;,，]/)
+    .map((part) => cleanText(part))
+    .filter(Boolean);
+
+  if (!parts.length) {
+    fragment.appendChild(document.createTextNode(text));
+    return fragment;
+  }
+
+  parts.forEach((part, index) => {
+    if (shouldHighlightAuthor(part, keywords)) {
+      const strong = document.createElement("strong");
+      strong.className = "publication-author-highlight";
+      strong.textContent = part;
+      fragment.appendChild(strong);
+    } else {
+      fragment.appendChild(document.createTextNode(part));
+    }
+
+    if (index < parts.length - 1) {
+      fragment.appendChild(document.createTextNode(", "));
+    }
+  });
+
+  return fragment;
 }
 
 function buildDoiUrl(doi) {
@@ -743,7 +801,7 @@ function renderPublications(items) {
     if (pub.authors) {
       const authors = document.createElement("div");
       authors.className = "publication-authors";
-      authors.textContent = pub.authors;
+      authors.appendChild(buildAuthorsFragment(pub.authors, publicationState.authorHighlightKeywords));
       item.appendChild(authors);
     }
 

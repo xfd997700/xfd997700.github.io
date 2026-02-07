@@ -287,6 +287,10 @@ a.publication-title:hover {
   opacity: 0.9;
 }
 
+.publication-author-highlight {
+  font-weight: 700;
+}
+
 .publication-venue {
   color: var(--text-muted);
   font-size: 13px;
