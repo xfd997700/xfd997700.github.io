@@ -201,6 +201,7 @@ function applySettings(settings) {
   const rootStyle = document.documentElement.style;
   const background = settings && settings.background ? settings.background : {};
   const glass = settings && settings.glass ? settings.glass : {};
+  const career = settings && settings.career ? settings.career : {};
   const publications = settings && settings.publications ? settings.publications : {};
 
   if (background.blur_px !== undefined) {
@@ -215,6 +216,16 @@ function applySettings(settings) {
   if (glass.blur_px !== undefined) {
     const blurPx = normalizeNonNegativeNumber(glass.blur_px, 18);
     rootStyle.setProperty("--glass-blur", `${blurPx}px`);
+  }
+
+  if (career.logo_height_px !== undefined) {
+    const height = Math.max(12, normalizeNonNegativeNumber(career.logo_height_px, 22));
+    rootStyle.setProperty("--career-logo-height", `${height}px`);
+  }
+
+  if (career.logo_max_width_px !== undefined) {
+    const width = Math.max(20, normalizeNonNegativeNumber(career.logo_max_width_px, 88));
+    rootStyle.setProperty("--career-logo-max-width", `${width}px`);
   }
 
   if (publications.graph_abs_width_px !== undefined) {
@@ -313,6 +324,8 @@ function renderCareer(career) {
       .map((item) => ({
         year: item.year || "",
         organization: item.organization || "",
+        department: item.department || "",
+        city: item.city || "",
         role: item.role || "",
         org_logo: item.org_logo || "",
         link: item.link || ""
@@ -320,6 +333,8 @@ function renderCareer(career) {
     : Object.entries(career || {}).map(([year, detail]) => ({
         year,
         organization: (detail && detail.organization) || "",
+        department: (detail && detail.department) || "",
+        city: (detail && detail.city) || "",
         role: (detail && detail.role) || "",
         org_logo: (detail && detail.org_logo) || "",
         link: (detail && detail.link) || ""
@@ -363,15 +378,25 @@ function renderCareer(career) {
       orgEl.appendChild(logoEl);
     }
 
-    const roleEl = document.createElement("div");
-    roleEl.textContent = detail.organization || "";
-    orgEl.appendChild(roleEl);
+    const orgNameEl = document.createElement("div");
+    orgNameEl.className = "career-org-name";
+    orgNameEl.textContent = detail.organization || "";
+    orgEl.appendChild(orgNameEl);
 
     const subEl = document.createElement("div");
     subEl.className = "career-role";
     subEl.textContent = detail.role || "";
+
+    const metaParts = [detail.department, detail.city].filter((part) => cleanText(part));
+    const metaEl = document.createElement("div");
+    metaEl.className = "career-meta";
+    metaEl.textContent = metaParts.join(" | ");
+
     detailEl.appendChild(orgEl);
     detailEl.appendChild(subEl);
+    if (metaParts.length) {
+      detailEl.appendChild(metaEl);
+    }
 
     item.appendChild(yearEl);
     item.appendChild(detailEl);

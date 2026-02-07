@@ -21,6 +21,8 @@
 }
 
 :root {
+  --career-logo-height: 22px;
+  --career-logo-max-width: 88px;
   --pub-graph-abs-width: 520px;
   --pub-graph-abs-height: 240px;
 }
@@ -193,12 +195,13 @@ body.modal-open {
   display: grid;
   grid-template-columns: auto 1fr auto;
   gap: 12px;
-  align-items: center;
+  align-items: start;
 }
 
 .career-year {
   font-weight: 600;
   color: var(--accent);
+  padding-top: 2px;
 }
 
 .career-role {
@@ -208,29 +211,40 @@ body.modal-open {
 
 .career-detail {
   display: grid;
-  gap: 4px;
+  gap: 5px;
 }
 
 .career-org {
   display: flex;
-  align-items: center;
+  align-items: flex-start;
   gap: 8px;
   min-width: 0;
 }
 
 .career-org-logo {
-  height: 22px;
+  height: var(--career-logo-height);
   width: auto;
-  max-width: 88px;
+  max-width: var(--career-logo-max-width);
   object-fit: contain;
   object-position: left center;
   display: block;
   flex: 0 0 auto;
 }
 
+.career-org-name {
+  line-height: 1.35;
+}
+
 .career-link {
   font-size: 14px;
   color: var(--accent);
+  padding-top: 3px;
+}
+
+.career-meta {
+  color: var(--text-muted);
+  font-size: 12px;
+  line-height: 1.4;
 }
 
 .publication-item {

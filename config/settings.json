@@ -6,6 +6,10 @@
   "glass": {
     "blur_px": 18
   },
+  "career": {
+    "logo_height_px": 22,
+    "logo_max_width_px": 88
+  },
   "publications": {
     "resolve_doi_enabled": false,
     "author_highlight_keywords": [

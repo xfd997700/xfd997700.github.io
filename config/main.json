@@ -40,6 +40,8 @@
     {
       "year": "2024-2026",
       "organization": "National University of Singapore",
+      "department": "School of Computing",
+      "city": "Singapore",
       "role": "Visiting Ph.D",
       "org_logo": "https://www.comp.nus.edu.sg/wp-content/uploads/2023/09/nus-computing-logo-1.png",
       "link": "https://zhanggroup.org/"
@@ -47,6 +49,8 @@
     {
       "year": "2021-2026",
       "organization": "Xi'an Jiaotong University",
+      "department": "School of Life Science and Technology",
+      "city": "Xi'an, China",
       "role": "Ph.D Student",
       "org_logo": "https://www.xjtu.edu.cn/img/logo_pic99.png",
       "link": "https://gr.xjtu.edu.cn/en/web/jglong"
@@ -54,13 +58,17 @@
     {
       "year": "2019-2021",
       "organization": "Xi'an Jiaotong University",
+      "department": "School of Life Science and Technology",
+      "city": "Xi'an, China",
       "role": "Master's student",
       "org_logo": "https://www.xjtu.edu.cn/img/logo_pic99.png",
-      "link": ""
+      "link": "https://gr.xjtu.edu.cn/en/web/junbo.duan"
     },
     {
       "year": "2015-2019",
       "organization": "Taiyuan University of Technology",
+      "department": "School of Biomedical Engineering",
+      "city": "Taiyuan, China",
       "role": "Bachelor's student",
       "org_logo": "https://www.tyut.edu.cn/images/logo.png",
       "link": ""
