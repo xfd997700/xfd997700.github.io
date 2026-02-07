@@ -186,24 +186,24 @@
 }
 
 .publication-item {
-  padding: 14px 16px;
-  border-radius: 12px;
   border: 1px solid rgba(255, 255, 255, 0.2);
   background: rgba(255, 255, 255, 0.06);
+  border-radius: 14px;
+  padding: 16px;
   display: grid;
-  gap: 8px;
+  gap: 10px;
 }
 
-.publication-header {
+.publication-head {
   display: flex;
-  align-items: flex-start;
-  justify-content: space-between;
   gap: 12px;
+  justify-content: space-between;
+  align-items: flex-start;
 }
 
 .publication-title {
   font-size: 16px;
-  line-height: 1.4;
+  line-height: 1.45;
   font-weight: 600;
   color: var(--text-primary);
 }
@@ -212,33 +212,65 @@ a.publication-title:hover {
   color: var(--accent);
 }
 
-.publication-detail {
+.publication-year {
+  flex: 0 0 auto;
+  border-radius: 999px;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  background: rgba(255, 255, 255, 0.08);
+  color: var(--text-muted);
+  font-size: 12px;
+  padding: 4px 10px;
+}
+
+.publication-authors {
+  color: var(--text-primary);
+  font-size: 13px;
+  line-height: 1.5;
+  opacity: 0.9;
+}
+
+.publication-venue {
   color: var(--text-muted);
   font-size: 13px;
   line-height: 1.5;
 }
 
-.publication-meta {
+.publication-doi {
   display: flex;
-  align-items: center;
+  flex-wrap: wrap;
   gap: 8px;
-  flex: 0 0 auto;
+  align-items: center;
+  font-size: 12px;
 }
 
-.publication-badge {
-  font-size: 11px;
-  line-height: 1;
-  padding: 6px 8px;
+.publication-doi-label {
   border-radius: 999px;
-  border: 1px solid rgba(255, 255, 255, 0.18);
-  color: var(--text-muted);
-  background: rgba(255, 255, 255, 0.08);
-  white-space: nowrap;
+  background: rgba(110, 231, 255, 0.12);
+  color: var(--accent);
+  padding: 3px 8px;
+  font-weight: 600;
+  letter-spacing: 0.4px;
 }
 
-.publication-open {
-  font-size: 13px;
+.publication-doi a {
   color: var(--accent);
+  word-break: break-all;
+}
+
+.publication-graph-abs {
+  margin: 2px 0 0;
+  border-radius: 10px;
+  overflow: hidden;
+  border: 1px solid rgba(255, 255, 255, 0.16);
+  background: rgba(255, 255, 255, 0.04);
+}
+
+.publication-graph-abs img {
+  width: 100%;
+  max-height: 240px;
+  object-fit: contain;
+  object-position: center;
+  display: block;
 }
 
 .placeholder-list {
@@ -271,8 +303,8 @@ a.publication-title:hover {
     gap: 6px;
   }
 
-  .publication-header {
+  .publication-head {
     flex-direction: column;
-    align-items: flex-start;
+    gap: 8px;
   }
 }

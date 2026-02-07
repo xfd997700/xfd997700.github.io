@@ -86,6 +86,19 @@ async function loadSettings() {
   }
 }
 
+async function loadPublicationsCatalog() {
+  try {
+    const response = await fetch("config/publications.json", { cache: "no-store" });
+    if (!response.ok) {
+      throw new Error("Failed to load config/publications.json");
+    }
+    return response.json();
+  } catch (error) {
+    console.warn("Using fallback publications from main config.", error);
+    return null;
+  }
+}
+
 function normalizeNonNegativeNumber(value, fallback) {
   const n = Number(value);
   if (!Number.isFinite(n) || n < 0) return fallback;
@@ -276,152 +289,171 @@ function cleanText(value) {
 }
 
 function normalizePositiveInteger(value, fallback, maxValue) {
-  const n = parseInt(value, 10);
-  if (!Number.isFinite(n) || n <= 0) return fallback;
-  return Math.min(n, maxValue);
+  const parsed = parseInt(value, 10);
+  if (!Number.isFinite(parsed) || parsed <= 0) return fallback;
+  return Math.min(parsed, maxValue);
 }
 
-function toAbsoluteScholarUrl(href) {
-  const raw = cleanText(href);
+function normalizeDoi(doi) {
+  const raw = cleanText(doi);
   if (!raw) return "";
-  if (/^https?:\/\//i.test(raw)) return raw;
-  if (raw.startsWith("/")) return `https://scholar.google.com${raw}`;
-  return `https://scholar.google.com/${raw}`;
+
+  return raw
+    .replace(/^https?:\/\/(dx\.)?doi\.org\//i, "")
+    .replace(/^doi:\s*/i, "")
+    .trim();
 }
 
-function extractScholarUserId(config) {
-  const source = (config && config.publications_source && config.publications_source.google_scholar) || {};
-  const configured = cleanText(source.user_id);
-  if (configured) return configured;
+function buildDoiUrl(doi) {
+  const normalized = normalizeDoi(doi);
+  if (!normalized) return "";
+  const encoded = encodeURIComponent(normalized).replace(/%2F/gi, "/");
+  return `https://doi.org/${encoded}`;
+}
 
-  const scholarLink =
-    config &&
-    config.personal_info &&
-    config.personal_info.links &&
-    config.personal_info.links.google_scholar &&
-    config.personal_info.links.google_scholar.url;
-
-  if (!scholarLink) return "";
-
-  try {
-    const parsed = new URL(scholarLink);
-    return cleanText(parsed.searchParams.get("user"));
-  } catch (error) {
-    console.warn("Failed to parse Google Scholar URL.", error);
-    return "";
+function formatAuthorList(authors) {
+  if (Array.isArray(authors)) {
+    return authors
+      .map((author) => {
+        if (typeof author === "string") return cleanText(author);
+        if (!author || typeof author !== "object") return "";
+        const family = cleanText(author.family);
+        const given = cleanText(author.given);
+        return cleanText(`${given} ${family}`);
+      })
+      .filter(Boolean)
+      .join(", ");
   }
+
+  return cleanText(authors);
 }
 
-async function fetchHtmlThroughProxy(targetUrl, proxyPrefix, timeoutMs) {
-  const url = cleanText(proxyPrefix)
-    ? `${cleanText(proxyPrefix)}${encodeURIComponent(targetUrl)}`
-    : targetUrl;
+function parseCrossrefMessage(message) {
+  if (!message || typeof message !== "object") {
+    return null;
+  }
+
+  const title = cleanText(Array.isArray(message.title) ? message.title[0] : message.title);
+  const journal = cleanText(
+    Array.isArray(message["container-title"]) ? message["container-title"][0] : message["container-title"]
+  );
+  const year = cleanText(
+    message.issued &&
+      Array.isArray(message.issued["date-parts"]) &&
+      Array.isArray(message.issued["date-parts"][0])
+      ? message.issued["date-parts"][0][0]
+      : ""
+  );
+
+  return {
+    doi: normalizeDoi(message.DOI),
+    title,
+    authors: formatAuthorList(message.author),
+    year,
+    journal,
+    volume: cleanText(message.volume),
+    page: cleanText(message.page)
+  };
+}
+
+async function fetchByDoi(doi, timeoutMs) {
+  const normalized = normalizeDoi(doi);
+  if (!normalized) return null;
+
   const controller = new AbortController();
   const timeout = normalizePositiveInteger(timeoutMs, 12000, 60000);
   const timer = setTimeout(() => controller.abort(), timeout);
 
   try {
-    const response = await fetch(url, { cache: "no-store", signal: controller.signal });
+    const response = await fetch(`https://api.crossref.org/works/${encodeURIComponent(normalized)}`, {
+      cache: "no-store",
+      signal: controller.signal
+    });
     if (!response.ok) {
-      throw new Error(`Publication fetch failed: ${response.status}`);
+      throw new Error(`Crossref response ${response.status}`);
     }
-    return response.text();
+
+    const payload = await response.json();
+    return parseCrossrefMessage(payload && payload.message);
+  } catch (error) {
+    console.warn(`DOI parse failed for ${normalized}.`, error);
+    return null;
   } finally {
     clearTimeout(timer);
   }
 }
 
-function parseScholarPublicationsFromHtml(html) {
-  const doc = new DOMParser().parseFromString(html, "text/html");
-  const rows = Array.from(doc.querySelectorAll("tr.gsc_a_tr"));
-
-  return rows
-    .map((row) => {
-      const titleEl = row.querySelector(".gsc_a_at");
-      const grayRows = row.querySelectorAll(".gs_gray");
-      const yearEl = row.querySelector(".gsc_a_y span, .gsc_a_y");
-      const citationEl = row.querySelector(".gsc_a_c a");
-
-      const title = cleanText(titleEl ? titleEl.textContent : "");
-      if (!title) return null;
-
-      const citationText = cleanText(citationEl ? citationEl.textContent : "");
-      const citationMatch = citationText.match(/\d+/);
-
-      return {
-        title,
-        authors: cleanText(grayRows[0] ? grayRows[0].textContent : ""),
-        venue: cleanText(grayRows[1] ? grayRows[1].textContent : ""),
-        year: cleanText(yearEl ? yearEl.textContent : ""),
-        citations: citationMatch ? parseInt(citationMatch[0], 10) : null,
-        link: toAbsoluteScholarUrl(titleEl ? titleEl.getAttribute("href") : "")
-      };
-    })
-    .filter(Boolean);
-}
-
-async function fetchGoogleScholarPublications(config) {
-  const source = (config && config.publications_source && config.publications_source.google_scholar) || {};
-  const userId = extractScholarUserId(config);
-  if (!userId) return [];
-
-  const maxItems = normalizePositiveInteger(source.max_items, 20, 100);
-  const pageSize = normalizePositiveInteger(source.pagesize, 20, 100);
-  const timeoutMs = normalizePositiveInteger(source.timeout_ms, 12000, 60000);
-  const proxyPrefix = source.proxy_url_prefix || "";
-  const allItems = [];
-  const seen = new Set();
-
-  for (let start = 0; start < maxItems; start += pageSize) {
-    const url =
-      "https://scholar.google.com/citations?hl=en&view_op=list_works" +
-      `&user=${encodeURIComponent(userId)}&sortby=pubdate&cstart=${start}&pagesize=${pageSize}`;
-
-    const html = await fetchHtmlThroughProxy(url, proxyPrefix, timeoutMs);
-    const pageItems = parseScholarPublicationsFromHtml(html);
-
-    if (!pageItems.length) break;
-
-    pageItems.forEach((item) => {
-      const dedupeKey = item.link || `${item.title}|${item.year}|${item.venue}`;
-      if (seen.has(dedupeKey)) return;
-      seen.add(dedupeKey);
-      allItems.push(item);
-    });
-
-    if (pageItems.length < pageSize || allItems.length >= maxItems) break;
-  }
-
-  return allItems.slice(0, maxItems);
-}
-
-function normalizePublicationItem(pub) {
+function normalizePublicationLocal(pub) {
   if (!pub || typeof pub !== "object") return null;
-  const citationNumber = Number(pub.citations);
+
+  const doi = normalizeDoi(pub.doi);
+  const title = cleanText(pub.title);
+  const authors = formatAuthorList(pub.authors);
+  const year = cleanText(pub.year);
+  const journal = cleanText(pub.journal);
+  const volume = cleanText(pub.volume);
+  const page = cleanText(pub.page);
+  const graphAbs = cleanText(pub.graph_abs);
+
+  if (!doi && !title) return null;
+
   return {
-    title: cleanText(pub.title),
-    authors: cleanText(pub.authors),
-    venue: cleanText(pub.venue || pub.journal || pub.booktitle),
-    year: cleanText(pub.year),
-    citations: Number.isFinite(citationNumber) ? citationNumber : null,
-    link: cleanText(pub.link || pub.url)
+    doi,
+    title,
+    authors,
+    year,
+    journal,
+    volume,
+    page,
+    graph_abs: graphAbs,
+    doi_link: buildDoiUrl(doi)
   };
 }
 
-async function loadPublications(config) {
-  const source = (config && config.publications_source) || {};
-  const wantsScholar = source.enabled !== false && source.type === "google_scholar";
+async function resolvePublications(catalog, settings) {
+  const rawPublications = Array.isArray(catalog && catalog.publications)
+    ? catalog.publications
+    : Array.isArray(catalog)
+      ? catalog
+      : [];
 
-  if (wantsScholar) {
-    try {
-      const scholarItems = await fetchGoogleScholarPublications(config);
-      if (scholarItems.length) return scholarItems;
-    } catch (error) {
-      console.warn("Google Scholar fetch failed, fallback to local publications.", error);
-    }
-  }
+  const localPublications = rawPublications.map(normalizePublicationLocal).filter(Boolean);
+  const doiTimeoutMs =
+    settings &&
+    settings.publications &&
+    settings.publications.doi_timeout_ms !== undefined
+      ? settings.publications.doi_timeout_ms
+      : 12000;
 
-  return (config.publications || []).map(normalizePublicationItem).filter((item) => item && item.title);
+  const resolved = await Promise.all(
+    localPublications.map(async (localItem) => {
+      if (!localItem.doi) return localItem;
+
+      const crossref = await fetchByDoi(localItem.doi, doiTimeoutMs);
+      if (!crossref) return localItem;
+
+      const doi = crossref.doi || localItem.doi;
+      return {
+        doi,
+        title: crossref.title || localItem.title,
+        authors: crossref.authors || localItem.authors,
+        year: crossref.year || localItem.year,
+        journal: crossref.journal || localItem.journal,
+        volume: crossref.volume || localItem.volume,
+        page: crossref.page || localItem.page,
+        graph_abs: localItem.graph_abs,
+        doi_link: buildDoiUrl(doi)
+      };
+    })
+  );
+
+  resolved.sort((a, b) => {
+    const ay = parseInt(a.year, 10) || 0;
+    const by = parseInt(b.year, 10) || 0;
+    return by - ay;
+  });
+
+  return resolved;
 }
 
 function renderPublications(items) {
@@ -437,69 +469,78 @@ function renderPublications(items) {
   }
 
   items.forEach((pub) => {
-    const normalized = normalizePublicationItem(pub);
-    if (!normalized || !normalized.title) return;
-
     const item = document.createElement("article");
     item.className = "publication-item";
 
-    const header = document.createElement("div");
-    header.className = "publication-header";
+    const head = document.createElement("div");
+    head.className = "publication-head";
 
-    if (normalized.link) {
-      const titleLink = document.createElement("a");
-      titleLink.className = "publication-title";
-      titleLink.href = normalized.link;
+    const titleLink = document.createElement(pub.doi_link ? "a" : "div");
+    titleLink.className = "publication-title";
+    titleLink.textContent = pub.title || "Untitled";
+    if (pub.doi_link) {
+      titleLink.href = pub.doi_link;
       titleLink.target = "_blank";
       titleLink.rel = "noreferrer";
-      titleLink.textContent = normalized.title;
-      header.appendChild(titleLink);
-    } else {
-      const titleText = document.createElement("div");
-      titleText.className = "publication-title";
-      titleText.textContent = normalized.title;
-      header.appendChild(titleText);
     }
+    head.appendChild(titleLink);
 
-    const metaWrap = document.createElement("div");
-    metaWrap.className = "publication-meta";
-
-    if (normalized.year) {
+    if (pub.year) {
       const yearBadge = document.createElement("span");
-      yearBadge.className = "publication-badge";
-      yearBadge.textContent = normalized.year;
-      metaWrap.appendChild(yearBadge);
+      yearBadge.className = "publication-year";
+      yearBadge.textContent = pub.year;
+      head.appendChild(yearBadge);
     }
 
-    if (normalized.citations !== null) {
-      const citationBadge = document.createElement("span");
-      citationBadge.className = "publication-badge";
-      citationBadge.textContent = `Cited ${normalized.citations}`;
-      metaWrap.appendChild(citationBadge);
+    item.appendChild(head);
+
+    if (pub.authors) {
+      const authors = document.createElement("div");
+      authors.className = "publication-authors";
+      authors.textContent = pub.authors;
+      item.appendChild(authors);
     }
 
-    if (normalized.link) {
-      const openLink = document.createElement("a");
-      openLink.className = "publication-open";
-      openLink.href = normalized.link;
-      openLink.target = "_blank";
-      openLink.rel = "noreferrer";
-      openLink.setAttribute("aria-label", `Open publication: ${normalized.title}`);
-      openLink.innerHTML = "<i class=\"fa-solid fa-arrow-up-right-from-square\"></i>";
-      metaWrap.appendChild(openLink);
+    const venueParts = [];
+    if (pub.journal) venueParts.push(pub.journal);
+    if (pub.volume) venueParts.push(`Vol. ${pub.volume}`);
+    if (pub.page) venueParts.push(`pp. ${pub.page}`);
+    if (venueParts.length) {
+      const venue = document.createElement("div");
+      venue.className = "publication-venue";
+      venue.textContent = venueParts.join(" | ");
+      item.appendChild(venue);
     }
 
-    header.appendChild(metaWrap);
+    if (pub.doi) {
+      const doiRow = document.createElement("div");
+      doiRow.className = "publication-doi";
+      const doiLabel = document.createElement("span");
+      doiLabel.className = "publication-doi-label";
+      doiLabel.textContent = "DOI";
+      doiRow.appendChild(doiLabel);
 
-    const detail = document.createElement("div");
-    detail.className = "publication-detail";
-    const detailParts = [normalized.authors, normalized.venue].filter(Boolean);
-    detail.textContent = detailParts.join(" | ");
-
-    item.appendChild(header);
-    if (detail.textContent) {
-      item.appendChild(detail);
+      const doiAnchor = document.createElement("a");
+      doiAnchor.href = pub.doi_link || buildDoiUrl(pub.doi);
+      doiAnchor.target = "_blank";
+      doiAnchor.rel = "noreferrer";
+      doiAnchor.textContent = pub.doi;
+      doiRow.appendChild(doiAnchor);
+      item.appendChild(doiRow);
     }
+
+    if (pub.graph_abs) {
+      const graphWrap = document.createElement("figure");
+      graphWrap.className = "publication-graph-abs";
+      const graphImg = document.createElement("img");
+      graphImg.src = pub.graph_abs;
+      graphImg.alt = `${pub.title || "Publication"} graphical abstract`;
+      graphImg.loading = "lazy";
+      graphImg.decoding = "async";
+      graphWrap.appendChild(graphImg);
+      item.appendChild(graphWrap);
+    }
+
     list.appendChild(item);
   });
 }
@@ -530,14 +571,19 @@ async function init() {
   document.addEventListener("keydown", handleTerminalKey);
 
   try {
-    const [config, settings] = await Promise.all([loadConfig(), loadSettings()]);
+    const [config, settings, publicationsCatalog] = await Promise.all([
+      loadConfig(),
+      loadSettings(),
+      loadPublicationsCatalog()
+    ]);
     applySettings(settings);
     applyBackground(config);
     renderProfile(config.personal_info, config.site_brand);
     renderCareer(config.career);
-    const publications = await loadPublications(config);
-    renderPublications(publications);
     renderProjects(config.projects);
+    const publicationSource = publicationsCatalog || { publications: config.publications || [] };
+    const publications = await resolvePublications(publicationSource, settings);
+    renderPublications(publications);
   } catch (error) {
     console.error(error);
   }

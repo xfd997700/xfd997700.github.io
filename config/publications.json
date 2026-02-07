@@ -1,0 +1,44 @@
+{
+  "template": {
+    "doi": "",
+    "title": "",
+    "authors": "",
+    "year": "",
+    "journal": "",
+    "volume": "",
+    "page": "",
+    "graph_abs": ""
+  },
+  "publications": [
+    {
+      "doi": "10.1093/bib/bbad423",
+      "title": "",
+      "authors": "",
+      "year": "",
+      "journal": "",
+      "volume": "",
+      "page": "",
+      "graph_abs": ""
+    },
+    {
+      "doi": "10.1016/j.actphy.2025.100209",
+      "title": "",
+      "authors": "",
+      "year": "",
+      "journal": "",
+      "volume": "",
+      "page": "",
+      "graph_abs": ""
+    },
+    {
+      "doi": "10.1016/j.dsp.2023.103937",
+      "title": "Comparative study of non-convex penalties and related algorithms in compressed sensing",
+      "authors": "Fanding Xu, Junbo Duan, Wenyu Liu",
+      "year": "2023",
+      "journal": "Digital Signal Processing",
+      "volume": "",
+      "page": "",
+      "graph_abs": ""
+    }
+  ]
+}

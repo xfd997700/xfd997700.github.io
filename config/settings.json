@@ -5,5 +5,8 @@
   },
   "glass": {
     "blur_px": 18
+  },
+  "publications": {
+    "doi_timeout_ms": 12000
   }
 }

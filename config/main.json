@@ -45,7 +45,7 @@
       "link": "https://zhanggroup.org/"
     },
     {
-      "year": "2021-2026",
+      "year": "2021-Now ",
       "organization": "Xi'an Jiaotong University",
       "role": "Ph.D Student",
       "org_logo": "https://www.xjtu.edu.cn/img/logo_pic99.png",
@@ -66,17 +66,6 @@
       "link": ""
     }
   ],
-  "publications_source": {
-    "type": "google_scholar",
-    "enabled": true,
-    "google_scholar": {
-      "user_id": "IWlerhMAAAAJ",
-      "max_items": 20,
-      "pagesize": 20,
-      "timeout_ms": 12000,
-      "proxy_url_prefix": "https://api.allorigins.win/raw?url="
-    }
-  },
   "publications": [],
   "projects": []
 }
