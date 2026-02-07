@@ -193,8 +193,8 @@ body.modal-open {
 
 .career-item {
   display: grid;
-  grid-template-columns: auto 1fr auto;
-  gap: 12px;
+  grid-template-columns: auto 1fr minmax(92px, auto);
+  gap: 14px;
   align-items: start;
 }
 
@@ -215,9 +215,7 @@ body.modal-open {
 }
 
 .career-org {
-  display: flex;
-  align-items: flex-start;
-  gap: 8px;
+  display: block;
   min-width: 0;
 }
 
@@ -233,18 +231,50 @@ body.modal-open {
 
 .career-org-name {
   line-height: 1.35;
-}
-
-.career-link {
-  font-size: 14px;
-  color: var(--accent);
-  padding-top: 3px;
+  font-weight: 600;
 }
 
 .career-meta {
   color: var(--text-muted);
   font-size: 12px;
   line-height: 1.4;
+}
+
+.career-side {
+  min-height: 100%;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  gap: 10px;
+}
+
+.career-logo-shell {
+  min-width: calc(var(--career-logo-max-width) + 22px);
+  min-height: calc(var(--career-logo-height) + 20px);
+  padding: 10px;
+  border-radius: 12px;
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  background: rgba(255, 255, 255, 0.1);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.1);
+  backdrop-filter: blur(var(--glass-blur));
+  -webkit-backdrop-filter: blur(var(--glass-blur));
+  display: grid;
+  place-items: center;
+}
+
+.career-link {
+  font-size: 13px;
+  color: var(--accent);
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.career-link-text {
+  font-size: 12px;
+  letter-spacing: 0.2px;
+  color: var(--text-muted);
 }
 
 .publication-item {
@@ -427,7 +457,13 @@ a.publication-title:hover {
 
   .career-item {
     grid-template-columns: 1fr;
-    gap: 6px;
+    gap: 10px;
+  }
+
+  .career-side {
+    flex-direction: row;
+    justify-content: flex-start;
+    align-items: center;
   }
 
   .publications-sort-btn {

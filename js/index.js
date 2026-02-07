@@ -369,16 +369,6 @@ function renderCareer(career) {
     const orgEl = document.createElement("div");
     orgEl.className = "career-org";
 
-    if (detail.org_logo) {
-      const logoEl = document.createElement("img");
-      logoEl.className = "career-org-logo";
-      logoEl.src = detail.org_logo;
-      logoEl.alt = `${detail.organization || "Organization"} logo`;
-      logoEl.loading = "lazy";
-      logoEl.decoding = "async";
-      orgEl.appendChild(logoEl);
-    }
-
     const orgNameEl = document.createElement("div");
     orgNameEl.className = "career-org-name";
     orgNameEl.textContent = detail.organization || "";
@@ -402,14 +392,40 @@ function renderCareer(career) {
     item.appendChild(yearEl);
     item.appendChild(detailEl);
 
+    const sideEl = document.createElement("div");
+    sideEl.className = "career-side";
+
+    if (detail.org_logo) {
+      const logoShell = document.createElement("div");
+      logoShell.className = "career-logo-shell";
+      const logoEl = document.createElement("img");
+      logoEl.className = "career-org-logo";
+      logoEl.src = detail.org_logo;
+      logoEl.alt = `${detail.organization || "Organization"} logo`;
+      logoEl.loading = "lazy";
+      logoEl.decoding = "async";
+      logoShell.appendChild(logoEl);
+      sideEl.appendChild(logoShell);
+    }
+
     if (detail.link) {
       const link = document.createElement("a");
       link.className = "career-link";
       link.href = detail.link;
       link.target = "_blank";
       link.rel = "noreferrer";
-      link.innerHTML = "<i class=\"fa-solid fa-arrow-up-right-from-square\"></i>";
-      item.appendChild(link);
+      const text = document.createElement("span");
+      text.className = "career-link-text";
+      text.textContent = "Group";
+      link.appendChild(text);
+      const icon = document.createElement("i");
+      icon.className = "fa-solid fa-arrow-up-right-from-square";
+      link.appendChild(icon);
+      sideEl.appendChild(link);
+    }
+
+    if (sideEl.childElementCount > 0) {
+      item.appendChild(sideEl);
     }
 
     list.appendChild(item);
