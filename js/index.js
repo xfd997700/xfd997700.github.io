@@ -913,28 +913,6 @@ function renderPublications(items) {
   });
 }
 
-function renderProjects(items) {
-  const list = document.getElementById("projects-list");
-  list.innerHTML = "";
-
-  if (!items || !items.length) {
-    const empty = document.createElement("div");
-    empty.className = "placeholder-item";
-    empty.textContent = "Projects will appear here soon.";
-    list.appendChild(empty);
-    return;
-  }
-
-  items.forEach((project) => {
-    const item = document.createElement("div");
-    item.className = "placeholder-item";
-    const name = project.name || "Project";
-    const desc = project.description ? ` - ${project.description}` : "";
-    item.textContent = `${name}${desc}`;
-    list.appendChild(item);
-  });
-}
-
 async function init() {
   document.addEventListener("keydown", handleTerminalKey);
   if (terminalScreen) {
@@ -975,7 +953,13 @@ async function init() {
     applyBackground(config);
     renderProfile(config.personal_info, config.site_brand);
     renderCareer(config.career);
-    renderProjects(config.projects);
+    if (window.ProjectFeature && typeof window.ProjectFeature.initIndexPage === "function") {
+      try {
+        await window.ProjectFeature.initIndexPage({ settings });
+      } catch (projectError) {
+        console.error("Failed to initialize projects module.", projectError);
+      }
+    }
     const publicationSource = publicationsCatalog || { publications: config.publications || [] };
     publicationState.items = await resolvePublications(publicationSource, settings, (nextItems) => {
       publicationState.items = nextItems;

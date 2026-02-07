@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>mol_motif | Project</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@400;600&family=JetBrains+Mono:wght@400;600&family=Space+Grotesk:wght@400;500;600&display=swap"
+      rel="stylesheet"
+    />
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css"
+      integrity="sha512-DTOQO9RWCH3ppGqcWaEA1BIZOC6xxalwEsw9c2QQeAIftl+Vegovlnee1c9QX4TctnWMn13TZye+giMm8e2LwA=="
+      crossorigin="anonymous"
+      referrerpolicy="no-referrer"
+    />
+    <link rel="stylesheet" href="../css/main.css" />
+    <link rel="stylesheet" href="../css/index.css" />
+    <link rel="stylesheet" href="../css/projects.css" />
+  </head>
+  <body>
+    <main id="project-standalone-root" class="project-standalone-main" data-project-key="mol_motif">
+      <header class="site-header">
+        <div class="site-brand">Project Detail</div>
+        <nav class="route-nav glass" id="project-standalone-route-nav" aria-label="Route navigation"></nav>
+      </header>
+
+      <section class="card glass project-single-card">
+        <div class="section-title section-title--projects">
+          <span id="project-single-title">Project</span>
+          <button type="button" class="project-back-btn" id="project-single-back-btn">Back</button>
+        </div>
+
+        <div class="project-single-copy">
+          <p id="project-single-abs-en" class="project-single-abs"></p>
+          <p id="project-single-abs-zh" class="project-single-abs"></p>
+        </div>
+
+        <div id="project-single-gallery" class="project-single-gallery"></div>
+
+        <section class="project-related-section">
+          <div class="section-title section-title--projects section-title--compact">
+            <span>Related Publications</span>
+          </div>
+          <div id="project-single-publications" class="placeholder-list">
+            <div class="placeholder-item">No related publications linked yet.</div>
+          </div>
+        </section>
+      </section>
+    </main>
+
+    <div id="project-graph-abs-modal" class="graph-abs-modal" hidden>
+      <div class="graph-abs-modal-panel glass" role="dialog" aria-modal="true" aria-label="Graphical abstract">
+        <button
+          id="project-graph-abs-modal-close"
+          class="graph-abs-modal-close"
+          type="button"
+          aria-label="Close graphical abstract"
+        >
+          <i class="fa-solid fa-xmark"></i>
+        </button>
+        <img id="project-graph-abs-modal-img" src="" alt="Graphical abstract" />
+      </div>
+    </div>
+
+    <script src="../js/projects.js" defer></script>
+  </body>
+</html>

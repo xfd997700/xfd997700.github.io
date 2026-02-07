@@ -1,0 +1,24 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="720" viewBox="0 0 1200 720">
+  <defs>
+    <linearGradient id="bg2" x1="0" y1="0" x2="0.9" y2="1">
+      <stop offset="0%" stop-color="#10243a" />
+      <stop offset="100%" stop-color="#101828" />
+    </linearGradient>
+  </defs>
+  <rect width="1200" height="720" fill="url(#bg2)" />
+  <g fill="none" stroke="#9dc6ff" stroke-width="2.6" opacity="0.9">
+    <circle cx="220" cy="220" r="80" />
+    <circle cx="440" cy="360" r="68" />
+    <circle cx="640" cy="210" r="74" />
+    <circle cx="860" cy="350" r="66" />
+    <circle cx="1040" cy="220" r="58" />
+  </g>
+  <g stroke="#8df4ff" stroke-width="3" opacity="0.55">
+    <line x1="300" y1="250" x2="372" y2="325" />
+    <line x1="504" y1="330" x2="566" y2="246" />
+    <line x1="714" y1="250" x2="794" y2="332" />
+    <line x1="926" y1="322" x2="982" y2="252" />
+  </g>
+  <text x="80" y="562" fill="#eff6ff" font-family="JetBrains Mono, Consolas, monospace" font-size="44">Motif Search Console</text>
+  <text x="80" y="614" fill="#a3b8ce" font-family="JetBrains Mono, Consolas, monospace" font-size="25">Clustering motifs and tracing activity-relevant fragments</text>
+</svg>

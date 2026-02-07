@@ -19,6 +19,7 @@
     />
     <link rel="stylesheet" href="css/main.css" />
     <link rel="stylesheet" href="css/index.css" />
+    <link rel="stylesheet" href="css/projects.css" />
   </head>
   <body>
     <div id="terminal-screen" role="dialog" aria-live="polite">
@@ -39,7 +40,7 @@
     <main id="main-content">
       <header class="site-header">
         <div class="site-brand" id="site-brand">Fanding XU</div>
-        <span class="badge">Dashboard</span>
+        <nav class="route-nav glass" id="route-nav" aria-label="Route navigation"></nav>
       </header>
 
       <section class="layout">
@@ -64,26 +65,43 @@
           </div>
         </aside>
 
-        <section class="right-column">
-          <div class="card glass" id="projects-card">
-            <div class="section-title">
-              <span>Projects | 项目</span>
+        <section class="right-column" id="right-column">
+          <div id="right-default-stack" class="right-default-stack">
+            <div class="card glass" id="projects-card">
+              <div class="section-title section-title--projects">
+                <button type="button" class="section-link-btn" id="projects-section-nav">Projects | 项目</button>
+                <div id="projects-home-lang-toggle"></div>
+              </div>
+              <div id="projects-home-view"></div>
             </div>
-            <div class="placeholder-list" id="projects-list">
-              <div class="placeholder-item">Projects will appear here soon.</div>
+
+            <div class="card glass" id="publications-card">
+              <div class="section-title">
+                <span>Publications | 论文</span>
+                <button id="publications-sort-btn" class="publications-sort-btn" type="button">
+                  Sort by Year
+                </button>
+              </div>
+              <div class="placeholder-list" id="publications-list">
+                <div class="placeholder-item">No publications loaded yet.</div>
+              </div>
             </div>
           </div>
 
-          <div class="card glass" id="publications-card">
-            <div class="section-title">
-              <span>Publications | 论文</span>
-              <button id="publications-sort-btn" class="publications-sort-btn" type="button">
-                Sort by Year
-              </button>
+          <div class="card glass right-standalone-card" id="projects-overview-card" hidden>
+            <div class="section-title section-title--projects">
+              <span>Projects | 项目</span>
+              <div id="projects-overview-lang-toggle"></div>
             </div>
-            <div class="placeholder-list" id="publications-list">
-              <div class="placeholder-item">No publications loaded yet.</div>
+            <div id="projects-overview-view"></div>
+          </div>
+
+          <div class="card glass right-standalone-card" id="project-detail-card" hidden>
+            <div class="section-title section-title--projects">
+              <span id="project-detail-title">Project</span>
+              <button type="button" class="project-back-btn" id="project-detail-back-btn">Back to Projects</button>
             </div>
+            <div id="project-detail-frame-wrap" class="project-detail-frame-wrap"></div>
           </div>
         </section>
       </section>
@@ -103,6 +121,7 @@
       </div>
     </div>
 
+    <script src="js/projects.js" defer></script>
     <script src="js/index.js" defer></script>
   </body>
 </html>

@@ -18,7 +18,7 @@
       "journal": "Briefings in Bioinformatics",
       "volume": "25",
       "page": "bbad423",
-      "graph_abs": "imgs/mespool.png"
+      "graph_abs": "imgs/publications/mespool.png"
     },
     "xufanding2025molunet": {
       "doi": "10.1016/j.actphy.2025.100209",
@@ -28,7 +28,7 @@
       "journal": "Acta Physico-Chimica Sinica",
       "volume": "",
       "page": "100209",
-      "graph_abs": "imgs/molunet.png"
+      "graph_abs": "imgs/publications/molunet.png"
     },
     "xufanding2023comparative": {
       "doi": "10.1016/j.dsp.2023.103937",
@@ -38,7 +38,7 @@
       "journal": "Digital Signal Processing",
       "volume": "135",
       "page": "103937",
-      "graph_abs": "imgs/nonconvex.jpg"
+      "graph_abs": "imgs/publications/nonconvex.jpg"
     },
     "zhengxinzhe2025pring": {
       "doi": "10.48550/arXiv.2507.05101",
@@ -48,7 +48,7 @@
       "journal": "NeurIPS 2025",
       "volume": "Poster",
       "page": "",
-      "graph_abs": "imgs/pring.png"
+      "graph_abs": "imgs/publications/pring.png"
     },
     "suwu2024screening": {
       "doi": "10.1021/acsami.3c18102",

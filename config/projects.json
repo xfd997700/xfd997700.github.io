@@ -1,0 +1,25 @@
+﻿{
+  "template": {
+    "title_en": "",
+    "title_zh": "",
+    "abs_en": "",
+    "abs_zh": "",
+    "imgs": [],
+    "related_publications": []
+  },
+  "projects": {
+    "mol_motif": {
+      "title_en": "Molecular Motif Atlas",
+      "title_zh": "Fenzi Pianduan Tupu",
+      "abs_en": "A lightweight toolkit for discovering, grouping, and visualizing molecular motifs across medicinal chemistry datasets.",
+      "abs_zh": "Yige qinglianghua gongju, yongyu faxian, julei bing keshihua guanjian fenzi pianduan.",
+      "imgs": [
+        "imgs/projects/mol_motif/1.svg",
+        "imgs/projects/mol_motif/2.svg"
+      ],
+      "related_publications": [
+        "xufanding2024mespool"
+      ]
+    }
+  }
+}

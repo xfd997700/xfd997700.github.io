@@ -10,6 +10,14 @@
     "logo_height_px": 26,
     "logo_max_width_px": 88
   },
+  "projects": {
+    "home_card_width_px": 290,
+    "home_card_height_px": 320,
+    "overview_card_width_px": 300,
+    "overview_card_height_px": 320,
+    "card_gap_px": 16,
+    "image_carousel_seconds": 4
+  },
   "publications": {
     "resolve_doi_enabled": false,
     "author_highlight_keywords": [
