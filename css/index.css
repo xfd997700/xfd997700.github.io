@@ -317,6 +317,10 @@ a.publication-title:hover {
   z-index: 40;
 }
 
+.graph-abs-modal[hidden] {
+  display: none !important;
+}
+
 .graph-abs-modal-panel {
   position: relative;
   width: min(1100px, 92vw);

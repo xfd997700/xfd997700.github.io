@@ -376,31 +376,67 @@ function parseCrossrefMessage(message) {
   };
 }
 
-async function fetchByDoi(doi, timeoutMs) {
+function wait(ms) {
+  return new Promise((resolve) => {
+    setTimeout(resolve, Math.max(0, ms));
+  });
+}
+
+async function fetchByDoi(doi, options) {
   const normalized = normalizeDoi(doi);
-  if (!normalized) return null;
+  if (!normalized) return { status: "empty", data: null };
 
-  const controller = new AbortController();
-  const timeout = normalizePositiveInteger(timeoutMs, 12000, 60000);
-  const timer = setTimeout(() => controller.abort(), timeout);
+  const timeoutMs = normalizePositiveInteger(options && options.timeoutMs, 12000, 60000);
+  const proxyUrlPrefix = cleanText(options && options.proxyUrlPrefix);
+  const directUrl = `https://api.crossref.org/works/${encodeURIComponent(normalized)}`;
+  const targets = proxyUrlPrefix ? [`${proxyUrlPrefix}${encodeURIComponent(directUrl)}`] : [directUrl];
 
-  try {
-    const response = await fetch(`https://api.crossref.org/works/${encodeURIComponent(normalized)}`, {
-      cache: "no-store",
-      signal: controller.signal
-    });
-    if (!response.ok) {
-      throw new Error(`Crossref response ${response.status}`);
+  let lastStatus = "failed";
+
+  for (let i = 0; i < targets.length; i += 1) {
+    const controller = new AbortController();
+    const timer = setTimeout(() => controller.abort(), timeoutMs);
+
+    try {
+      const response = await fetch(targets[i], {
+        cache: "no-store",
+        signal: controller.signal
+      });
+
+      if (response.status === 404) {
+        return { status: "not_found", data: null };
+      }
+      if (response.status === 429) {
+        lastStatus = "rate_limited";
+        continue;
+      }
+      if (!response.ok) {
+        lastStatus = `http_${response.status}`;
+        continue;
+      }
+
+      const payload = await response.json();
+      const message = payload && payload.message ? payload.message : payload;
+      const parsed = parseCrossrefMessage(message);
+      if (!parsed) {
+        lastStatus = "invalid_payload";
+        continue;
+      }
+
+      return { status: "ok", data: parsed };
+    } catch (error) {
+      if (error && error.name === "AbortError") {
+        lastStatus = "timeout";
+        continue;
+      }
+      lastStatus = "network";
+      continue;
+    } finally {
+      clearTimeout(timer);
     }
-
-    const payload = await response.json();
-    return parseCrossrefMessage(payload && payload.message);
-  } catch (error) {
-    console.warn(`DOI parse failed for ${normalized}.`, error);
-    return null;
-  } finally {
-    clearTimeout(timer);
   }
+
+  return { status: lastStatus, data: null };
 }
 
 function normalizePublicationLocal(pub) {
@@ -430,7 +466,7 @@ function normalizePublicationLocal(pub) {
   };
 }
 
-async function resolvePublications(catalog, settings) {
+async function resolvePublications(catalog, settings, onUpdate) {
   const rawPublications = Array.isArray(catalog && catalog.publications)
     ? catalog.publications
     : Array.isArray(catalog)
@@ -438,22 +474,45 @@ async function resolvePublications(catalog, settings) {
       : [];
 
   const localPublications = rawPublications.map(normalizePublicationLocal).filter(Boolean);
+  const resolved = localPublications.map((item) => ({ ...item }));
+  const publicationSettings = (settings && settings.publications) || {};
   const doiTimeoutMs =
-    settings &&
-    settings.publications &&
-    settings.publications.doi_timeout_ms !== undefined
-      ? settings.publications.doi_timeout_ms
-      : 12000;
+    publicationSettings.doi_timeout_ms !== undefined ? publicationSettings.doi_timeout_ms : 12000;
+  const doiRequestIntervalMs =
+    publicationSettings.doi_request_interval_ms !== undefined
+      ? normalizePositiveInteger(publicationSettings.doi_request_interval_ms, 300, 60000)
+      : 300;
+  const doiStopAfterFailures =
+    publicationSettings.doi_stop_after_failures !== undefined
+      ? normalizePositiveInteger(publicationSettings.doi_stop_after_failures, 5, 100)
+      : 5;
+  const doiProxyUrlPrefix =
+    publicationSettings.doi_proxy_url_prefix !== undefined
+      ? cleanText(publicationSettings.doi_proxy_url_prefix)
+      : "";
 
-  const resolved = await Promise.all(
-    localPublications.map(async (localItem) => {
-      if (!localItem.doi) return localItem;
+  if (typeof onUpdate === "function") {
+    onUpdate([...resolved]);
+  }
 
-      const crossref = await fetchByDoi(localItem.doi, doiTimeoutMs);
-      if (!crossref) return localItem;
+  let consecutiveFailures = 0;
+  let fallbackCount = 0;
 
+  for (let index = 0; index < resolved.length; index += 1) {
+    const localItem = resolved[index];
+    if (!localItem || !localItem.doi) {
+      continue;
+    }
+
+    const result = await fetchByDoi(localItem.doi, {
+      timeoutMs: doiTimeoutMs,
+      proxyUrlPrefix: doiProxyUrlPrefix
+    });
+
+    if (result.status === "ok" && result.data) {
+      const crossref = result.data;
       const doi = crossref.doi || localItem.doi;
-      return {
+      resolved[index] = {
         doi,
         title: crossref.title || localItem.title,
         authors: crossref.authors || localItem.authors,
@@ -464,9 +523,36 @@ async function resolvePublications(catalog, settings) {
         graph_abs: localItem.graph_abs,
         doi_link: buildDoiUrl(doi)
       };
-    })
-  );
+      consecutiveFailures = 0;
 
+      if (typeof onUpdate === "function") {
+        onUpdate([...resolved]);
+      }
+    } else {
+      fallbackCount += 1;
+      if (result.status === "not_found") {
+        consecutiveFailures = 0;
+      } else {
+        consecutiveFailures += 1;
+      }
+
+      if (result.status === "network" && !doiProxyUrlPrefix) {
+        break;
+      }
+      if (consecutiveFailures >= doiStopAfterFailures) {
+        break;
+      }
+    }
+
+    if (index < resolved.length - 1) {
+      const delay = result.status === "rate_limited" ? doiRequestIntervalMs * 2 : doiRequestIntervalMs;
+      await wait(delay);
+    }
+  }
+
+  if (fallbackCount > 0) {
+    console.info(`DOI auto-resolve fallback used for ${fallbackCount} publication(s).`);
+  }
   return resolved;
 }
 
@@ -676,7 +762,10 @@ async function init() {
     renderCareer(config.career);
     renderProjects(config.projects);
     const publicationSource = publicationsCatalog || { publications: config.publications || [] };
-    publicationState.items = await resolvePublications(publicationSource, settings);
+    publicationState.items = await resolvePublications(publicationSource, settings, (nextItems) => {
+      publicationState.items = nextItems;
+      renderPublications(publicationState.items);
+    });
     renderPublications(publicationState.items);
     updatePublicationsSortButton();
   } catch (error) {

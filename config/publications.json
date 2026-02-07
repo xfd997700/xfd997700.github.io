@@ -13,11 +13,11 @@
     {
       "doi": "10.1093/bib/bbad423",
       "title": "MESPool: Molecular Edge Shrinkage Pooling for hierarchical molecular representation learning and property prediction",
-      "authors": "",
-      "year": "",
-      "journal": "",
-      "volume": "",
-      "page": "",
+      "authors": "Fanding Xu, Zhiwei Yang, Lizhuo Wang, Deyu Meng, Jiangang Long",
+      "year": "2024",
+      "journal": "Briefings in Bioinformatics",
+      "volume": "25",
+      "page": "bbad423",
       "graph_abs": "imgs/mespool.png"
     },
     {
@@ -36,17 +36,17 @@
       "authors": "Fanding Xu, Junbo Duan, Wenyu Liu",
       "year": "2023",
       "journal": "Digital Signal Processing",
-      "volume": "",
-      "page": "",
+      "volume": "135",
+      "page": "103937",
       "graph_abs": ""
     },
     {
       "doi": "10.48550/arXiv.2507.05101",
       "title": "Pring: Rethinking protein-protein interaction prediction from pairs to graphs",
-      "authors": "",
-      "year": "",
-      "journal": "",
-      "volume": "",
+      "authors": "Xinzhe Zheng, Hao Du, Fanding Xu, Jinzhe Li, Zhiyuan Liu, Wenkang Wang, Tao Chen, Wanli Ouyang, Stan Z Li, Yan Lu, Nanqing Dong, Yang Zhang",
+      "year": "2025",
+      "journal": "NeurIPS 2025",
+      "volume": "Poster",
       "page": "",
       "graph_abs": ""
     },

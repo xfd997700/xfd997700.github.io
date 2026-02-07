@@ -8,6 +8,9 @@
   },
   "publications": {
     "doi_timeout_ms": 114000,
+    "doi_request_interval_ms": 300,
+    "doi_stop_after_failures": 5,
+    "doi_proxy_url_prefix": "https://api.allorigins.win/raw?url=",
     "graph_abs_width_px": 520,
     "graph_abs_height_px": 240
   }
