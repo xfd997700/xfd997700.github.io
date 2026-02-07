@@ -1,6 +1,7 @@
 ﻿{
-  "background_img_api": "https://images.unsplash.com/flagged/photo-1575555201693-7cd442b8023d?auto=format&fit=crop&w=1920&q=80",
+  "background_img_api": "https://picsum.photos/3840/2160",
   "background_img_local": "",
+  "site_brand": "Fanding's Notebook",
   "personal_info": {
     "name": "Fanding Xu",
     "nickname": "Fanding XU (徐凡丁)",
@@ -44,7 +45,7 @@
       "link": "https://zhanggroup.org/"
     },
     {
-      "year": "2021-Now",
+      "year": "2021-Now ",
       "organization": "Xi'an Jiaotong University",
       "role": "Ph.D Student",
       "org_logo": "https://isso.xjtu.edu.cn/static/images/logo_pic99_blue.png",

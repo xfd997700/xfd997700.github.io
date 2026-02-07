@@ -1,6 +1,7 @@
 ﻿:root {
   --bg-image: radial-gradient(circle at 20% 20%, #10203a 0%, #0a111f 40%, #05080f 100%);
   --bg-overlay: rgba(7, 10, 18, 0.62);
+  --bg-blur: 0px;
   --text-primary: #eef2ff;
   --text-muted: #a7b0c3;
   --accent: #6ee7ff;
@@ -9,6 +10,7 @@
   --card-border: rgba(255, 255, 255, 0.18);
   --shadow: 0 20px 60px rgba(0, 0, 0, 0.45);
   --radius: 18px;
+  --glass-blur: 18px;
   --font-body: "Space Grotesk", "Segoe UI", sans-serif;
   --font-display: "Cormorant Garamond", "Times New Roman", serif;
   --font-mono: "JetBrains Mono", "Consolas", monospace;
@@ -27,16 +29,29 @@ html, body {
 body {
   font-family: var(--font-body);
   color: var(--text-primary);
-  background: var(--bg-image) no-repeat center center / cover;
+  background-color: #05080f;
   position: relative;
   min-height: 100vh;
   overflow-x: hidden;
 }
 
-body::before {
+body::before,
+body::after {
   content: "";
   position: fixed;
   inset: 0;
+  pointer-events: none;
+}
+
+body::before {
+  background: var(--bg-image) no-repeat center center / cover;
+  filter: blur(var(--bg-blur));
+  transform: scale(1.05);
+  transform-origin: center;
+  z-index: -2;
+}
+
+body::after {
   background: var(--bg-overlay);
   z-index: -1;
 }
@@ -61,8 +76,8 @@ main {
   border: 1px solid var(--card-border);
   border-radius: var(--radius);
   box-shadow: var(--shadow);
-  backdrop-filter: blur(18px);
-  -webkit-backdrop-filter: blur(18px);
+  backdrop-filter: blur(var(--glass-blur));
+  -webkit-backdrop-filter: blur(var(--glass-blur));
 }
 
 .card {

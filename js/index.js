@@ -73,38 +73,84 @@ async function loadConfig() {
   return response.json();
 }
 
+async function loadSettings() {
+  try {
+    const response = await fetch("config/settings.json", { cache: "no-store" });
+    if (!response.ok) {
+      throw new Error("Failed to load config/settings.json");
+    }
+    return response.json();
+  } catch (error) {
+    console.warn("Using default settings.", error);
+    return {};
+  }
+}
+
+function normalizeNonNegativeNumber(value, fallback) {
+  const n = Number(value);
+  if (!Number.isFinite(n) || n < 0) return fallback;
+  return n;
+}
+
+function toCssUrl(url) {
+  return `url("${String(url).replace(/"/g, "\\\"")}")`;
+}
+
+function applySettings(settings) {
+  const rootStyle = document.documentElement.style;
+  const background = settings && settings.background ? settings.background : {};
+  const glass = settings && settings.glass ? settings.glass : {};
+
+  if (background.blur_px !== undefined) {
+    const blurPx = normalizeNonNegativeNumber(background.blur_px, 0);
+    rootStyle.setProperty("--bg-blur", `${blurPx}px`);
+  }
+
+  if (typeof background.overlay_color === "string" && background.overlay_color.trim()) {
+    rootStyle.setProperty("--bg-overlay", background.overlay_color.trim());
+  }
+
+  if (glass.blur_px !== undefined) {
+    const blurPx = normalizeNonNegativeNumber(glass.blur_px, 18);
+    rootStyle.setProperty("--glass-blur", `${blurPx}px`);
+  }
+}
+
 function applyBackground(config) {
   const local = (config.background_img_local || "").trim();
   const api = (config.background_img_api || "").trim();
+  const rootStyle = document.documentElement.style;
 
   if (local) {
-    document.body.style.backgroundImage = `url(${local})`;
+    rootStyle.setProperty("--bg-image", toCssUrl(local));
     return;
   }
 
   if (api) {
-    document.body.style.backgroundImage = `url(${api})`;
+    rootStyle.setProperty("--bg-image", toCssUrl(api));
   }
 }
 
-function renderProfile(info) {
-  if (!info) return;
+function renderProfile(info, siteBrand) {
+  const profile = info || {};
   const brand = document.getElementById("site-brand");
   const avatar = document.getElementById("avatar-img");
   const name = document.getElementById("profile-name");
   const signature = document.getElementById("profile-signature");
   const linksWrap = document.getElementById("link-buttons");
   const tagsWrap = document.getElementById("profile-tags");
+  const customBrand = typeof siteBrand === "string" ? siteBrand.trim() : "";
+  const fallbackName = profile.nickname || profile.name || "Personal Page";
 
-  brand.textContent = info.nickname || info.name || "Personal Page";
-  name.textContent = info.nickname || info.name || "Personal Page";
-  signature.textContent = info.signature || "";
-  if (info.avatar) {
-    avatar.src = info.avatar;
+  brand.textContent = customBrand || fallbackName;
+  name.textContent = fallbackName;
+  signature.textContent = profile.signature || "";
+  if (profile.avatar) {
+    avatar.src = profile.avatar;
   }
 
   linksWrap.innerHTML = "";
-  const links = info.links || {};
+  const links = profile.links || {};
   const iconMap = {
     github: "fa-brands fa-github",
     bilibili: "fa-brands fa-bilibili",
@@ -130,7 +176,7 @@ function renderProfile(info) {
   });
 
   tagsWrap.innerHTML = "";
-  const tags = info.tags || [];
+  const tags = profile.tags || [];
   tags.forEach((tag) => {
     const span = document.createElement("span");
     span.textContent = tag;
@@ -274,9 +320,10 @@ async function init() {
   document.addEventListener("keydown", handleTerminalKey);
 
   try {
-    const config = await loadConfig();
+    const [config, settings] = await Promise.all([loadConfig(), loadSettings()]);
+    applySettings(settings);
     applyBackground(config);
-    renderProfile(config.personal_info);
+    renderProfile(config.personal_info, config.site_brand);
     renderCareer(config.career);
     renderPublications(config.publications);
     renderProjects(config.projects);
