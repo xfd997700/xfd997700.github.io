@@ -262,11 +262,9 @@ a.publication-title:hover {
 
 .publication-title-doi-icon {
   margin-left: 6px;
-  width: 34px;
-  height: 14px;
-  vertical-align: -1px;
-  object-fit: contain;
-  opacity: 0.95;
+  font-size: 12px;
+  vertical-align: middle;
+  opacity: 0.9;
 }
 
 .publication-year {

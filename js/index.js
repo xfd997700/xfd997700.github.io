@@ -6,7 +6,6 @@ const publicationsSortButton = document.getElementById("publications-sort-btn");
 const graphAbsModal = document.getElementById("graph-abs-modal");
 const graphAbsModalImage = document.getElementById("graph-abs-modal-img");
 const graphAbsModalCloseButton = document.getElementById("graph-abs-modal-close");
-const DOI_ICON_SRC = "assets/doi-mark.svg";
 
 const state = {
   input: "",
@@ -724,12 +723,10 @@ function renderPublications(items) {
       titleLink.href = pub.doi_link;
       titleLink.target = "_blank";
       titleLink.rel = "noreferrer";
-      const doiIcon = document.createElement("img");
+      const doiIcon = document.createElement("i");
       doiIcon.className = "publication-title-doi-icon";
-      doiIcon.src = DOI_ICON_SRC;
-      doiIcon.alt = "DOI";
-      doiIcon.loading = "lazy";
-      doiIcon.decoding = "async";
+      doiIcon.classList.add("fa-solid", "fa-link");
+      doiIcon.setAttribute("aria-hidden", "true");
       titleLink.appendChild(doiIcon);
     }
     head.appendChild(titleLink);
