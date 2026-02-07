@@ -25,7 +25,7 @@ function enterMain() {
 function showEasterEgg() {
   if (state.locked) return;
   state.locked = true;
-  terminalMessage.innerHTML = "<div>Hello world!</div><div>bye bye</div>";
+  terminalMessage.innerHTML = "<div>Hello word!</div><div>bye bye</div>";
   setTimeout(() => {
     state.locked = false;
     resetTerminal();
@@ -38,28 +38,30 @@ function handleTerminalKey(event) {
   const key = event.key;
 
   if (key === "Enter") {
-    if (state.input.toLowerCase() === "n") {
-      showEasterEgg();
-    } else {
+    const normalizedInput = state.input.trim().toLowerCase();
+    if (normalizedInput === "" || normalizedInput === "y") {
       enterMain();
+    } else {
+      showEasterEgg();
     }
     return;
   }
 
   if (key === "Backspace") {
+    state.input = state.input.slice(0, -1);
+    terminalInput.textContent = state.input;
+    return;
+  }
+
+  if (key === "Escape") {
     state.input = "";
     terminalInput.textContent = "";
     return;
   }
 
-  if (state.input === "" && (key === "n" || key === "N")) {
-    state.input = "n";
-    terminalInput.textContent = "n";
-    return;
-  }
-
-  if (state.input === "") {
-    enterMain();
+  if (key.length === 1 && !event.ctrlKey && !event.metaKey && !event.altKey) {
+    state.input += key;
+    terminalInput.textContent = state.input;
   }
 }
 
