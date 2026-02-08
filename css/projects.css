@@ -71,6 +71,8 @@
   height: var(--top-action-btn-height);
   padding: 0 12px;
   font-size: 12px;
+  line-height: 1;
+  font-family: var(--font-body);
   cursor: pointer;
   display: inline-flex;
   align-items: center;

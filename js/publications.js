@@ -570,11 +570,27 @@
     if (maxInput && document.activeElement !== maxInput) maxInput.value = viewState.maxYear || "";
   }
 
+  function parseFilterYearInput(input) {
+    const raw = cleanText(input ? input.value : "");
+    if (!raw) return "";
+    const match = raw.match(/\d{4}/);
+    if (!match) return "";
+    const year = parseInt(match[0], 10);
+    return Number.isFinite(year) && year > 0 ? String(year) : "";
+  }
+
   function applyFilterInputs(viewState, minInput, maxInput) {
-    const minYear = parseInt(String(minInput ? minInput.value : "").trim(), 10);
-    const maxYear = parseInt(String(maxInput ? maxInput.value : "").trim(), 10);
-    viewState.minYear = Number.isFinite(minYear) && minYear > 0 ? String(minYear) : "";
-    viewState.maxYear = Number.isFinite(maxYear) && maxYear > 0 ? String(maxYear) : "";
+    let minYear = parseFilterYearInput(minInput);
+    let maxYear = parseFilterYearInput(maxInput);
+    if (minYear && maxYear && parseInt(minYear, 10) > parseInt(maxYear, 10)) {
+      const t = minYear;
+      minYear = maxYear;
+      maxYear = t;
+    }
+    viewState.minYear = minYear;
+    viewState.maxYear = maxYear;
+    if (minInput) minInput.value = minYear;
+    if (maxInput) maxInput.value = maxYear;
     viewState.page = 1;
   }
 
