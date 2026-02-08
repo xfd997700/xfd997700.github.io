@@ -316,6 +316,46 @@
   opacity: 0.95;
 }
 
+.project-card-meta {
+  margin-top: auto;
+  padding: 0 14px;
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.project-card-authors {
+  margin: 0;
+  color: var(--text-muted);
+  font-size: 12px;
+  line-height: 1.4;
+  min-width: 0;
+}
+
+.project-card-amount,
+.project-doc-page-amount {
+  margin-left: auto;
+  border-radius: 999px;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  background: rgba(255, 255, 255, 0.12);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  color: #dff9ff;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 10px;
+  font-size: 11px;
+  line-height: 1;
+  white-space: nowrap;
+}
+
+.project-card-amount i,
+.project-doc-page-amount i {
+  font-size: 11px;
+}
+
 .projects-overview-grid {
   display: grid;
   gap: var(--projects-card-gap);
@@ -443,6 +483,22 @@
 
 .project-doc-page-title--spaced {
   margin-top: 22px;
+}
+
+.project-doc-page-meta {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.project-doc-page-authors {
+  margin: 0;
+  color: var(--text-muted);
+  font-size: 13px;
+  line-height: 1.45;
+  text-align: center;
 }
 
 /* Standalone project pages: continuous reading layout */

@@ -124,6 +124,9 @@
       key: cleanText(key),
       title_en: cleanText(value.title_en),
       title_zh: cleanText(value.title_zh),
+      authors_en: cleanText(value.authors_en || value.authors),
+      authors_zh: cleanText(value.authors_zh || value.authors),
+      amount: cleanText(value.amount),
       abs_en: cleanText(value.abs_en),
       abs_zh: cleanText(value.abs_zh),
       funding_en: cleanText(value.funding_en || value.funding),
@@ -202,6 +205,22 @@
     return project.abs_en || project.abs_zh || "";
   }
 
+  function getProjectAuthors(project, lang) {
+    if (!project) return "";
+    if (lang === "zh") return cleanText(project.authors_zh || project.authors_en);
+    return cleanText(project.authors_en || project.authors_zh);
+  }
+
+  function hasProjectAmount(project) {
+    return Boolean(project && cleanText(project.amount));
+  }
+
+  function formatProjectAmount(project, lang) {
+    const amount = cleanText(project && project.amount);
+    if (!amount) return "";
+    return lang === "zh" ? `金额：${amount}` : `Amount: ${amount}`;
+  }
+
   function hasProjectFunding(project) {
     if (!project) return false;
     return Boolean(cleanText(project.funding_en) || cleanText(project.funding_zh) || cleanText(project.funding_no));
@@ -244,6 +263,71 @@
       container.appendChild(dot);
     }
   }
+
+  function createProjectAmountBadge(project, lang, className) {
+    const text = formatProjectAmount(project, lang);
+    if (!text) return null;
+
+    const badge = document.createElement("span");
+    badge.className = className || "project-card-amount";
+
+    const icon = document.createElement("i");
+    icon.className = "fa-solid fa-sack-dollar";
+    icon.setAttribute("aria-hidden", "true");
+    badge.appendChild(icon);
+
+    const label = document.createElement("span");
+    label.textContent = text;
+    badge.appendChild(label);
+    return badge;
+  }
+
+  function createProjectInfoMeta(project, lang) {
+    const wrap = document.createElement("div");
+    wrap.className = "project-card-meta";
+
+    const authorsText = getProjectAuthors(project, lang);
+    if (authorsText) {
+      const authors = document.createElement("p");
+      authors.className = "project-card-authors";
+      authors.textContent = lang === "zh" ? `作者：${authorsText}` : `Authors: ${authorsText}`;
+      wrap.appendChild(authors);
+    }
+
+    const amountBadge = createProjectAmountBadge(project, lang, "project-card-amount");
+    if (amountBadge) {
+      wrap.appendChild(amountBadge);
+    }
+
+    if (!authorsText && !amountBadge) {
+      return null;
+    }
+    return wrap;
+  }
+
+  function renderProjectHeaderMeta(host, project, lang) {
+    if (!host) return;
+    host.innerHTML = "";
+
+    const authorsText = getProjectAuthors(project, lang);
+    const amountBadge = createProjectAmountBadge(project, lang, "project-doc-page-amount");
+    if (!authorsText && !amountBadge) {
+      host.hidden = true;
+      return;
+    }
+
+    host.hidden = false;
+    if (authorsText) {
+      const authors = document.createElement("p");
+      authors.className = "project-doc-page-authors";
+      authors.textContent = lang === "zh" ? `作者：${authorsText}` : `Authors: ${authorsText}`;
+      host.appendChild(authors);
+    }
+    if (amountBadge) {
+      host.appendChild(amountBadge);
+    }
+  }
+
   function createProjectCard(project, options) {
     const variant = options.variant || "home";
     const lang = options.lang || "en";
@@ -298,6 +382,8 @@
       funding.textContent = fundingText;
     }
 
+    const meta = createProjectInfoMeta(project, lang);
+
     if (onOpen) {
       card.addEventListener("click", () => onOpen(project));
       card.addEventListener("keydown", (event) => {
@@ -313,6 +399,9 @@
     card.appendChild(abs);
     if (funding) {
       card.appendChild(funding);
+    }
+    if (meta) {
+      card.appendChild(meta);
     }
     return card;
   }
@@ -695,16 +784,6 @@
     summaryZh.className = "project-doc-heading proj-zh";
     summaryZh.textContent = "项目摘要";
     section.appendChild(summaryZh);
-
-    const titleEn = document.createElement("p");
-    titleEn.className = "project-doc-text project-doc-emphasis proj-en";
-    titleEn.textContent = getProjectTitle(project, "en");
-    section.appendChild(titleEn);
-
-    const titleZh = document.createElement("p");
-    titleZh.className = "project-doc-text project-doc-emphasis proj-zh";
-    titleZh.textContent = getProjectTitle(project, "zh");
-    section.appendChild(titleZh);
 
     const overrideAbsEn = readProjectOverrideText(projectRoot, "abs_en");
     const overrideAbsZh = readProjectOverrideText(projectRoot, "abs_zh");
@@ -1271,6 +1350,7 @@
 
     const routeNavHost = projectDoc.querySelector("[data-project-slot='route-nav']");
     const titleHost = projectDoc.querySelector("[data-project-slot='page-title']");
+    let metaHost = projectDoc.querySelector("[data-project-slot='page-meta']");
     const homeButton = projectDoc.querySelector("[data-project-slot='home-btn']");
     const projectsButton = projectDoc.querySelector("[data-project-slot='projects-btn']");
     if (homeButton) {
@@ -1290,6 +1370,15 @@
       }
       if (titleHost) {
         titleHost.textContent = getProjectTitle(project, lang);
+        if (!metaHost && titleHost.parentElement) {
+          metaHost = document.createElement("div");
+          metaHost.setAttribute("data-project-slot", "page-meta");
+          metaHost.className = "project-doc-page-meta";
+          titleHost.insertAdjacentElement("afterend", metaHost);
+        }
+      }
+      if (metaHost) {
+        renderProjectHeaderMeta(metaHost, project, lang);
       }
     }
     renderDocHeader(currentLang);

@@ -44,6 +44,7 @@
     },
     "page": {
       "default_view": "grid",
+      "default_view_mobile": "list",
       "list_page_size": 10,
       "grid_shape": [3, 3],
       "list_show_graph_abs": true,

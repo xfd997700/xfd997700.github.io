@@ -74,6 +74,11 @@
     return [rows, cols];
   }
 
+  function isMobileViewport() {
+    if (!window || typeof window.matchMedia !== "function") return false;
+    return window.matchMedia("(max-width: 700px)").matches;
+  }
+
   function normalizeDoi(doi) {
     return cleanText(doi).replace(/^https?:\/\/(dx\.)?doi\.org\//i, "").replace(/^doi:\s*/i, "");
   }
@@ -649,7 +654,9 @@
       }
     }
     rootStyle.setProperty("--pub-grid-columns", `${Math.max(1, state.page.gridCols)}`);
-    state.page.mode = page.default_view === "grid" ? "grid" : "list";
+    const desktopDefaultMode = page.default_view === "grid" ? "grid" : "list";
+    const mobileDefaultMode = page.default_view_mobile === "grid" ? "grid" : "list";
+    state.page.mode = isMobileViewport() ? mobileDefaultMode : desktopDefaultMode;
     state.page.listShowGraphAbs = page.list_show_graph_abs === undefined ? true : Boolean(page.list_show_graph_abs);
     state.page.gridShowGraphAbs = page.grid_show_graph_abs === undefined ? false : Boolean(page.grid_show_graph_abs);
   }
