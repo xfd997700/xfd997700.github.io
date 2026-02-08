@@ -238,6 +238,57 @@ body.modal-open {
   text-underline-offset: 2px;
 }
 
+.profile-address-item {
+  display: block;
+}
+
+.profile-address-text {
+  display: inline;
+}
+
+.profile-address-maps {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  margin-left: 6px;
+  vertical-align: middle;
+  white-space: nowrap;
+}
+
+.profile-map-link {
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid rgba(255, 255, 255, 0.28);
+  background: rgba(255, 255, 255, 0.08);
+  color: var(--text-primary);
+  text-decoration: none;
+  transition: background 0.2s ease, border-color 0.2s ease, transform 0.2s ease;
+}
+
+.profile-map-icon {
+  width: 12px;
+  height: 12px;
+  display: block;
+}
+
+.profile-map-link:hover {
+  background: rgba(255, 255, 255, 0.18);
+  border-color: rgba(255, 255, 255, 0.45);
+  transform: translateY(-1px);
+}
+
+.profile-map-link--baidu {
+  color: #84d5ff;
+}
+
+.profile-map-link--google {
+  color: #9ee8b8;
+}
+
 .profile-extra-placeholder {
   color: var(--text-muted);
 }

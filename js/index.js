@@ -384,8 +384,121 @@ function renderProfile(info, banners) {
     }
   }
 
+  function renderMapLink(target, url, label, provider, providerClassName) {
+    const href = cleanText(url);
+    if (!href) return;
+
+    const link = document.createElement("a");
+    link.className = "profile-map-link";
+    if (providerClassName) {
+      link.classList.add(providerClassName);
+    }
+    link.href = href;
+    link.target = "_blank";
+    link.rel = "noreferrer";
+    link.setAttribute("aria-label", label);
+    link.title = label;
+
+    const icon = document.createElement("img");
+    icon.className = "profile-map-icon";
+    icon.alt = "";
+    icon.setAttribute("aria-hidden", "true");
+    icon.loading = "lazy";
+    icon.decoding = "async";
+    if (provider === "baidu") {
+      icon.src = "https://cdn.simpleicons.org/baidu/84d5ff";
+    } else {
+      icon.src = "https://cdn.simpleicons.org/google/9ee8b8";
+    }
+    icon.addEventListener("error", () => {
+      const fallback = document.createElement("i");
+      fallback.className = provider === "baidu" ? "fa-solid fa-map-location-dot" : "fa-brands fa-google";
+      fallback.setAttribute("aria-hidden", "true");
+      link.innerHTML = "";
+      link.appendChild(fallback);
+    });
+    link.appendChild(icon);
+    target.appendChild(link);
+  }
+
+  function renderAddressList(target, values, placeholderText) {
+    if (!target) return;
+    target.innerHTML = "";
+
+    let visibleCount = 0;
+
+    function appendAddressItem(text, mapMeta) {
+      const addressText = cleanText(text);
+      if (!addressText) return;
+
+      const li = document.createElement("li");
+      li.className = "profile-address-item";
+
+      const textNode = document.createElement("span");
+      textNode.className = "profile-address-text";
+      textNode.textContent = addressText;
+      li.appendChild(textNode);
+
+      const maps = mapMeta && typeof mapMeta === "object" ? mapMeta : {};
+      const baiduUrl = cleanText(maps.baidu);
+      const googleUrl = cleanText(maps.google);
+      if (baiduUrl || googleUrl) {
+        const mapLinks = document.createElement("span");
+        mapLinks.className = "profile-address-maps";
+        renderMapLink(
+          mapLinks,
+          baiduUrl,
+          `Open Baidu Map for ${addressText}`,
+          "baidu",
+          "profile-map-link--baidu"
+        );
+        renderMapLink(
+          mapLinks,
+          googleUrl,
+          `Open Google Map for ${addressText}`,
+          "google",
+          "profile-map-link--google"
+        );
+        li.appendChild(mapLinks);
+      }
+
+      target.appendChild(li);
+      visibleCount += 1;
+    }
+
+    if (Array.isArray(values)) {
+      values.forEach((entry) => {
+        if (typeof entry === "string") {
+          appendAddressItem(entry, {});
+          return;
+        }
+        if (!entry || typeof entry !== "object") {
+          return;
+        }
+
+        const text = cleanText(entry.address || entry.value || entry.text || entry.label || "");
+        const mapMeta =
+          entry.maps && typeof entry.maps === "object"
+            ? { baidu: entry.maps.baidu, google: entry.maps.google }
+            : { baidu: entry.baidu, google: entry.google };
+        appendAddressItem(text, mapMeta);
+      });
+    } else if (values && typeof values === "object") {
+      Object.entries(values).forEach(([addressText, mapMeta]) => {
+        appendAddressItem(addressText, mapMeta);
+      });
+    }
+
+    if (visibleCount === 0) {
+      const li = document.createElement("li");
+      li.className = "profile-extra-placeholder";
+      li.textContent = placeholderText;
+      target.appendChild(li);
+    }
+  }
+
   renderProfileList(contactsWrap, profile.contacts, "Not set yet / 待填写", true);
-  renderProfileList(addressesWrap, profile.addresses, "Not set yet / 待填写", false);
+  renderAddressList(addressesWrap, profile.addresses || profile.address, "Not set yet / 待填写");
 }
 
 function renderCareer(career) {

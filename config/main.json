@@ -18,7 +18,7 @@
         "url": "https://github.com/xfd997700"
       },
       "bilibili": {
-        "label": "Bilibili",
+        "label": "bilibili",
         "url": "https://space.bilibili.com/605829"
       },
       "google_scholar": {
@@ -41,11 +41,15 @@
       "Databases"
     ],
     "contacts": [
-      "xfd997700@gmail.com"
+      "xfd997700@gmail.com",
+      "fandingxu@u.nus.edu"
     ],
-    "addresses": [
-      "iHarbour, Xi'an, Shaanxi Province 710049, P.R. China"
-    ]
+    "addresses": {
+      "iHarbour, Xi'an, Shaanxi Province 710049, P.R. China": {
+        "baidu": "https://j.map.baidu.com/30/SL3K",
+        "google": "https://maps.app.goo.gl/UcJupkwtetVLmtUv5"
+      }
+    }
   },
   "career": [
     {
