@@ -3,6 +3,7 @@
 
   const refs = {
     homeSortBtn: document.getElementById("publications-sort-btn"),
+    homeGraphAbsBtn: document.getElementById("publications-graph-abs-btn"),
     homeFilterBtn: document.getElementById("publications-filter-btn"),
     homeFilterPanel: document.getElementById("publications-filter-panel"),
     homeMinInput: document.getElementById("publications-filter-min-year"),
@@ -12,6 +13,7 @@
     homeList: document.getElementById("publications-list"),
     homePagination: document.getElementById("publications-pagination"),
     pageSortBtn: document.getElementById("publications-page-sort-btn"),
+    pageGraphAbsBtn: document.getElementById("publications-page-graph-abs-btn"),
     pageFilterBtn: document.getElementById("publications-page-filter-btn"),
     pageFilterPanel: document.getElementById("publications-page-filter-panel"),
     pageMinInput: document.getElementById("publications-page-filter-min-year"),
@@ -38,7 +40,9 @@
       page: 1,
       mode: "list",
       listPageSize: 10,
-      gridPageSize: 8,
+      gridRows: 3,
+      gridCols: 3,
+      gridPageSize: 9,
       listShowGraphAbs: true,
       gridShowGraphAbs: false
     }
@@ -58,6 +62,16 @@
     const parsed = Number(value);
     if (!Number.isFinite(parsed) || parsed < 0) return fallback;
     return parsed;
+  }
+
+  function normalizeGridShape(value, fallbackRows, fallbackCols) {
+    if (!Array.isArray(value) || value.length < 2) {
+      return null;
+    }
+    const rows = normalizePositiveInteger(value[0], fallbackRows, 20);
+    const cols = normalizePositiveInteger(value[1], fallbackCols, 20);
+    if (!rows || !cols) return null;
+    return [rows, cols];
   }
 
   function normalizeDoi(doi) {
@@ -468,6 +482,24 @@
     button.classList.toggle("is-active", active);
   }
 
+  function updateGraphAbsButton(button, isShown) {
+    if (!button) return;
+    const shown = Boolean(isShown);
+    const title = shown
+      ? "Hide graphical abstracts | 隐藏图形摘要"
+      : "Show graphical abstracts | 显示图形摘要";
+    button.setAttribute("aria-pressed", shown ? "true" : "false");
+    button.setAttribute("title", title);
+    button.setAttribute("aria-label", title);
+    button.classList.toggle("is-active", shown);
+
+    const icon = button.querySelector("i");
+    if (icon) {
+      icon.classList.remove(shown ? "fa-regular" : "fa-solid");
+      icon.classList.add(shown ? "fa-solid" : "fa-regular");
+    }
+  }
+
   function syncFilterInputs(viewState, minInput, maxInput) {
     if (minInput && document.activeElement !== minInput) minInput.value = viewState.minYear || "";
     if (maxInput && document.activeElement !== maxInput) maxInput.value = viewState.maxYear || "";
@@ -517,6 +549,7 @@
       renderHomePublications();
     });
     updateSortButton(refs.homeSortBtn, state.home.sortMode);
+    updateGraphAbsButton(refs.homeGraphAbsBtn, state.home.showGraphAbs);
     updateFilterButton(refs.homeFilterBtn, state.home);
     syncFilterInputs(state.home, refs.homeMinInput, refs.homeMaxInput);
   }
@@ -551,6 +584,10 @@
       renderPublicationsPage();
     });
     updateSortButton(refs.pageSortBtn, pageState.sortMode);
+    updateGraphAbsButton(
+      refs.pageGraphAbsBtn,
+      pageState.mode === "grid" ? pageState.gridShowGraphAbs : pageState.listShowGraphAbs
+    );
     updateFilterButton(refs.pageFilterBtn, pageState);
     syncFilterInputs(pageState, refs.pageMinInput, refs.pageMaxInput);
     updateViewToggle();
@@ -599,7 +636,19 @@
     state.home.pageSize = normalizePositiveInteger(home.page_size, 5, 60);
     state.home.showGraphAbs = home.show_graph_abs === undefined ? true : Boolean(home.show_graph_abs);
     state.page.listPageSize = normalizePositiveInteger(page.list_page_size, 10, 120);
-    state.page.gridPageSize = normalizePositiveInteger(page.grid_page_size, 8, 120);
+    const shape = normalizeGridShape(page.grid_shape, state.page.gridRows, state.page.gridCols);
+    if (shape) {
+      state.page.gridRows = shape[0];
+      state.page.gridCols = shape[1];
+      state.page.gridPageSize = state.page.gridRows * state.page.gridCols;
+    } else {
+      state.page.gridPageSize = normalizePositiveInteger(page.grid_page_size, state.page.gridPageSize, 120);
+      if (!state.page.gridRows || !state.page.gridCols) {
+        state.page.gridRows = 3;
+        state.page.gridCols = Math.max(1, Math.min(12, state.page.gridPageSize));
+      }
+    }
+    rootStyle.setProperty("--pub-grid-columns", `${Math.max(1, state.page.gridCols)}`);
     state.page.mode = page.default_view === "grid" ? "grid" : "list";
     state.page.listShowGraphAbs = page.list_show_graph_abs === undefined ? true : Boolean(page.list_show_graph_abs);
     state.page.gridShowGraphAbs = page.grid_show_graph_abs === undefined ? false : Boolean(page.grid_show_graph_abs);
@@ -624,6 +673,12 @@
         renderHomePublications();
       });
     }
+    if (refs.homeGraphAbsBtn) {
+      refs.homeGraphAbsBtn.addEventListener("click", () => {
+        state.home.showGraphAbs = !state.home.showGraphAbs;
+        renderHomePublications();
+      });
+    }
     if (refs.homeFilterBtn) {
       refs.homeFilterBtn.addEventListener("click", () => {
         if (!refs.homeFilterPanel) return;
@@ -644,6 +699,16 @@
       state.page.page = 1;
       renderPublicationsPage();
     });
+    if (refs.pageGraphAbsBtn) {
+      refs.pageGraphAbsBtn.addEventListener("click", () => {
+        if (state.page.mode === "grid") {
+          state.page.gridShowGraphAbs = !state.page.gridShowGraphAbs;
+        } else {
+          state.page.listShowGraphAbs = !state.page.listShowGraphAbs;
+        }
+        renderPublicationsPage();
+      });
+    }
     if (refs.pageFilterBtn) refs.pageFilterBtn.addEventListener("click", () => {
       if (!refs.pageFilterPanel) return;
       refs.pageFilterPanel.hidden = !refs.pageFilterPanel.hidden;

@@ -45,7 +45,7 @@
     "page": {
       "default_view": "grid",
       "list_page_size": 10,
-      "grid_page_size": 9,
+      "grid_shape": [3, 3],
       "list_show_graph_abs": true,
       "grid_show_graph_abs": true
     },

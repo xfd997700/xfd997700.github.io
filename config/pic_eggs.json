@@ -21,5 +21,12 @@
       "imgs/common/eggs/3p1.jpg",
       "imgs/common/eggs/3p2.jpg"
     ]
+  },
+  {
+    "keyword": ["wyf", "wangyifang"],
+    "pics": [
+      "imgs/common/eggs/wyf0.webp",
+      "imgs/common/eggs/wyf1.jpg"
+    ]
   }
 ]
