@@ -636,6 +636,33 @@ function cleanText(value) {
   return String(value || "").replace(/\s+/g, " ").trim();
 }
 
+function normalizeFooterLines(value) {
+  if (!Array.isArray(value)) return [];
+  return value
+    .map((item) => cleanText(item))
+    .filter(Boolean);
+}
+
+function renderFooter(linesInput) {
+  const footer = document.getElementById("site-footer");
+  if (!footer) return;
+
+  const lines = normalizeFooterLines(linesInput);
+  footer.innerHTML = "";
+  if (!lines.length) {
+    footer.hidden = true;
+    return;
+  }
+
+  lines.forEach((line) => {
+    const row = document.createElement("p");
+    row.className = "site-footer-line";
+    row.textContent = line;
+    footer.appendChild(row);
+  });
+  footer.hidden = false;
+}
+
 async function init() {
   document.addEventListener("keydown", handleTerminalKey);
   ensureGlassPrewarm();
@@ -658,6 +685,7 @@ async function init() {
     applyBackground(config);
     renderProfile(config.personal_info, config.banner || config.site_brand);
     renderCareer(config.career);
+    renderFooter(config.foot || config.footer);
     if (window.ProjectFeature && typeof window.ProjectFeature.initIndexPage === "function") {
       try {
         await window.ProjectFeature.initIndexPage({ settings });

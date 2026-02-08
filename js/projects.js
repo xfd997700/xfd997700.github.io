@@ -130,6 +130,7 @@
       title_zh: cleanText(value.title_zh),
       authors_en: cleanText(value.authors_en || value.authors),
       authors_zh: cleanText(value.authors_zh || value.authors),
+      year: cleanText(value.year),
       amount: cleanText(value.amount),
       abs_en: cleanText(value.abs_en),
       abs_zh: cleanText(value.abs_zh),
@@ -222,7 +223,11 @@
   function formatProjectAmount(project, lang) {
     const amount = cleanText(project && project.amount);
     if (!amount) return "";
-    return lang === "zh" ? ` ${amount}` : ` ${amount}`;
+    return lang === "zh" ? amount : amount;
+  }
+
+  function getProjectYear(project) {
+    return cleanText(project && project.year);
   }
 
   function hasProjectFunding(project) {
@@ -286,13 +291,24 @@
     return badge;
   }
 
+  function createProjectYearLabel(project, className) {
+    const year = getProjectYear(project);
+    if (!year) return null;
+    const label = document.createElement("span");
+    label.className = className || "project-card-year";
+    label.textContent = year;
+    return label;
+  }
+
   function createProjectInfoMeta(project, lang) {
+    const yearLabel = createProjectYearLabel(project, "project-card-year");
     const amountBadge = createProjectAmountBadge(project, lang, "project-card-amount");
-    if (!amountBadge) return null;
+    if (!yearLabel && !amountBadge) return null;
 
     const wrap = document.createElement("div");
     wrap.className = "project-card-meta";
-    wrap.appendChild(amountBadge);
+    if (yearLabel) wrap.appendChild(yearLabel);
+    if (amountBadge) wrap.appendChild(amountBadge);
     return wrap;
   }
 
@@ -303,13 +319,51 @@
     return lang === "zh" ? indexState.settings.overviewAbsMaxCharsZh : indexState.settings.overviewAbsMaxCharsEn;
   }
 
-  function renderProjectHeaderMeta(host, project, lang) {
+  function renderProjectHeaderMeta(host, project, lang, keywords) {
     if (!host) return;
-    host.innerHTML = "";
 
     const authorsText = getProjectAuthors(project, lang);
+    const authorKeywords = Array.isArray(keywords) ? keywords : indexState.publicationAuthorKeywords;
+    const scopedAuthorsHost = host.querySelector("[data-project-slot='page-authors']");
+    const scopedFactsHost = host.querySelector("[data-project-slot='page-facts']");
+    const hasScopedHosts = Boolean(scopedAuthorsHost || scopedFactsHost);
+
+    if (hasScopedHosts) {
+      let hasVisibleContent = false;
+
+      if (scopedAuthorsHost) {
+        scopedAuthorsHost.innerHTML = "";
+        if (authorsText) {
+          scopedAuthorsHost.hidden = false;
+          scopedAuthorsHost.appendChild(buildAuthorsFragment(authorsText, authorKeywords));
+          hasVisibleContent = true;
+        } else {
+          scopedAuthorsHost.hidden = true;
+        }
+      }
+
+      if (scopedFactsHost) {
+        scopedFactsHost.innerHTML = "";
+        const yearLabel = createProjectYearLabel(project, "project-doc-page-year");
+        const amountBadge = createProjectAmountBadge(project, lang, "project-doc-page-amount");
+        if (yearLabel || amountBadge) {
+          scopedFactsHost.hidden = false;
+          if (yearLabel) scopedFactsHost.appendChild(yearLabel);
+          if (amountBadge) scopedFactsHost.appendChild(amountBadge);
+          hasVisibleContent = true;
+        } else {
+          scopedFactsHost.hidden = true;
+        }
+      }
+
+      host.hidden = !hasVisibleContent;
+      return;
+    }
+
+    host.innerHTML = "";
+    const yearLabel = createProjectYearLabel(project, "project-doc-page-year");
     const amountBadge = createProjectAmountBadge(project, lang, "project-doc-page-amount");
-    if (!authorsText && !amountBadge) {
+    if (!authorsText && !yearLabel && !amountBadge) {
       host.hidden = true;
       return;
     }
@@ -318,11 +372,16 @@
     if (authorsText) {
       const authors = document.createElement("p");
       authors.className = "project-doc-page-authors";
-      authors.textContent = lang === "zh" ? `作者：${authorsText}` : `Authors: ${authorsText}`;
+      authors.appendChild(buildAuthorsFragment(authorsText, authorKeywords));
       host.appendChild(authors);
     }
-    if (amountBadge) {
-      host.appendChild(amountBadge);
+
+    if (yearLabel || amountBadge) {
+      const facts = document.createElement("div");
+      facts.className = "project-doc-page-facts";
+      if (yearLabel) facts.appendChild(yearLabel);
+      if (amountBadge) facts.appendChild(amountBadge);
+      host.appendChild(facts);
     }
   }
 
@@ -639,6 +698,7 @@
       publicationsOverviewCard: document.getElementById("publications-overview-card"),
       detailCard: document.getElementById("project-detail-card"),
       detailTitle: document.getElementById("project-detail-title"),
+      detailMeta: document.getElementById("project-detail-meta"),
       detailLangToggle: document.getElementById("project-detail-lang-toggle"),
       detailBackButton: document.getElementById("project-detail-back-btn"),
       detailFrameWrap: document.getElementById("project-detail-frame-wrap")
@@ -932,13 +992,17 @@
   }
 
   async function renderProjectDetail(project) {
-    const { detailTitle, detailFrameWrap } = indexState.refs;
+    const { detailTitle, detailMeta, detailFrameWrap } = indexState.refs;
     if (!detailFrameWrap || !detailTitle) return;
     const renderToken = ++indexState.detailRenderToken;
 
     detailFrameWrap.innerHTML = "";
     if (!project) {
       detailTitle.textContent = "Project not found";
+      if (detailMeta) {
+        detailMeta.innerHTML = "";
+        detailMeta.hidden = true;
+      }
       const empty = document.createElement("div");
       empty.className = "placeholder-item";
       empty.textContent = "This project key is not available in config/projects.json.";
@@ -947,6 +1011,9 @@
     }
 
     detailTitle.textContent = getProjectTitle(project, indexState.lang);
+    if (detailMeta) {
+      renderProjectHeaderMeta(detailMeta, project, indexState.lang, indexState.publicationAuthorKeywords);
+    }
     const loading = document.createElement("div");
     loading.className = "placeholder-item";
     loading.textContent = "Loading project content...";
@@ -1483,7 +1550,7 @@
         }
       }
       if (metaHost) {
-        renderProjectHeaderMeta(metaHost, project, lang);
+        renderProjectHeaderMeta(metaHost, project, lang, authorKeywords);
       }
     }
     renderDocHeader(currentLang);

@@ -99,6 +99,10 @@
   margin-bottom: 12px;
 }
 
+#project-detail-meta {
+  margin-top: 8px;
+}
+
 #project-detail-title {
   margin: 0;
   font-size: clamp(18px, 2vw, 24px);
@@ -334,27 +338,33 @@
   margin-top: auto;
   padding: 0 14px;
   display: flex;
-  align-items: flex-end;
+  align-items: center;
   justify-content: flex-end;
   gap: 8px;
 }
 
+.project-card-year,
+.project-doc-page-year,
 .project-card-amount,
 .project-doc-page-amount {
-  margin-left: auto;
   border-radius: 999px;
   border: 1px solid rgba(255, 255, 255, 0.2);
-  background: rgba(255, 255, 255, 0.12);
-  backdrop-filter: blur(10px);
-  -webkit-backdrop-filter: blur(10px);
-  color: #dff9ff;
+  background: rgba(255, 255, 255, 0.08);
+  color: var(--text-muted);
   display: inline-flex;
   align-items: center;
   gap: 6px;
   padding: 4px 10px;
-  font-size: 11px;
+  min-height: 24px;
+  box-sizing: border-box;
+  font-size: 12px;
   line-height: 1;
   white-space: nowrap;
+}
+
+.project-card-year,
+.project-doc-page-year {
+  gap: 0;
 }
 
 .project-card-amount i,
@@ -492,11 +502,9 @@
 }
 
 .project-doc-page-meta {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 10px;
-  flex-wrap: wrap;
+  display: grid;
+  justify-items: center;
+  gap: 8px;
 }
 
 .project-doc-page-authors {
@@ -505,6 +513,14 @@
   font-size: 13px;
   line-height: 1.45;
   text-align: center;
+}
+
+.project-doc-page-facts {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  flex-wrap: wrap;
 }
 
 /* Standalone project pages: continuous reading layout */

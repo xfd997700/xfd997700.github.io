@@ -311,6 +311,23 @@ body.modal-open {
   align-items: start;
 }
 
+.site-footer {
+  margin-top: 14px;
+  padding: 2px 12px 0;
+  display: grid;
+  gap: 2px;
+  justify-items: center;
+  text-align: center;
+  color: var(--text-muted);
+  font-size: 12px;
+  line-height: 1.55;
+}
+
+.site-footer-line {
+  margin: 0;
+  white-space: pre-wrap;
+}
+
 .left-column,
 .right-column {
   display: grid;
