@@ -31,9 +31,9 @@
     settings: { ...DEFAULT_PROJECT_SETTINGS },
     refs: null,
     currentRoute: { view: "home" },
-    resizeTimer: null,
-    routeTransitionTimer: null
+    resizeTimer: null
   };
+  const routePanelAnimations = new WeakMap();
 
   function cleanText(value) {
     return String(value || "").replace(/\s+/g, " ").trim();
@@ -995,15 +995,32 @@
   function animateRoutePanel(panel) {
     if (!panel) return;
     if (window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
-    panel.classList.remove("route-panel-enter");
-    void panel.offsetWidth;
-    panel.classList.add("route-panel-enter");
-    if (indexState.routeTransitionTimer) {
-      clearTimeout(indexState.routeTransitionTimer);
+    if (typeof panel.animate !== "function") return;
+
+    const previousAnimation = routePanelAnimations.get(panel);
+    if (previousAnimation) {
+      previousAnimation.cancel();
     }
-    indexState.routeTransitionTimer = setTimeout(() => {
-      panel.classList.remove("route-panel-enter");
-    }, 260);
+
+    const animation = panel.animate(
+      [
+        { opacity: 0 },
+        { opacity: 1 }
+      ],
+      {
+        duration: 150,
+        easing: "cubic-bezier(0.22, 1, 0.36, 1)"
+      }
+    );
+    routePanelAnimations.set(panel, animation);
+
+    const clearIfCurrent = () => {
+      if (routePanelAnimations.get(panel) === animation) {
+        routePanelAnimations.delete(panel);
+      }
+    };
+    animation.addEventListener("finish", clearIfCurrent, { once: true });
+    animation.addEventListener("cancel", clearIfCurrent, { once: true });
   }
 
   function applyRoute(route) {

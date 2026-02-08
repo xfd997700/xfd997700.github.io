@@ -135,21 +135,6 @@
   min-height: 360px;
 }
 
-.route-panel-enter {
-  animation: routePanelEnter 0.22s ease-out;
-}
-
-@keyframes routePanelEnter {
-  from {
-    opacity: 0;
-    transform: translateX(10px);
-  }
-  to {
-    opacity: 1;
-    transform: translateX(0);
-  }
-}
-
 .projects-lang-toggle {
   display: inline-flex;
   align-items: center;
