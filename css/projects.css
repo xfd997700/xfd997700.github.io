@@ -299,12 +299,47 @@
   color: var(--text-primary);
 }
 
-.project-card-abs {
+.project-card-authors {
   margin: 0;
   padding: 0 14px;
   color: var(--text-muted);
+  font-size: 12px;
+  line-height: 1.4;
+  min-width: 0;
+}
+
+.project-card-authors .publication-author-highlight {
+  color: var(--text-primary);
+  font-weight: 600;
+}
+
+.project-card-abs-wrap {
+  padding: 0 14px;
+  display: grid;
+  gap: 4px;
+}
+
+.project-card-abs {
+  margin: 0;
+  padding: 0;
+  color: var(--text-muted);
   font-size: 13px;
   line-height: 1.5;
+}
+
+.project-card-abs-toggle {
+  border: 0;
+  background: transparent;
+  color: var(--accent);
+  font-size: 12px;
+  line-height: 1.2;
+  padding: 0;
+  cursor: pointer;
+  width: fit-content;
+}
+
+.project-card-abs-toggle:hover {
+  text-decoration: underline;
 }
 
 .project-card-funding {
@@ -321,16 +356,8 @@
   padding: 0 14px;
   display: flex;
   align-items: flex-end;
-  justify-content: space-between;
+  justify-content: flex-end;
   gap: 8px;
-}
-
-.project-card-authors {
-  margin: 0;
-  color: var(--text-muted);
-  font-size: 12px;
-  line-height: 1.4;
-  min-width: 0;
 }
 
 .project-card-amount,

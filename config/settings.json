@@ -29,6 +29,10 @@
     "overview_card_height_px": 320,
     "card_gap_px": 16,
     "image_carousel_seconds": 4,
+    "home_abs_max_chars_en": 110,
+    "home_abs_max_chars_zh": 70,
+    "overview_abs_max_chars_en": 130,
+    "overview_abs_max_chars_zh": 84,
     "breadcrumb_title_max_chars_en": 56,
     "breadcrumb_title_max_chars_zh": 28
   },

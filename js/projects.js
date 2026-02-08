@@ -8,6 +8,10 @@
     overviewCardHeight: 320,
     cardGap: 16,
     imageCarouselSeconds: 4,
+    homeAbsMaxCharsEn: 110,
+    homeAbsMaxCharsZh: 70,
+    overviewAbsMaxCharsEn: 130,
+    overviewAbsMaxCharsZh: 84,
     breadcrumbMaxCharsEn: 56,
     breadcrumbMaxCharsZh: 28,
     topActionButtonHeight: 32
@@ -218,7 +222,7 @@
   function formatProjectAmount(project, lang) {
     const amount = cleanText(project && project.amount);
     if (!amount) return "";
-    return lang === "zh" ? `金额：${amount}` : `Amount: ${amount}`;
+    return lang === "zh" ? ` ${amount}` : ` ${amount}`;
   }
 
   function hasProjectFunding(project) {
@@ -283,26 +287,20 @@
   }
 
   function createProjectInfoMeta(project, lang) {
+    const amountBadge = createProjectAmountBadge(project, lang, "project-card-amount");
+    if (!amountBadge) return null;
+
     const wrap = document.createElement("div");
     wrap.className = "project-card-meta";
-
-    const authorsText = getProjectAuthors(project, lang);
-    if (authorsText) {
-      const authors = document.createElement("p");
-      authors.className = "project-card-authors";
-      authors.textContent = lang === "zh" ? `作者：${authorsText}` : `Authors: ${authorsText}`;
-      wrap.appendChild(authors);
-    }
-
-    const amountBadge = createProjectAmountBadge(project, lang, "project-card-amount");
-    if (amountBadge) {
-      wrap.appendChild(amountBadge);
-    }
-
-    if (!authorsText && !amountBadge) {
-      return null;
-    }
+    wrap.appendChild(amountBadge);
     return wrap;
+  }
+
+  function getProjectAbstractMaxChars(variant, lang) {
+    if (variant === "home") {
+      return lang === "zh" ? indexState.settings.homeAbsMaxCharsZh : indexState.settings.homeAbsMaxCharsEn;
+    }
+    return lang === "zh" ? indexState.settings.overviewAbsMaxCharsZh : indexState.settings.overviewAbsMaxCharsEn;
   }
 
   function renderProjectHeaderMeta(host, project, lang) {
@@ -370,9 +368,56 @@
     title.className = "project-card-title";
     title.textContent = getProjectTitle(project, lang);
 
+    const authorsText = getProjectAuthors(project, lang);
+    let authors = null;
+    if (authorsText) {
+      authors = document.createElement("p");
+      authors.className = "project-card-authors";
+      authors.appendChild(buildAuthorsFragment(authorsText, indexState.publicationAuthorKeywords));
+    }
+
+    const abstractText = getProjectAbstract(project, lang) || (lang === "zh" ? "暂无摘要。" : "No abstract provided yet.");
+    const abstractLimit = getProjectAbstractMaxChars(variant, lang);
+    const compactAbstract = truncateWithEllipsis(abstractText, abstractLimit);
+    const isAbstractTruncated = compactAbstract !== cleanText(abstractText);
+    const absWrap = document.createElement("div");
+    absWrap.className = "project-card-abs-wrap";
+
     const abs = document.createElement("p");
     abs.className = "project-card-abs";
-    abs.textContent = getProjectAbstract(project, lang) || "No abstract provided yet.";
+    abs.textContent = compactAbstract;
+    absWrap.appendChild(abs);
+
+    if (isAbstractTruncated) {
+      let expanded = false;
+      const toggle = document.createElement("button");
+      toggle.type = "button";
+      toggle.className = "project-card-abs-toggle";
+      const labels =
+        lang === "zh"
+          ? { more: "展开", less: "收起" }
+          : { more: "More", less: "Less" };
+
+      function renderAbstract() {
+        abs.textContent = expanded ? cleanText(abstractText) : compactAbstract;
+        toggle.textContent = expanded ? labels.less : labels.more;
+        toggle.setAttribute("aria-expanded", String(expanded));
+      }
+
+      toggle.addEventListener("click", (event) => {
+        event.preventDefault();
+        event.stopPropagation();
+        expanded = !expanded;
+        renderAbstract();
+      });
+      toggle.addEventListener("keydown", (event) => {
+        if (event.key === "Enter" || event.key === " ") {
+          event.stopPropagation();
+        }
+      });
+      renderAbstract();
+      absWrap.appendChild(toggle);
+    }
 
     const fundingText = formatProjectFunding(project, lang);
     let funding = null;
@@ -396,7 +441,10 @@
 
     card.appendChild(media);
     card.appendChild(title);
-    card.appendChild(abs);
+    if (authors) {
+      card.appendChild(authors);
+    }
+    card.appendChild(absWrap);
     if (funding) {
       card.appendChild(funding);
     }
@@ -608,6 +656,26 @@
       overviewCardHeight: Math.max(220, normalizeNonNegativeNumber(projectSettings.overview_card_height_px, 320)),
       cardGap: Math.max(8, normalizeNonNegativeNumber(projectSettings.card_gap_px, 16)),
       imageCarouselSeconds: normalizePositiveInteger(projectSettings.image_carousel_seconds, 4, 120),
+      homeAbsMaxCharsEn: normalizePositiveInteger(
+        projectSettings.home_abs_max_chars_en,
+        DEFAULT_PROJECT_SETTINGS.homeAbsMaxCharsEn,
+        1000
+      ),
+      homeAbsMaxCharsZh: normalizePositiveInteger(
+        projectSettings.home_abs_max_chars_zh,
+        DEFAULT_PROJECT_SETTINGS.homeAbsMaxCharsZh,
+        1000
+      ),
+      overviewAbsMaxCharsEn: normalizePositiveInteger(
+        projectSettings.overview_abs_max_chars_en,
+        DEFAULT_PROJECT_SETTINGS.overviewAbsMaxCharsEn,
+        1000
+      ),
+      overviewAbsMaxCharsZh: normalizePositiveInteger(
+        projectSettings.overview_abs_max_chars_zh,
+        DEFAULT_PROJECT_SETTINGS.overviewAbsMaxCharsZh,
+        1000
+      ),
       breadcrumbMaxCharsEn: normalizePositiveInteger(
         projectSettings.breadcrumb_title_max_chars_en,
         DEFAULT_PROJECT_SETTINGS.breadcrumbMaxCharsEn,
@@ -1404,6 +1472,10 @@
     const [settings, catalog] = await Promise.all([loadSettings(""), loadProjectsCatalog("")]);
     applyProjectSettings(settings);
     const projects = normalizeProjectsCatalog(catalog, "");
+    indexState.publicationAuthorKeywords =
+      settings && settings.publications && Array.isArray(settings.publications.author_highlight_keywords)
+        ? settings.publications.author_highlight_keywords.map((name) => cleanText(name)).filter(Boolean)
+        : ["Fanding Xu", "徐凡丁"];
 
     const langState = { lang: "zh", intervals: [] };
     const langToggle = document.getElementById("projects-standalone-lang-toggle");
