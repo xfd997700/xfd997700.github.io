@@ -16,7 +16,17 @@
       <template data-project-override="abs_zh">
         Optional ZH abstract override from this HTML. If empty, fallback to config/projects.json.
       </template>
-      <div data-project-slot="lang-toggle"></div>
+      <header class="project-doc-header">
+        <div class="project-doc-header-top">
+          <nav class="route-nav glass" data-project-slot="route-nav" aria-label="Route navigation"></nav>
+          <div class="project-doc-header-actions">
+            <div data-project-slot="lang-toggle"></div>
+            <button type="button" class="project-back-btn" data-project-slot="projects-btn">Projects</button>
+            <button type="button" class="project-back-btn" data-project-slot="home-btn">Home</button>
+          </div>
+        </div>
+        <h1 class="project-doc-page-title project-doc-page-title--spaced" data-project-slot="page-title"></h1>
+      </header>
       <figure class="project-doc-banner">
         <img src="../imgs/projects/mol_motif/1.svg" alt="project cover" />
       </figure>

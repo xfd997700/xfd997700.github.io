@@ -2,56 +2,11 @@
 const terminalInput = document.getElementById("terminal-input");
 const terminalMessage = document.getElementById("terminal-message");
 const mainContent = document.getElementById("main-content");
-const publicationsSortButton = document.getElementById("publications-sort-btn");
-const publicationsFilterButton = document.getElementById("publications-filter-btn");
-const publicationsFilterPanel = document.getElementById("publications-filter-panel");
-const publicationsFilterMinYearInput = document.getElementById("publications-filter-min-year");
-const publicationsFilterMaxYearInput = document.getElementById("publications-filter-max-year");
-const publicationsFilterApplyButton = document.getElementById("publications-filter-apply-btn");
-const publicationsFilterResetButton = document.getElementById("publications-filter-reset-btn");
-const publicationsPagination = document.getElementById("publications-pagination");
-const publicationsPageSortButton = document.getElementById("publications-page-sort-btn");
-const publicationsPageFilterButton = document.getElementById("publications-page-filter-btn");
-const publicationsPageFilterPanel = document.getElementById("publications-page-filter-panel");
-const publicationsPageFilterMinYearInput = document.getElementById("publications-page-filter-min-year");
-const publicationsPageFilterMaxYearInput = document.getElementById("publications-page-filter-max-year");
-const publicationsPageFilterApplyButton = document.getElementById("publications-page-filter-apply-btn");
-const publicationsPageFilterResetButton = document.getElementById("publications-page-filter-reset-btn");
-const publicationsPageView = document.getElementById("publications-page-view");
-const publicationsPagePagination = document.getElementById("publications-page-pagination");
-const publicationsPageViewToggle = document.getElementById("publications-page-view-toggle");
-const graphAbsModal = document.getElementById("graph-abs-modal");
-const graphAbsModalImage = document.getElementById("graph-abs-modal-img");
-const graphAbsModalCloseButton = document.getElementById("graph-abs-modal-close");
 
 const state = {
   input: "",
   locked: false,
   entered: false
-};
-
-const publicationState = {
-  items: [],
-  authorHighlightKeywords: ["Fanding Xu", "徐凡丁"],
-  home: {
-    sortMode: "default",
-    minYear: "",
-    maxYear: "",
-    page: 1,
-    pageSize: 5,
-    showGraphAbs: true
-  },
-  page: {
-    sortMode: "default",
-    minYear: "",
-    maxYear: "",
-    page: 1,
-    mode: "list",
-    listPageSize: 10,
-    gridPageSize: 8,
-    listShowGraphAbs: true,
-    gridShowGraphAbs: false
-  }
 };
 
 const siteBrandTypingState = {
@@ -155,14 +110,32 @@ function enterMain() {
   mainContent.classList.add("visible");
 }
 
-function showEasterEgg() {
+function wait(ms) {
+  return new Promise((resolve) => {
+    setTimeout(resolve, Math.max(0, ms));
+  });
+}
+
+async function showTerminalInputResponse(normalizedInput) {
   if (state.locked) return;
   state.locked = true;
-  terminalMessage.innerHTML = "<div>Hello world!</div><div>bye bye</div>";
-  setTimeout(() => {
-    state.locked = false;
-    resetTerminal();
-  }, 2200);
+
+  let matchedEgg = false;
+  if (window.EggFeature && typeof window.EggFeature.showForKeyword === "function") {
+    try {
+      matchedEgg = await window.EggFeature.showForKeyword(normalizedInput, { container: terminalMessage });
+    } catch (error) {
+      console.error("EggFeature trigger failed.", error);
+    }
+  }
+
+  if (!matchedEgg) {
+    terminalMessage.innerHTML = "<div>Hello world!</div><div>bye bye</div>";
+    await wait(2200);
+  }
+
+  state.locked = false;
+  resetTerminal();
 }
 
 function handleTerminalKey(event) {
@@ -175,7 +148,7 @@ function handleTerminalKey(event) {
     if (normalizedInput === "" || normalizedInput === "y") {
       enterMain();
     } else {
-      showEasterEgg();
+      showTerminalInputResponse(normalizedInput);
     }
     return;
   }
@@ -227,19 +200,6 @@ async function loadSettings() {
   }
 }
 
-async function loadPublicationsCatalog() {
-  try {
-    const response = await fetch("config/publications.json", { cache: "no-store" });
-    if (!response.ok) {
-      throw new Error("Failed to load config/publications.json");
-    }
-    return response.json();
-  } catch (error) {
-    console.warn("Using fallback publications from main config.", error);
-    return null;
-  }
-}
-
 function normalizeNonNegativeNumber(value, fallback) {
   const n = Number(value);
   if (!Number.isFinite(n) || n < 0) return fallback;
@@ -256,7 +216,7 @@ function applySettings(settings) {
   const banner = settings && settings.banner ? settings.banner : {};
   const glass = settings && settings.glass ? settings.glass : {};
   const career = settings && settings.career ? settings.career : {};
-  const publications = settings && settings.publications ? settings.publications : {};
+  const ui = settings && settings.ui ? settings.ui : {};
 
   if (background.blur_px !== undefined) {
     const blurPx = normalizeNonNegativeNumber(background.blur_px, 0);
@@ -282,36 +242,10 @@ function applySettings(settings) {
     rootStyle.setProperty("--career-logo-max-width", `${width}px`);
   }
 
-  if (publications.graph_abs_width_px !== undefined) {
-    const width = Math.max(120, normalizeNonNegativeNumber(publications.graph_abs_width_px, 520));
-    rootStyle.setProperty("--pub-graph-abs-width", `${width}px`);
+  if (ui.top_action_button_height_px !== undefined) {
+    const height = Math.max(24, normalizeNonNegativeNumber(ui.top_action_button_height_px, 32));
+    rootStyle.setProperty("--top-action-btn-height", `${height}px`);
   }
-
-  if (publications.graph_abs_height_px !== undefined) {
-    const height = Math.max(120, normalizeNonNegativeNumber(publications.graph_abs_height_px, 240));
-    rootStyle.setProperty("--pub-graph-abs-height", `${height}px`);
-  }
-
-  if (Array.isArray(publications.author_highlight_keywords)) {
-    publicationState.authorHighlightKeywords = publications.author_highlight_keywords
-      .map((name) => cleanText(name))
-      .filter(Boolean);
-  }
-
-  const publicationHome = publications && publications.home && typeof publications.home === "object" ? publications.home : {};
-  const publicationPage = publications && publications.page && typeof publications.page === "object" ? publications.page : {};
-
-  publicationState.home.pageSize = normalizePositiveInteger(publicationHome.page_size, 5, 60);
-  publicationState.home.showGraphAbs =
-    publicationHome.show_graph_abs === undefined ? true : Boolean(publicationHome.show_graph_abs);
-
-  publicationState.page.listPageSize = normalizePositiveInteger(publicationPage.list_page_size, 10, 120);
-  publicationState.page.gridPageSize = normalizePositiveInteger(publicationPage.grid_page_size, 8, 120);
-  publicationState.page.mode = publicationPage.default_view === "grid" ? "grid" : "list";
-  publicationState.page.listShowGraphAbs =
-    publicationPage.list_show_graph_abs === undefined ? true : Boolean(publicationPage.list_show_graph_abs);
-  publicationState.page.gridShowGraphAbs =
-    publicationPage.grid_show_graph_abs === undefined ? false : Boolean(publicationPage.grid_show_graph_abs);
 
   if (banner.hold_ms !== undefined) {
     siteBrandTypingState.holdMs = normalizeNonNegativeNumber(banner.hold_ms, 2600);
@@ -681,842 +615,24 @@ function cleanText(value) {
   return String(value || "").replace(/\s+/g, " ").trim();
 }
 
-function normalizePositiveInteger(value, fallback, maxValue) {
-  const parsed = parseInt(value, 10);
-  if (!Number.isFinite(parsed) || parsed <= 0) return fallback;
-  return Math.min(parsed, maxValue);
-}
-
-function normalizeDoi(doi) {
-  const raw = cleanText(doi);
-  if (!raw) return "";
-
-  return raw
-    .replace(/^https?:\/\/(dx\.)?doi\.org\//i, "")
-    .replace(/^doi:\s*/i, "")
-    .trim();
-}
-
-function normalizeAuthorKeyword(value) {
-  return cleanText(value)
-    .toLowerCase()
-    .replace(/[.*†‡]/g, "")
-    .replace(/\s+/g, "");
-}
-
-function shouldHighlightAuthor(authorName, keywords) {
-  const normalizedAuthor = normalizeAuthorKeyword(authorName);
-  if (!normalizedAuthor) return false;
-
-  return keywords.some((keyword) => {
-    const normalizedKeyword = normalizeAuthorKeyword(keyword);
-    if (!normalizedKeyword) return false;
-    return normalizedAuthor === normalizedKeyword || normalizedAuthor.includes(normalizedKeyword);
-  });
-}
-
-function buildAuthorsFragment(authorsText, keywords) {
-  const text = cleanText(authorsText);
-  const fragment = document.createDocumentFragment();
-  if (!text) return fragment;
-
-  const parts = text
-    .split(/[;,，]/)
-    .map((part) => cleanText(part))
-    .filter(Boolean);
-
-  if (!parts.length) {
-    fragment.appendChild(document.createTextNode(text));
-    return fragment;
-  }
-
-  parts.forEach((part, index) => {
-    if (shouldHighlightAuthor(part, keywords)) {
-      const strong = document.createElement("strong");
-      strong.className = "publication-author-highlight";
-      strong.textContent = part;
-      fragment.appendChild(strong);
-    } else {
-      fragment.appendChild(document.createTextNode(part));
-    }
-
-    if (index < parts.length - 1) {
-      fragment.appendChild(document.createTextNode(", "));
-    }
-  });
-
-  return fragment;
-}
-
-function buildDoiUrl(doi) {
-  const normalized = normalizeDoi(doi);
-  if (!normalized) return "";
-  const encoded = encodeURIComponent(normalized).replace(/%2F/gi, "/");
-  return `https://doi.org/${encoded}`;
-}
-
-function formatAuthorList(authors) {
-  if (Array.isArray(authors)) {
-    return authors
-      .map((author) => {
-        if (typeof author === "string") return cleanText(author);
-        if (!author || typeof author !== "object") return "";
-        const family = cleanText(author.family);
-        const given = cleanText(author.given);
-        return cleanText(`${given} ${family}`);
-      })
-      .filter(Boolean)
-      .join(", ");
-  }
-
-  return cleanText(authors);
-}
-
-function parseCrossrefMessage(message) {
-  if (!message || typeof message !== "object") {
-    return null;
-  }
-
-  const title = cleanText(Array.isArray(message.title) ? message.title[0] : message.title);
-  const journal = cleanText(
-    Array.isArray(message["container-title"]) ? message["container-title"][0] : message["container-title"]
-  );
-  const year = cleanText(
-    message.issued &&
-      Array.isArray(message.issued["date-parts"]) &&
-      Array.isArray(message.issued["date-parts"][0])
-      ? message.issued["date-parts"][0][0]
-      : ""
-  );
-
-  return {
-    doi: normalizeDoi(message.DOI),
-    title,
-    authors: formatAuthorList(message.author),
-    year,
-    journal,
-    volume: cleanText(message.volume),
-    page: cleanText(message.page)
-  };
-}
-
-function wait(ms) {
-  return new Promise((resolve) => {
-    setTimeout(resolve, Math.max(0, ms));
-  });
-}
-
-async function fetchByDoi(doi, options) {
-  const normalized = normalizeDoi(doi);
-  if (!normalized) return { status: "empty", data: null };
-
-  const timeoutMs = normalizePositiveInteger(options && options.timeoutMs, 12000, 60000);
-  const proxyUrlPrefix = cleanText(options && options.proxyUrlPrefix);
-  const directUrl = `https://api.crossref.org/works/${encodeURIComponent(normalized)}`;
-  const targets = proxyUrlPrefix ? [`${proxyUrlPrefix}${encodeURIComponent(directUrl)}`] : [directUrl];
-
-  let lastStatus = "failed";
-
-  for (let i = 0; i < targets.length; i += 1) {
-    const controller = new AbortController();
-    const timer = setTimeout(() => controller.abort(), timeoutMs);
-
-    try {
-      const response = await fetch(targets[i], {
-        cache: "no-store",
-        signal: controller.signal
-      });
-
-      if (response.status === 404) {
-        return { status: "not_found", data: null };
-      }
-      if (response.status === 429) {
-        lastStatus = "rate_limited";
-        continue;
-      }
-      if (!response.ok) {
-        lastStatus = `http_${response.status}`;
-        continue;
-      }
-
-      const payload = await response.json();
-      const message = payload && payload.message ? payload.message : payload;
-      const parsed = parseCrossrefMessage(message);
-      if (!parsed) {
-        lastStatus = "invalid_payload";
-        continue;
-      }
-
-      return { status: "ok", data: parsed };
-    } catch (error) {
-      if (error && error.name === "AbortError") {
-        lastStatus = "timeout";
-        continue;
-      }
-      lastStatus = "network";
-      continue;
-    } finally {
-      clearTimeout(timer);
-    }
-  }
-
-  return { status: lastStatus, data: null };
-}
-
-function normalizePublicationLocal(pub, refKey) {
-  if (!pub || typeof pub !== "object") return null;
-
-  const doi = normalizeDoi(pub.doi);
-  const title = cleanText(pub.title);
-  const authors = formatAuthorList(pub.authors);
-  const year = cleanText(pub.year);
-  const journal = cleanText(pub.journal);
-  const volume = cleanText(pub.volume);
-  const page = cleanText(pub.page);
-  const graphAbs = cleanText(pub.graph_abs);
-
-  if (!doi && !title) return null;
-
-  return {
-    ref_key: cleanText(refKey),
-    doi,
-    title,
-    authors,
-    year,
-    journal,
-    volume,
-    page,
-    graph_abs: graphAbs,
-    doi_link: buildDoiUrl(doi)
-  };
-}
-
-async function resolvePublications(catalog, settings, onUpdate) {
-  const rawPublicationEntries = Array.isArray(catalog && catalog.publications)
-    ? catalog.publications.map((item, index) => [String(index), item])
-    : catalog && catalog.publications && typeof catalog.publications === "object"
-      ? Object.entries(catalog.publications)
-      : Array.isArray(catalog)
-        ? catalog.map((item, index) => [String(index), item])
-        : [];
-
-  const localPublications = rawPublicationEntries
-    .map(([refKey, item]) => normalizePublicationLocal(item, refKey))
-    .filter(Boolean);
-  const resolved = localPublications.map((item) => ({ ...item }));
-  const publicationSettings = (settings && settings.publications) || {};
-  const resolveDoiEnabled =
-    publicationSettings.resolve_doi_enabled === undefined
-      ? true
-      : Boolean(publicationSettings.resolve_doi_enabled);
-  const doiTimeoutMs =
-    publicationSettings.doi_timeout_ms !== undefined ? publicationSettings.doi_timeout_ms : 12000;
-  const doiRequestIntervalMs =
-    publicationSettings.doi_request_interval_ms !== undefined
-      ? normalizePositiveInteger(publicationSettings.doi_request_interval_ms, 300, 60000)
-      : 300;
-  const doiStopAfterFailures =
-    publicationSettings.doi_stop_after_failures !== undefined
-      ? normalizePositiveInteger(publicationSettings.doi_stop_after_failures, 5, 100)
-      : 5;
-  const doiProxyUrlPrefix =
-    publicationSettings.doi_proxy_url_prefix !== undefined
-      ? cleanText(publicationSettings.doi_proxy_url_prefix)
-      : "";
-
-  if (typeof onUpdate === "function") {
-    onUpdate([...resolved]);
-  }
-
-  if (!resolveDoiEnabled) {
-    return resolved;
-  }
-
-  let consecutiveFailures = 0;
-  let fallbackCount = 0;
-
-  for (let index = 0; index < resolved.length; index += 1) {
-    const localItem = resolved[index];
-    if (!localItem || !localItem.doi) {
-      continue;
-    }
-
-    const result = await fetchByDoi(localItem.doi, {
-      timeoutMs: doiTimeoutMs,
-      proxyUrlPrefix: doiProxyUrlPrefix
-    });
-
-    if (result.status === "ok" && result.data) {
-      const crossref = result.data;
-      const doi = crossref.doi || localItem.doi;
-      resolved[index] = {
-        ref_key: localItem.ref_key,
-        doi,
-        title: crossref.title || localItem.title,
-        authors: crossref.authors || localItem.authors,
-        year: crossref.year || localItem.year,
-        journal: crossref.journal || localItem.journal,
-        volume: crossref.volume || localItem.volume,
-        page: crossref.page || localItem.page,
-        graph_abs: localItem.graph_abs,
-        doi_link: buildDoiUrl(doi)
-      };
-      consecutiveFailures = 0;
-
-      if (typeof onUpdate === "function") {
-        onUpdate([...resolved]);
-      }
-    } else {
-      fallbackCount += 1;
-      if (result.status === "not_found") {
-        consecutiveFailures = 0;
-      } else {
-        consecutiveFailures += 1;
-      }
-
-      if (result.status === "network" && !doiProxyUrlPrefix) {
-        break;
-      }
-      if (consecutiveFailures >= doiStopAfterFailures) {
-        break;
-      }
-    }
-
-    if (index < resolved.length - 1) {
-      const delay = result.status === "rate_limited" ? doiRequestIntervalMs * 2 : doiRequestIntervalMs;
-      await wait(delay);
-    }
-  }
-
-  if (fallbackCount > 0) {
-    console.info(`DOI auto-resolve fallback used for ${fallbackCount} publication(s).`);
-  }
-  return resolved;
-}
-
-function parsePublicationYear(pub) {
-  const text = cleanText(pub && pub.year);
-  const match = text.match(/\d{4}/);
-  return match ? parseInt(match[0], 10) : 0;
-}
-
-function getOrderedPublications(items, sortMode) {
-  const safeItems = Array.isArray(items) ? items : [];
-  if (sortMode !== "year") {
-    return safeItems;
-  }
-
-  return safeItems
-    .map((item, index) => ({ item, index }))
-    .sort((a, b) => {
-      const ay = parsePublicationYear(a.item);
-      const by = parsePublicationYear(b.item);
-      if (by !== ay) return by - ay;
-      return a.index - b.index;
-    })
-    .map((entry) => entry.item);
-}
-
-function normalizeYearBoundary(value) {
-  const parsed = parseInt(String(value || "").trim(), 10);
-  if (!Number.isFinite(parsed) || parsed <= 0) return null;
-  return parsed;
-}
-
-function normalizeYearInputString(value) {
-  const normalized = normalizeYearBoundary(value);
-  return normalized === null ? "" : String(normalized);
-}
-
-function resolvePublicationYearRange(viewState) {
-  let minYear = normalizeYearBoundary(viewState && viewState.minYear);
-  let maxYear = normalizeYearBoundary(viewState && viewState.maxYear);
-  if (minYear !== null && maxYear !== null && minYear > maxYear) {
-    const temp = minYear;
-    minYear = maxYear;
-    maxYear = temp;
-  }
-  return { minYear, maxYear };
-}
-
-function getPreparedPublications(items, viewState) {
-  const orderedItems = getOrderedPublications(items, viewState.sortMode);
-  const { minYear, maxYear } = resolvePublicationYearRange(viewState);
-
-  return orderedItems.filter((pub) => {
-    if (minYear === null && maxYear === null) return true;
-    const year = parsePublicationYear(pub);
-    if (!year) return false;
-    if (minYear !== null && year < minYear) return false;
-    if (maxYear !== null && year > maxYear) return false;
-    return true;
-  });
-}
-
-function paginateItems(items, page, pageSize) {
-  const safeSize = normalizePositiveInteger(pageSize, 10, 200);
-  const totalPages = Math.max(1, Math.ceil(items.length / safeSize));
-  const parsedPage = parseInt(page, 10);
-  const safePage = Math.min(Math.max(Number.isFinite(parsedPage) ? parsedPage : 1, 1), totalPages);
-  const start = (safePage - 1) * safeSize;
-  return {
-    page: safePage,
-    pageSize: safeSize,
-    totalPages,
-    pagedItems: items.slice(start, start + safeSize)
-  };
-}
-
-function createPublicationListItem(pub, options) {
-  const showGraphAbs = options && options.showGraphAbs !== false;
-  const item = document.createElement("article");
-  item.className = "publication-item";
-  if (pub.ref_key) {
-    item.dataset.pubKey = pub.ref_key;
-  }
-
-  const head = document.createElement("div");
-  head.className = "publication-head";
-
-  const titleLink = document.createElement("div");
-  titleLink.className = "publication-title";
-  titleLink.textContent = pub.title || "Untitled";
-  head.appendChild(titleLink);
-
-  if (pub.year) {
-    const yearBadge = document.createElement("span");
-    yearBadge.className = "publication-year";
-    yearBadge.textContent = pub.year;
-    head.appendChild(yearBadge);
-  }
-
-  item.appendChild(head);
-
-  if (pub.authors) {
-    const authors = document.createElement("div");
-    authors.className = "publication-authors";
-    authors.appendChild(buildAuthorsFragment(pub.authors, publicationState.authorHighlightKeywords));
-    item.appendChild(authors);
-  }
-
-  const venueParts = [];
-  if (pub.journal) venueParts.push(pub.journal);
-  if (pub.volume) venueParts.push(`Vol. ${pub.volume}`);
-  if (pub.page) venueParts.push(`pp. ${pub.page}`);
-  if (venueParts.length) {
-    const venue = document.createElement("div");
-    venue.className = "publication-venue";
-    venue.textContent = venueParts.join(" | ");
-    item.appendChild(venue);
-  }
-
-  if (showGraphAbs && pub.graph_abs) {
-    const graphWrap = document.createElement("button");
-    graphWrap.type = "button";
-    graphWrap.className = "publication-graph-abs";
-    graphWrap.setAttribute("aria-label", `Open graphical abstract for ${pub.title || "publication"}`);
-    const graphImg = document.createElement("img");
-    graphImg.src = pub.graph_abs;
-    graphImg.alt = `${pub.title || "Publication"} graphical abstract`;
-    graphImg.loading = "lazy";
-    graphImg.decoding = "async";
-    graphWrap.appendChild(graphImg);
-    graphWrap.addEventListener("click", () => {
-      openGraphAbsModal(pub.graph_abs, graphImg.alt);
-    });
-    item.appendChild(graphWrap);
-  }
-
-  if (pub.doi) {
-    const doiLine = document.createElement("div");
-    doiLine.className = "publication-doi-line";
-    const doiLabel = document.createElement("span");
-    doiLabel.textContent = "DOI: ";
-    doiLine.appendChild(doiLabel);
-
-    const doiLink = document.createElement("a");
-    doiLink.href = pub.doi_link || buildDoiUrl(pub.doi);
-    doiLink.target = "_blank";
-    doiLink.rel = "noreferrer";
-    doiLink.textContent = pub.doi;
-    doiLine.appendChild(doiLink);
-    item.appendChild(doiLine);
-  }
-
-  return item;
-}
-
-function createPublicationGridCard(pub, options) {
-  const showGraphAbs = options && options.showGraphAbs !== false;
-  const hasGraphAbs = showGraphAbs && Boolean(pub.graph_abs);
-  const item = document.createElement("article");
-  item.className = "publication-grid-item";
-  item.classList.add(hasGraphAbs ? "is-rich" : "is-compact");
-
-  const head = document.createElement("div");
-  head.className = "publication-grid-head";
-
-  const titleLink = document.createElement("div");
-  titleLink.className = "publication-grid-title";
-  titleLink.textContent = pub.title || "Untitled";
-  head.appendChild(titleLink);
-
-  if (pub.year) {
-    const year = document.createElement("span");
-    year.className = "publication-grid-year";
-    year.textContent = pub.year;
-    head.appendChild(year);
-  }
-  item.appendChild(head);
-
-  if (pub.authors) {
-    const authors = document.createElement("div");
-    authors.className = "publication-grid-authors";
-    authors.appendChild(buildAuthorsFragment(pub.authors, publicationState.authorHighlightKeywords));
-    item.appendChild(authors);
-  }
-
-  const venueParts = [];
-  if (pub.journal) venueParts.push(pub.journal);
-  if (pub.volume) venueParts.push(`Vol. ${pub.volume}`);
-  if (pub.page) venueParts.push(`pp. ${pub.page}`);
-  if (venueParts.length) {
-    const venue = document.createElement("div");
-    venue.className = "publication-grid-venue";
-    venue.textContent = venueParts.join(" | ");
-    item.appendChild(venue);
-  }
-
-  if (hasGraphAbs) {
-    const graphWrap = document.createElement("button");
-    graphWrap.type = "button";
-    graphWrap.className = "publication-grid-graph";
-    graphWrap.setAttribute("aria-label", `Open graphical abstract for ${pub.title || "publication"}`);
-    const graphImg = document.createElement("img");
-    graphImg.src = pub.graph_abs;
-    graphImg.alt = `${pub.title || "Publication"} graphical abstract`;
-    graphImg.loading = "lazy";
-    graphImg.decoding = "async";
-    graphWrap.appendChild(graphImg);
-    graphWrap.addEventListener("click", () => {
-      openGraphAbsModal(pub.graph_abs, graphImg.alt);
-    });
-    item.appendChild(graphWrap);
-  }
-
-  return item;
-}
-
-function createPaginationButton(label, onClick, isDisabled, isCurrent) {
-  const button = document.createElement("button");
-  button.type = "button";
-  button.className = "publication-page-btn";
-  if (isCurrent) {
-    button.classList.add("is-current");
-  }
-  button.disabled = Boolean(isDisabled);
-  button.textContent = label;
-  if (!button.disabled && typeof onClick === "function") {
-    button.addEventListener("click", onClick);
-  }
-  return button;
-}
-
-function renderPagination(container, page, totalPages, onNavigate) {
-  if (!container) return;
-  container.innerHTML = "";
-  if (totalPages <= 1) return;
-
-  const wrap = document.createElement("div");
-  wrap.className = "publication-page-wrap";
-
-  wrap.appendChild(createPaginationButton("«", () => onNavigate(1), page <= 1, false));
-  wrap.appendChild(createPaginationButton("‹", () => onNavigate(page - 1), page <= 1, false));
-
-  const pages = [1];
-  const start = Math.max(2, page - 1);
-  const end = Math.min(totalPages - 1, page + 1);
-  for (let p = start; p <= end; p += 1) {
-    pages.push(p);
-  }
-  if (totalPages > 1) {
-    pages.push(totalPages);
-  }
-
-  let last = 0;
-  pages.forEach((p) => {
-    if (p - last > 1) {
-      const ellipsis = document.createElement("span");
-      ellipsis.className = "publication-page-ellipsis";
-      ellipsis.textContent = "...";
-      wrap.appendChild(ellipsis);
-    }
-    wrap.appendChild(createPaginationButton(String(p), () => onNavigate(p), false, p === page));
-    last = p;
-  });
-
-  wrap.appendChild(createPaginationButton("›", () => onNavigate(page + 1), page >= totalPages, false));
-  wrap.appendChild(createPaginationButton("»", () => onNavigate(totalPages), page >= totalPages, false));
-  container.appendChild(wrap);
-}
-
-function updateSortButton(button, sortMode) {
-  if (!button) return;
-  const isYearMode = sortMode === "year";
-  button.textContent = isYearMode ? "Sort by Default" : "Sort by Year";
-  button.setAttribute("aria-pressed", isYearMode ? "true" : "false");
-}
-
-function updateFilterButton(button, viewState) {
-  if (!button) return;
-  const hasFilter = Boolean(cleanText(viewState.minYear) || cleanText(viewState.maxYear));
-  button.setAttribute("aria-pressed", hasFilter ? "true" : "false");
-  button.classList.toggle("is-active", hasFilter);
-}
-
-function applyFilterInputs(viewState, minInput, maxInput) {
-  viewState.minYear = normalizeYearInputString(minInput ? minInput.value : "");
-  viewState.maxYear = normalizeYearInputString(maxInput ? maxInput.value : "");
-  viewState.page = 1;
-}
-
-function resetFilterInputs(viewState, minInput, maxInput) {
-  viewState.minYear = "";
-  viewState.maxYear = "";
-  if (minInput) minInput.value = "";
-  if (maxInput) maxInput.value = "";
-  viewState.page = 1;
-}
-
-function syncFilterInputs(viewState, minInput, maxInput) {
-  if (minInput && document.activeElement !== minInput) {
-    minInput.value = viewState.minYear || "";
-  }
-  if (maxInput && document.activeElement !== maxInput) {
-    maxInput.value = viewState.maxYear || "";
-  }
-}
-
-function updatePublicationViewToggle() {
-  if (!publicationsPageViewToggle) return;
-  const mode = publicationState.page.mode;
-  publicationsPageViewToggle.querySelectorAll("button[data-mode]").forEach((button) => {
-    const isActive = button.dataset.mode === mode;
-    button.classList.toggle("is-active", isActive);
-    button.setAttribute("aria-selected", isActive ? "true" : "false");
-  });
-}
-
-function renderHomePublications() {
-  const list = document.getElementById("publications-list");
-  if (!list) return;
-
-  const filtered = getPreparedPublications(publicationState.items, publicationState.home);
-  const pagination = paginateItems(filtered, publicationState.home.page, publicationState.home.pageSize);
-  publicationState.home.page = pagination.page;
-  list.innerHTML = "";
-
-  if (!filtered.length) {
-    const empty = document.createElement("div");
-    empty.className = "placeholder-item";
-    empty.textContent = "No publications match current filter.";
-    list.appendChild(empty);
-  } else {
-    pagination.pagedItems.forEach((pub) => {
-      list.appendChild(createPublicationListItem(pub, { showGraphAbs: publicationState.home.showGraphAbs }));
-    });
-  }
-
-  renderPagination(publicationsPagination, pagination.page, pagination.totalPages, (nextPage) => {
-    publicationState.home.page = nextPage;
-    renderHomePublications();
-  });
-  updateSortButton(publicationsSortButton, publicationState.home.sortMode);
-  updateFilterButton(publicationsFilterButton, publicationState.home);
-  syncFilterInputs(publicationState.home, publicationsFilterMinYearInput, publicationsFilterMaxYearInput);
-}
-
-function renderPublicationsPage() {
-  if (!publicationsPageView) return;
-  const state = publicationState.page;
-  const filtered = getPreparedPublications(publicationState.items, state);
-  const pageSize = state.mode === "grid" ? state.gridPageSize : state.listPageSize;
-  const showGraphAbs = state.mode === "grid" ? state.gridShowGraphAbs : state.listShowGraphAbs;
-  const pagination = paginateItems(filtered, state.page, pageSize);
-  state.page = pagination.page;
-
-  publicationsPageView.innerHTML = "";
-  if (!filtered.length) {
-    const empty = document.createElement("div");
-    empty.className = "placeholder-item";
-    empty.textContent = "No publications match current filter.";
-    publicationsPageView.appendChild(empty);
-  } else if (state.mode === "grid") {
-    const grid = document.createElement("div");
-    grid.className = "publications-grid";
-    pagination.pagedItems.forEach((pub) => {
-      grid.appendChild(createPublicationGridCard(pub, { showGraphAbs }));
-    });
-    publicationsPageView.appendChild(grid);
-  } else {
-    const list = document.createElement("div");
-    list.className = "placeholder-list";
-    pagination.pagedItems.forEach((pub) => {
-      list.appendChild(createPublicationListItem(pub, { showGraphAbs }));
-    });
-    publicationsPageView.appendChild(list);
-  }
-
-  renderPagination(publicationsPagePagination, pagination.page, pagination.totalPages, (nextPage) => {
-    state.page = nextPage;
-    renderPublicationsPage();
-  });
-  updateSortButton(publicationsPageSortButton, state.sortMode);
-  updateFilterButton(publicationsPageFilterButton, state);
-  syncFilterInputs(state, publicationsPageFilterMinYearInput, publicationsPageFilterMaxYearInput);
-  updatePublicationViewToggle();
-}
-
-function rerenderPublicationViews() {
-  renderHomePublications();
-  renderPublicationsPage();
-}
-
-function isGraphAbsModalOpen() {
-  return Boolean(graphAbsModal && !graphAbsModal.hidden);
-}
-
-function openGraphAbsModal(imageSrc, imageAlt) {
-  if (!graphAbsModal || !graphAbsModalImage || !imageSrc) return;
-  graphAbsModalImage.src = imageSrc;
-  graphAbsModalImage.alt = imageAlt || "Graphical abstract";
-  graphAbsModal.hidden = false;
-  document.body.classList.add("modal-open");
-}
-
-function closeGraphAbsModal() {
-  if (!graphAbsModal || !graphAbsModalImage || graphAbsModal.hidden) return;
-  graphAbsModal.hidden = true;
-  graphAbsModalImage.src = "";
-  graphAbsModalImage.alt = "Graphical abstract";
-  document.body.classList.remove("modal-open");
-}
-
 async function init() {
   document.addEventListener("keydown", handleTerminalKey);
   if (terminalScreen) {
     terminalScreen.addEventListener("pointerdown", handleTerminalPointer);
     terminalScreen.addEventListener("touchstart", handleTerminalPointer, { passive: true });
   }
-  if (publicationsSortButton) {
-    publicationsSortButton.addEventListener("click", () => {
-      publicationState.home.sortMode = publicationState.home.sortMode === "year" ? "default" : "year";
-      publicationState.home.page = 1;
-      renderHomePublications();
+  if (window.EggFeature && typeof window.EggFeature.preload === "function") {
+    window.EggFeature.preload().catch((error) => {
+      console.error("EggFeature preload failed.", error);
     });
   }
-  if (publicationsFilterButton) {
-    publicationsFilterButton.addEventListener("click", () => {
-      if (!publicationsFilterPanel) return;
-      publicationsFilterPanel.hidden = !publicationsFilterPanel.hidden;
-    });
-  }
-  if (publicationsFilterApplyButton) {
-    publicationsFilterApplyButton.addEventListener("click", () => {
-      applyFilterInputs(publicationState.home, publicationsFilterMinYearInput, publicationsFilterMaxYearInput);
-      renderHomePublications();
-    });
-  }
-  if (publicationsFilterResetButton) {
-    publicationsFilterResetButton.addEventListener("click", () => {
-      resetFilterInputs(publicationState.home, publicationsFilterMinYearInput, publicationsFilterMaxYearInput);
-      renderHomePublications();
-    });
-  }
-  if (publicationsPageSortButton) {
-    publicationsPageSortButton.addEventListener("click", () => {
-      publicationState.page.sortMode = publicationState.page.sortMode === "year" ? "default" : "year";
-      publicationState.page.page = 1;
-      renderPublicationsPage();
-    });
-  }
-  if (publicationsPageFilterButton) {
-    publicationsPageFilterButton.addEventListener("click", () => {
-      if (!publicationsPageFilterPanel) return;
-      publicationsPageFilterPanel.hidden = !publicationsPageFilterPanel.hidden;
-    });
-  }
-  if (publicationsPageFilterApplyButton) {
-    publicationsPageFilterApplyButton.addEventListener("click", () => {
-      applyFilterInputs(publicationState.page, publicationsPageFilterMinYearInput, publicationsPageFilterMaxYearInput);
-      renderPublicationsPage();
-    });
-  }
-  if (publicationsPageFilterResetButton) {
-    publicationsPageFilterResetButton.addEventListener("click", () => {
-      resetFilterInputs(publicationState.page, publicationsPageFilterMinYearInput, publicationsPageFilterMaxYearInput);
-      renderPublicationsPage();
-    });
-  }
-  if (publicationsPageViewToggle) {
-    publicationsPageViewToggle.querySelectorAll("button[data-mode]").forEach((button) => {
-      button.addEventListener("click", () => {
-        const mode = button.dataset.mode === "grid" ? "grid" : "list";
-        if (publicationState.page.mode === mode) return;
-        publicationState.page.mode = mode;
-        publicationState.page.page = 1;
-        renderPublicationsPage();
-      });
-    });
-  }
-  const filterInputPairs = [
-    [publicationsFilterMinYearInput, publicationsFilterMaxYearInput, () => {
-      applyFilterInputs(publicationState.home, publicationsFilterMinYearInput, publicationsFilterMaxYearInput);
-      renderHomePublications();
-    }],
-    [publicationsPageFilterMinYearInput, publicationsPageFilterMaxYearInput, () => {
-      applyFilterInputs(publicationState.page, publicationsPageFilterMinYearInput, publicationsPageFilterMaxYearInput);
-      renderPublicationsPage();
-    }]
-  ];
-
-  filterInputPairs.forEach(([minInput, maxInput, onApply]) => {
-    [minInput, maxInput].forEach((input) => {
-      if (!input) return;
-      input.addEventListener("keydown", (event) => {
-        if (event.key === "Enter") {
-          onApply();
-        }
-      });
-    });
-  });
-
-  window.addEventListener("hashchange", () => {
-    rerenderPublicationViews();
-  });
-  if (graphAbsModalCloseButton) {
-    graphAbsModalCloseButton.addEventListener("click", closeGraphAbsModal);
-  }
-  if (graphAbsModal) {
-    graphAbsModal.addEventListener("click", (event) => {
-      if (event.target === graphAbsModal) {
-        closeGraphAbsModal();
-      }
-    });
-  }
-  document.addEventListener("keydown", (event) => {
-    if (event.key === "Escape" && isGraphAbsModalOpen()) {
-      closeGraphAbsModal();
-    }
-  });
 
   try {
-    const [config, settings, publicationsCatalog] = await Promise.all([
-      loadConfig(),
-      loadSettings(),
-      loadPublicationsCatalog()
-    ]);
+    const [config, settings] = await Promise.all([loadConfig(), loadSettings()]);
     applySettings(settings);
+    if (window.EggFeature && typeof window.EggFeature.applySettings === "function") {
+      window.EggFeature.applySettings(settings);
+    }
     applyBackground(config);
     renderProfile(config.personal_info, config.banner || config.site_brand);
     renderCareer(config.career);
@@ -1527,12 +643,16 @@ async function init() {
         console.error("Failed to initialize projects module.", projectError);
       }
     }
-    const publicationSource = publicationsCatalog || { publications: config.publications || [] };
-    publicationState.items = await resolvePublications(publicationSource, settings, (nextItems) => {
-      publicationState.items = nextItems;
-      rerenderPublicationViews();
-    });
-    rerenderPublicationViews();
+    if (window.PublicationFeature && typeof window.PublicationFeature.initIndexPage === "function") {
+      try {
+        await window.PublicationFeature.initIndexPage({
+          settings,
+          fallbackCatalog: { publications: config.publications || [] }
+        });
+      } catch (publicationError) {
+        console.error("Failed to initialize publications module.", publicationError);
+      }
+    }
   } catch (error) {
     console.error(error);
   }

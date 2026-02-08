@@ -9,6 +9,15 @@
   "banner": {
     "hold_ms": 2600
   },
+  "ui": {
+    "top_action_button_height_px": 32
+  },
+  "eggs": {
+    "display_seconds": 3,
+    "image_height_px": 800,
+    "item_min_width_px": 160,
+    "grid_max_width_px": 1200
+  },
   "career": {
     "logo_height_px": 26,
     "logo_max_width_px": 88
@@ -19,7 +28,9 @@
     "overview_card_width_px": 300,
     "overview_card_height_px": 320,
     "card_gap_px": 16,
-    "image_carousel_seconds": 4
+    "image_carousel_seconds": 4,
+    "breadcrumb_title_max_chars_en": 56,
+    "breadcrumb_title_max_chars_zh": 28
   },
   "publications": {
     "resolve_doi_enabled": false,

@@ -7,7 +7,10 @@
     overviewCardWidth: 300,
     overviewCardHeight: 320,
     cardGap: 16,
-    imageCarouselSeconds: 4
+    imageCarouselSeconds: 4,
+    breadcrumbMaxCharsEn: 56,
+    breadcrumbMaxCharsZh: 28,
+    topActionButtonHeight: 32
   };
 
   const indexState = {
@@ -24,7 +27,8 @@
     settings: { ...DEFAULT_PROJECT_SETTINGS },
     refs: null,
     currentRoute: { view: "home" },
-    resizeTimer: null
+    resizeTimer: null,
+    routeTransitionTimer: null
   };
 
   function cleanText(value) {
@@ -506,6 +510,7 @@
   function applyProjectSettings(settings) {
     const rootStyle = document.documentElement.style;
     const projectSettings = settings && settings.projects ? settings.projects : {};
+    const uiSettings = settings && settings.ui ? settings.ui : {};
 
     const next = {
       homeCardWidth: Math.max(220, normalizeNonNegativeNumber(projectSettings.home_card_width_px, 290)),
@@ -513,7 +518,21 @@
       overviewCardWidth: Math.max(220, normalizeNonNegativeNumber(projectSettings.overview_card_width_px, 300)),
       overviewCardHeight: Math.max(220, normalizeNonNegativeNumber(projectSettings.overview_card_height_px, 320)),
       cardGap: Math.max(8, normalizeNonNegativeNumber(projectSettings.card_gap_px, 16)),
-      imageCarouselSeconds: normalizePositiveInteger(projectSettings.image_carousel_seconds, 4, 120)
+      imageCarouselSeconds: normalizePositiveInteger(projectSettings.image_carousel_seconds, 4, 120),
+      breadcrumbMaxCharsEn: normalizePositiveInteger(
+        projectSettings.breadcrumb_title_max_chars_en,
+        DEFAULT_PROJECT_SETTINGS.breadcrumbMaxCharsEn,
+        240
+      ),
+      breadcrumbMaxCharsZh: normalizePositiveInteger(
+        projectSettings.breadcrumb_title_max_chars_zh,
+        DEFAULT_PROJECT_SETTINGS.breadcrumbMaxCharsZh,
+        240
+      ),
+      topActionButtonHeight: Math.max(
+        24,
+        normalizeNonNegativeNumber(uiSettings.top_action_button_height_px, DEFAULT_PROJECT_SETTINGS.topActionButtonHeight)
+      )
     };
     indexState.settings = next;
 
@@ -522,6 +541,7 @@
     rootStyle.setProperty("--projects-overview-card-width", `${next.overviewCardWidth}px`);
     rootStyle.setProperty("--projects-overview-card-height", `${next.overviewCardHeight}px`);
     rootStyle.setProperty("--projects-card-gap", `${next.cardGap}px`);
+    rootStyle.setProperty("--top-action-btn-height", `${next.topActionButtonHeight}px`);
   }
 
   function buildHash(route) {
@@ -572,6 +592,19 @@
     nav.appendChild(sep);
   }
 
+  function truncateWithEllipsis(text, maxChars) {
+    const value = cleanText(text);
+    const limit = normalizePositiveInteger(maxChars, 0, 1000);
+    if (!limit || value.length <= limit) return value;
+    return `${value.slice(0, Math.max(1, limit)).trimEnd()}...`;
+  }
+
+  function getProjectBreadcrumbLabel(project, lang) {
+    const title = getProjectTitle(project, lang);
+    const maxChars = lang === "zh" ? indexState.settings.breadcrumbMaxCharsZh : indexState.settings.breadcrumbMaxCharsEn;
+    return truncateWithEllipsis(title, maxChars);
+  }
+
   function renderRouteNav(route) {
     const nav = indexState.refs.routeNav;
     if (!nav) return;
@@ -596,7 +629,7 @@
     if (route.view === "project") {
       const project = indexState.projectMap.get(route.key);
       addRouteSeparator(nav);
-      nav.appendChild(createRouteItem(getProjectTitle(project, indexState.lang), true, null));
+      nav.appendChild(createRouteItem(getProjectBreadcrumbLabel(project, indexState.lang), true, null));
     }
   }
 
@@ -804,6 +837,28 @@
     }
   }
 
+  function getRoutePanelByView(refs, view) {
+    if (!refs) return null;
+    if (view === "projects") return refs.overviewCard;
+    if (view === "publications") return refs.publicationsOverviewCard;
+    if (view === "project") return refs.detailCard;
+    return refs.defaultStack;
+  }
+
+  function animateRoutePanel(panel) {
+    if (!panel) return;
+    if (window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+    panel.classList.remove("route-panel-enter");
+    void panel.offsetWidth;
+    panel.classList.add("route-panel-enter");
+    if (indexState.routeTransitionTimer) {
+      clearTimeout(indexState.routeTransitionTimer);
+    }
+    indexState.routeTransitionTimer = setTimeout(() => {
+      panel.classList.remove("route-panel-enter");
+    }, 260);
+  }
+
   function applyRoute(route) {
     const validRoute = route || { view: "home" };
     const refs = indexState.refs;
@@ -814,6 +869,7 @@
       nextRoute = { view: "projects" };
     }
 
+    const previousView = indexState.currentRoute && indexState.currentRoute.view ? indexState.currentRoute.view : "home";
     const isHome = nextRoute.view === "home";
     const isProjects = nextRoute.view === "projects";
     const isProjectDetail = nextRoute.view === "project";
@@ -837,6 +893,10 @@
       refs.rightColumn.classList.toggle("route-publications", isPublications);
     }
     indexState.currentRoute = nextRoute;
+
+    if (previousView !== nextRoute.view) {
+      animateRoutePanel(getRoutePanelByView(refs, nextRoute.view));
+    }
 
     if (nextRoute.view === "project") {
       renderProjectDetail(indexState.projectMap.get(nextRoute.key));
@@ -1167,6 +1227,7 @@
       loadProjectsCatalog(basePrefix),
       loadPublicationsCatalog(basePrefix)
     ]);
+    applyProjectSettings(settings);
 
     const projects = normalizeProjectsCatalog(projectCatalog, basePrefix);
     const projectMap = new Map(projects.map((project) => [project.key, project]));
@@ -1200,13 +1261,47 @@
     document.body.classList.add("project-doc-page");
     document.body.classList.add("lang-zh");
 
-    const toggleHost = document.querySelector("[data-project-slot='lang-toggle']");
+    function goHome() {
+      window.location.href = `${basePrefix}index.html#home`;
+    }
+
+    function goProjects() {
+      window.location.href = `${basePrefix}index.html#projects`;
+    }
+
+    const routeNavHost = projectDoc.querySelector("[data-project-slot='route-nav']");
+    const titleHost = projectDoc.querySelector("[data-project-slot='page-title']");
+    const homeButton = projectDoc.querySelector("[data-project-slot='home-btn']");
+    const projectsButton = projectDoc.querySelector("[data-project-slot='projects-btn']");
+    if (homeButton) {
+      homeButton.addEventListener("click", goHome);
+    }
+    if (projectsButton) {
+      projectsButton.addEventListener("click", goProjects);
+    }
+
+    function renderDocHeader(lang) {
+      if (routeNavHost) {
+        renderStandaloneRouteNav(routeNavHost, [
+          { label: "Home", current: false, onClick: goHome },
+          { label: "Projects", current: false, onClick: goProjects },
+          { label: getProjectBreadcrumbLabel(project, lang), current: true, onClick: null }
+        ]);
+      }
+      if (titleHost) {
+        titleHost.textContent = getProjectTitle(project, lang);
+      }
+    }
+    renderDocHeader(currentLang);
+
+    const toggleHost = projectDoc.querySelector("[data-project-slot='lang-toggle']");
     if (toggleHost) {
       function setLang(nextLang) {
         if (nextLang === currentLang) return;
         currentLang = nextLang;
         document.body.classList.toggle("lang-en", currentLang !== "zh");
         document.body.classList.toggle("lang-zh", currentLang === "zh");
+        renderDocHeader(currentLang);
         createLanguageToggle(toggleHost, currentLang, setLang);
       }
       createLanguageToggle(toggleHost, currentLang, setLang);
@@ -1341,7 +1436,7 @@
     renderStandaloneRouteNav(routeNav, [
       { label: "Home", current: false, onClick: goHome },
       { label: "Projects", current: false, onClick: goProjects },
-      { label: projectKey || "Project", current: true, onClick: null }
+      { label: project ? getProjectBreadcrumbLabel(project, "zh") : projectKey || "Project", current: true, onClick: null }
     ]);
 
     function openGraphAbsModal(src, alt) {

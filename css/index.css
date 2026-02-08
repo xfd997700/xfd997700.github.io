@@ -25,6 +25,10 @@
   --career-logo-max-width: 88px;
   --pub-graph-abs-width: 520px;
   --pub-graph-abs-height: 240px;
+  --top-action-btn-height: 32px;
+  --egg-item-min-width: 180px;
+  --egg-grid-max-width: 900px;
+  --egg-image-height: 160px;
 }
 
 body.modal-open {
@@ -33,6 +37,40 @@ body.modal-open {
 
 .terminal-line {
   font-size: clamp(16px, 2vw, 20px);
+}
+
+.terminal-egg-wrap {
+  display: grid;
+  gap: 10px;
+  margin-top: 8px;
+}
+
+.terminal-egg-label {
+  font-size: 13px;
+  color: #7ef5ff;
+  letter-spacing: 0.3px;
+}
+
+.terminal-egg-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(var(--egg-item-min-width), 1fr));
+  gap: 10px;
+  width: min(var(--egg-grid-max-width), calc(100vw - 80px));
+}
+
+.terminal-egg-item {
+  border: 1px solid rgba(126, 245, 255, 0.4);
+  border-radius: 8px;
+  overflow: hidden;
+  background: rgba(126, 245, 255, 0.08);
+  animation: terminalEggPop 0.2s ease-out both;
+}
+
+.terminal-egg-item img {
+  width: 100%;
+  height: var(--egg-image-height);
+  object-fit: cover;
+  display: block;
 }
 
 .terminal-title {
@@ -70,6 +108,17 @@ body.modal-open {
 @keyframes blink {
   50% {
     opacity: 0;
+  }
+}
+
+@keyframes terminalEggPop {
+  from {
+    opacity: 0;
+    transform: translateY(6px) scale(0.98);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
   }
 }
 
@@ -127,10 +176,14 @@ body.modal-open {
   background: rgba(255, 255, 255, 0.08);
   color: var(--text-primary);
   border-radius: 999px;
-  padding: 6px 12px;
+  height: var(--top-action-btn-height);
+  padding: 0 12px;
   font-size: 12px;
-  line-height: 1.1;
+  line-height: 1;
   cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
   transition: background 0.2s ease, border 0.2s ease, transform 0.2s ease;
 }
 
@@ -200,6 +253,7 @@ body.modal-open {
   border: 1px solid rgba(255, 255, 255, 0.22);
   background: rgba(255, 255, 255, 0.08);
   padding: 3px;
+  min-height: var(--top-action-btn-height);
 }
 
 .publications-view-toggle button {
@@ -207,9 +261,19 @@ body.modal-open {
   background: transparent;
   color: var(--text-muted);
   border-radius: 999px;
-  padding: 6px 11px;
+  min-width: var(--top-action-btn-height);
+  height: calc(var(--top-action-btn-height) - 6px);
+  padding: 0 10px;
   font-size: 12px;
   cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.publications-view-toggle button i {
+  font-size: 12px;
+  line-height: 1;
 }
 
 .publications-view-toggle button.is-active {
@@ -496,6 +560,10 @@ body.modal-open {
   color: var(--text-primary);
 }
 
+a.publication-title {
+  text-decoration: none;
+}
+
 a.publication-title:hover {
   color: var(--accent);
 }
@@ -611,6 +679,10 @@ a.publication-title:hover {
   line-height: 1.4;
   font-weight: 600;
   color: var(--text-primary);
+}
+
+a.publication-grid-title {
+  text-decoration: none;
 }
 
 a.publication-grid-title:hover {

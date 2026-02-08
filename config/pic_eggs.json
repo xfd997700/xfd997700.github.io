@@ -1,0 +1,25 @@
+[
+  {
+    "keyword": ["zhangqiang", "zq"],
+    "pics": [
+      "imgs/common/eggs/zq0.jpg",
+      "imgs/common/eggs/zq1.jpg",
+      "imgs/common/eggs/zq2.jpg"
+    ]
+  },
+  {
+    "keyword": ["weiyuang", "wya"],
+    "pics": [
+      "imgs/common/eggs/wya0.jpg",
+      "imgs/common/eggs/wya_zq1.jpg",
+      "imgs/common/eggs/wya_zq0.jpg"
+    ]
+  },
+  {
+    "keyword": ["westbay", "3p"],
+    "pics": [
+      "imgs/common/eggs/3p1.jpg",
+      "imgs/common/eggs/3p2.jpg"
+    ]
+  }
+]

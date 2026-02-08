@@ -132,8 +132,12 @@
               <span>Publications | 论文</span>
               <div class="project-detail-actions publications-page-actions">
                 <div class="publications-view-toggle" id="publications-page-view-toggle" role="tablist" aria-label="View mode">
-                  <button type="button" data-mode="list" aria-selected="true">List</button>
-                  <button type="button" data-mode="grid" aria-selected="false">Grid</button>
+                  <button type="button" data-mode="list" aria-selected="true" aria-label="List view" title="List view">
+                    <i class="fa-solid fa-bars" aria-hidden="true"></i>
+                  </button>
+                  <button type="button" data-mode="grid" aria-selected="false" aria-label="Grid view" title="Grid view">
+                    <i class="fa-solid fa-table-cells-large" aria-hidden="true"></i>
+                  </button>
                 </div>
                 <button id="publications-page-filter-btn" class="publications-sort-btn" type="button">Filter</button>
                 <button id="publications-page-sort-btn" class="publications-sort-btn" type="button">Sort by Year</button>
@@ -169,12 +173,15 @@
           </div>
 
           <div class="card glass right-standalone-card" id="project-detail-card" hidden>
-            <div class="section-title section-title--projects">
-              <span id="project-detail-title">Project</span>
+            <div class="section-title section-title--projects section-title--project-detail-top">
+              <span>Project | 项目</span>
               <div class="project-detail-actions">
                 <div id="project-detail-lang-toggle"></div>
                 <button type="button" class="project-back-btn" id="project-detail-back-btn">Back to Projects</button>
               </div>
+            </div>
+            <div class="project-detail-title-row">
+              <h3 id="project-detail-title">Project</h3>
             </div>
             <div id="project-detail-frame-wrap" class="project-detail-frame-wrap"></div>
           </div>
@@ -197,6 +204,8 @@
     </div>
 
     <script src="js/projects.js" defer></script>
+    <script src="js/publications.js" defer></script>
+    <script src="js/eggs.js" defer></script>
     <script src="js/index.js" defer></script>
   </body>
 </html>
