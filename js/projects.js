@@ -411,14 +411,44 @@
 
     const imgs = project.imgs.length ? project.imgs.slice() : [createImagePlaceholderDataUri(getProjectTitle(project, lang))];
     let imageIndex = 0;
+    let isSwitchingImage = false;
+    const reduceMotion = window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    const SWITCH_OUT_MS = 90;
+
+    function switchCardImage(nextIndex) {
+      const normalizedNext = ((nextIndex % imgs.length) + imgs.length) % imgs.length;
+      if (normalizedNext === imageIndex) return;
+
+      if (reduceMotion || isSwitchingImage) {
+        imageIndex = normalizedNext;
+        image.src = imgs[imageIndex];
+        addImageDots(dots, imgs.length, imageIndex);
+        return;
+      }
+
+      isSwitchingImage = true;
+      image.classList.add("is-slide-out");
+      window.setTimeout(() => {
+        imageIndex = normalizedNext;
+        image.classList.remove("is-slide-out");
+        image.classList.add("is-slide-in");
+        image.src = imgs[imageIndex];
+        addImageDots(dots, imgs.length, imageIndex);
+        requestAnimationFrame(() => {
+          requestAnimationFrame(() => {
+            image.classList.remove("is-slide-in");
+            isSwitchingImage = false;
+          });
+        });
+      }, SWITCH_OUT_MS);
+    }
+
     image.src = imgs[imageIndex];
     addImageDots(dots, imgs.length, imageIndex);
 
     if (imgs.length > 1 && intervalStore) {
       const timer = setInterval(() => {
-        imageIndex = (imageIndex + 1) % imgs.length;
-        image.src = imgs[imageIndex];
-        addImageDots(dots, imgs.length, imageIndex);
+        switchCardImage(imageIndex + 1);
       }, Math.max(1200, imageIntervalMs));
       intervalStore.push(timer);
     }
