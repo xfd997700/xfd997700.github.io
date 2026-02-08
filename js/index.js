@@ -20,7 +20,8 @@ const publicationState = {
 };
 
 const siteBrandTypingState = {
-  timer: null
+  timer: null,
+  holdMs: 2600
 };
 
 function stopSiteBrandTyping() {
@@ -48,40 +49,57 @@ function ensureSiteBrandTypingNodes(element) {
   return { typed, cursor };
 }
 
-function startSiteBrandTyping(element, text) {
+function normalizeBannerTexts(banners, fallbackText) {
+  const source = Array.isArray(banners) ? banners : [banners];
+  const normalized = source
+    .map((item) => String(item || "").trim())
+    .filter(Boolean);
+
+  if (normalized.length) {
+    return normalized;
+  }
+
+  const fallback = String(fallbackText || "").trim();
+  return fallback ? [fallback] : [];
+}
+
+function startSiteBrandTyping(element, texts) {
   if (!element) return;
   stopSiteBrandTyping();
 
-  const content = String(text || "").trim();
+  const contents = normalizeBannerTexts(texts, "");
   const nodes = ensureSiteBrandTypingNodes(element);
-  if (!content) {
+  if (!contents.length) {
     nodes.typed.textContent = "";
     return;
   }
 
   if (window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
-    nodes.typed.textContent = content;
+    nodes.typed.textContent = contents[0];
     nodes.cursor.classList.remove("blink");
     return;
   }
   nodes.cursor.classList.add("blink");
 
   const typingSpeedMs = 100;
-  const holdMs = 2600;
+  const holdMs = normalizeNonNegativeNumber(siteBrandTypingState.holdMs, 2600);
   const restartGapMs = 350;
-  let index = 0;
+  let bannerIndex = 0;
+  let charIndex = 0;
 
   const step = () => {
-    if (index <= content.length) {
-      nodes.typed.textContent = content.slice(0, index);
-      index += 1;
+    const content = contents[bannerIndex];
+    if (charIndex <= content.length) {
+      nodes.typed.textContent = content.slice(0, charIndex);
+      charIndex += 1;
       siteBrandTypingState.timer = setTimeout(step, typingSpeedMs);
       return;
     }
 
     siteBrandTypingState.timer = setTimeout(() => {
       nodes.typed.textContent = "";
-      index = 0;
+      charIndex = 0;
+      bannerIndex = (bannerIndex + 1) % contents.length;
       siteBrandTypingState.timer = setTimeout(step, restartGapMs);
     }, holdMs);
   };
@@ -200,6 +218,7 @@ function toCssUrl(url) {
 function applySettings(settings) {
   const rootStyle = document.documentElement.style;
   const background = settings && settings.background ? settings.background : {};
+  const banner = settings && settings.banner ? settings.banner : {};
   const glass = settings && settings.glass ? settings.glass : {};
   const career = settings && settings.career ? settings.career : {};
   const publications = settings && settings.publications ? settings.publications : {};
@@ -243,6 +262,10 @@ function applySettings(settings) {
       .map((name) => cleanText(name))
       .filter(Boolean);
   }
+
+  if (banner.hold_ms !== undefined) {
+    siteBrandTypingState.holdMs = normalizeNonNegativeNumber(banner.hold_ms, 2600);
+  }
 }
 
 function applyBackground(config) {
@@ -260,7 +283,7 @@ function applyBackground(config) {
   }
 }
 
-function renderProfile(info, siteBrand) {
+function renderProfile(info, banners) {
   const profile = info || {};
   const brand = document.getElementById("site-brand");
   const avatar = document.getElementById("avatar-img");
@@ -270,11 +293,10 @@ function renderProfile(info, siteBrand) {
   const tagsWrap = document.getElementById("profile-tags");
   const contactsWrap = document.getElementById("profile-contacts");
   const addressesWrap = document.getElementById("profile-addresses");
-  const customBrand = typeof siteBrand === "string" ? siteBrand.trim() : "";
   const fallbackName = profile.nickname || profile.name || "Personal Page";
-  const brandText = customBrand || fallbackName;
+  const bannerTexts = normalizeBannerTexts(banners, fallbackName);
 
-  startSiteBrandTyping(brand, brandText);
+  startSiteBrandTyping(brand, bannerTexts);
   name.textContent = fallbackName;
   signature.textContent = profile.signature || "";
   if (profile.avatar) {
@@ -1002,7 +1024,7 @@ async function init() {
     ]);
     applySettings(settings);
     applyBackground(config);
-    renderProfile(config.personal_info, config.site_brand);
+    renderProfile(config.personal_info, config.banner || config.site_brand);
     renderCareer(config.career);
     if (window.ProjectFeature && typeof window.ProjectFeature.initIndexPage === "function") {
       try {

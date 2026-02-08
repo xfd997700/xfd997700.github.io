@@ -92,6 +92,7 @@ body.modal-open {
   display: flex;
   align-items: center;
   justify-content: space-between;
+  gap: 12px;
   margin-bottom: 32px;
 }
 
@@ -100,9 +101,19 @@ body.modal-open {
   font-size: clamp(24px, 3.8vw, 38px);
   letter-spacing: 0.4px;
   color: #d1ffe8;
-  display: inline-flex;
-  align-items: center;
-  white-space: nowrap;
+  line-height: 1.25;
+  min-width: 0;
+  max-width: 100%;
+  flex: 1 1 auto;
+  white-space: normal;
+  overflow-wrap: anywhere;
+  word-break: break-word;
+}
+
+.site-brand-typed {
+  white-space: normal;
+  overflow-wrap: anywhere;
+  word-break: break-word;
 }
 
 .site-brand-cursor {

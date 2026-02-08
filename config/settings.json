@@ -6,6 +6,9 @@
   "glass": {
     "blur_px": 18
   },
+  "banner": {
+    "hold_ms": 2600
+  },
   "career": {
     "logo_height_px": 26,
     "logo_max_width_px": 88
