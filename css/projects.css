@@ -82,6 +82,7 @@
   display: inline-flex;
   align-items: center;
   gap: 10px;
+  flex-wrap: wrap;
 }
 
 .right-default-stack {
@@ -90,17 +91,23 @@
 }
 
 .right-column.route-projects .right-default-stack,
-.right-column.route-project .right-default-stack {
+.right-column.route-project .right-default-stack,
+.right-column.route-publications .right-default-stack {
   display: none !important;
 }
 
 .right-column.route-home #projects-overview-card,
-.right-column.route-home #project-detail-card {
+.right-column.route-home #project-detail-card,
+.right-column.route-home #publications-overview-card {
   display: none !important;
 }
 
 .right-column.route-projects #project-detail-card,
-.right-column.route-project #projects-overview-card {
+.right-column.route-projects #publications-overview-card,
+.right-column.route-project #projects-overview-card,
+.right-column.route-project #publications-overview-card,
+.right-column.route-publications #projects-overview-card,
+.right-column.route-publications #project-detail-card {
   display: none !important;
 }
 

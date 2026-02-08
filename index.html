@@ -79,22 +79,40 @@
           <div id="right-default-stack" class="right-default-stack">
             <div class="card glass" id="projects-card">
               <div class="section-title section-title--projects">
-                <button type="button" class="section-link-btn" id="projects-section-nav">Projects | 项目</button>
-                <div id="projects-home-lang-toggle"></div>
+                <span>Projects | 项目</span>
+                <div class="project-detail-actions">
+                  <div id="projects-home-lang-toggle"></div>
+                  <button type="button" class="project-back-btn" id="projects-home-more-btn">More | 更多</button>
+                </div>
               </div>
               <div id="projects-home-view"></div>
             </div>
 
             <div class="card glass" id="publications-card">
-              <div class="section-title">
+              <div class="section-title section-title--projects">
                 <span>Publications | 论文</span>
-                <button id="publications-sort-btn" class="publications-sort-btn" type="button">
-                  Sort by Year
-                </button>
+                <div class="publications-home-actions">
+                  <button id="publications-filter-btn" class="publications-sort-btn" type="button">Filter</button>
+                  <button id="publications-sort-btn" class="publications-sort-btn" type="button">Sort by Year</button>
+                  <button id="publications-more-btn" class="publications-sort-btn" type="button">More | 更多</button>
+                </div>
+              </div>
+              <div class="publications-filter-panel" id="publications-filter-panel" hidden>
+                <label>
+                  <span>&gt;= Year</span>
+                  <input id="publications-filter-min-year" type="number" inputmode="numeric" min="1900" max="2200" />
+                </label>
+                <label>
+                  <span>&lt;= Year</span>
+                  <input id="publications-filter-max-year" type="number" inputmode="numeric" min="1900" max="2200" />
+                </label>
+                <button id="publications-filter-apply-btn" class="publications-sort-btn" type="button">Apply</button>
+                <button id="publications-filter-reset-btn" class="publications-sort-btn" type="button">Reset</button>
               </div>
               <div class="placeholder-list" id="publications-list">
                 <div class="placeholder-item">No publications loaded yet.</div>
               </div>
+              <div class="publications-pagination" id="publications-pagination"></div>
             </div>
           </div>
 
@@ -103,10 +121,51 @@
               <span>Projects | 项目</span>
               <div class="project-detail-actions">
                 <div id="projects-overview-lang-toggle"></div>
-                <button type="button" class="project-back-btn" id="projects-overview-home-btn">Back to Home</button>
+                <button type="button" class="project-back-btn" id="projects-overview-home-btn">Home | 主页</button>
               </div>
             </div>
             <div id="projects-overview-view"></div>
+          </div>
+
+          <div class="card glass right-standalone-card" id="publications-overview-card" hidden>
+            <div class="section-title section-title--projects">
+              <span>Publications | 论文</span>
+              <div class="project-detail-actions publications-page-actions">
+                <div class="publications-view-toggle" id="publications-page-view-toggle" role="tablist" aria-label="View mode">
+                  <button type="button" data-mode="list" aria-selected="true">List</button>
+                  <button type="button" data-mode="grid" aria-selected="false">Grid</button>
+                </div>
+                <button id="publications-page-filter-btn" class="publications-sort-btn" type="button">Filter</button>
+                <button id="publications-page-sort-btn" class="publications-sort-btn" type="button">Sort by Year</button>
+                <button type="button" class="project-back-btn" id="publications-page-home-btn">Home | 主页</button>
+              </div>
+            </div>
+            <div class="publications-filter-panel" id="publications-page-filter-panel" hidden>
+              <label>
+                <span>&gt;= Year</span>
+                <input
+                  id="publications-page-filter-min-year"
+                  type="number"
+                  inputmode="numeric"
+                  min="1900"
+                  max="2200"
+                />
+              </label>
+              <label>
+                <span>&lt;= Year</span>
+                <input
+                  id="publications-page-filter-max-year"
+                  type="number"
+                  inputmode="numeric"
+                  min="1900"
+                  max="2200"
+                />
+              </label>
+              <button id="publications-page-filter-apply-btn" class="publications-sort-btn" type="button">Apply</button>
+              <button id="publications-page-filter-reset-btn" class="publications-sort-btn" type="button">Reset</button>
+            </div>
+            <div id="publications-page-view"></div>
+            <div class="publications-pagination" id="publications-page-pagination"></div>
           </div>
 
           <div class="card glass right-standalone-card" id="project-detail-card" hidden>

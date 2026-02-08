@@ -3,6 +3,23 @@ const terminalInput = document.getElementById("terminal-input");
 const terminalMessage = document.getElementById("terminal-message");
 const mainContent = document.getElementById("main-content");
 const publicationsSortButton = document.getElementById("publications-sort-btn");
+const publicationsFilterButton = document.getElementById("publications-filter-btn");
+const publicationsFilterPanel = document.getElementById("publications-filter-panel");
+const publicationsFilterMinYearInput = document.getElementById("publications-filter-min-year");
+const publicationsFilterMaxYearInput = document.getElementById("publications-filter-max-year");
+const publicationsFilterApplyButton = document.getElementById("publications-filter-apply-btn");
+const publicationsFilterResetButton = document.getElementById("publications-filter-reset-btn");
+const publicationsPagination = document.getElementById("publications-pagination");
+const publicationsPageSortButton = document.getElementById("publications-page-sort-btn");
+const publicationsPageFilterButton = document.getElementById("publications-page-filter-btn");
+const publicationsPageFilterPanel = document.getElementById("publications-page-filter-panel");
+const publicationsPageFilterMinYearInput = document.getElementById("publications-page-filter-min-year");
+const publicationsPageFilterMaxYearInput = document.getElementById("publications-page-filter-max-year");
+const publicationsPageFilterApplyButton = document.getElementById("publications-page-filter-apply-btn");
+const publicationsPageFilterResetButton = document.getElementById("publications-page-filter-reset-btn");
+const publicationsPageView = document.getElementById("publications-page-view");
+const publicationsPagePagination = document.getElementById("publications-page-pagination");
+const publicationsPageViewToggle = document.getElementById("publications-page-view-toggle");
 const graphAbsModal = document.getElementById("graph-abs-modal");
 const graphAbsModalImage = document.getElementById("graph-abs-modal-img");
 const graphAbsModalCloseButton = document.getElementById("graph-abs-modal-close");
@@ -15,8 +32,26 @@ const state = {
 
 const publicationState = {
   items: [],
-  sortMode: "default",
-  authorHighlightKeywords: ["Fanding Xu", "徐凡丁"]
+  authorHighlightKeywords: ["Fanding Xu", "徐凡丁"],
+  home: {
+    sortMode: "default",
+    minYear: "",
+    maxYear: "",
+    page: 1,
+    pageSize: 5,
+    showGraphAbs: true
+  },
+  page: {
+    sortMode: "default",
+    minYear: "",
+    maxYear: "",
+    page: 1,
+    mode: "list",
+    listPageSize: 10,
+    gridPageSize: 8,
+    listShowGraphAbs: true,
+    gridShowGraphAbs: false
+  }
 };
 
 const siteBrandTypingState = {
@@ -262,6 +297,21 @@ function applySettings(settings) {
       .map((name) => cleanText(name))
       .filter(Boolean);
   }
+
+  const publicationHome = publications && publications.home && typeof publications.home === "object" ? publications.home : {};
+  const publicationPage = publications && publications.page && typeof publications.page === "object" ? publications.page : {};
+
+  publicationState.home.pageSize = normalizePositiveInteger(publicationHome.page_size, 5, 60);
+  publicationState.home.showGraphAbs =
+    publicationHome.show_graph_abs === undefined ? true : Boolean(publicationHome.show_graph_abs);
+
+  publicationState.page.listPageSize = normalizePositiveInteger(publicationPage.list_page_size, 10, 120);
+  publicationState.page.gridPageSize = normalizePositiveInteger(publicationPage.grid_page_size, 8, 120);
+  publicationState.page.mode = publicationPage.default_view === "grid" ? "grid" : "list";
+  publicationState.page.listShowGraphAbs =
+    publicationPage.list_show_graph_abs === undefined ? true : Boolean(publicationPage.list_show_graph_abs);
+  publicationState.page.gridShowGraphAbs =
+    publicationPage.grid_show_graph_abs === undefined ? false : Boolean(publicationPage.grid_show_graph_abs);
 
   if (banner.hold_ms !== undefined) {
     siteBrandTypingState.holdMs = normalizeNonNegativeNumber(banner.hold_ms, 2600);
@@ -967,11 +1017,369 @@ function getOrderedPublications(items, sortMode) {
     .map((entry) => entry.item);
 }
 
-function updatePublicationsSortButton() {
-  if (!publicationsSortButton) return;
-  const isYearMode = publicationState.sortMode === "year";
-  publicationsSortButton.textContent = isYearMode ? "Sort by Default" : "Sort by Year";
-  publicationsSortButton.setAttribute("aria-pressed", isYearMode ? "true" : "false");
+function normalizeYearBoundary(value) {
+  const parsed = parseInt(String(value || "").trim(), 10);
+  if (!Number.isFinite(parsed) || parsed <= 0) return null;
+  return parsed;
+}
+
+function normalizeYearInputString(value) {
+  const normalized = normalizeYearBoundary(value);
+  return normalized === null ? "" : String(normalized);
+}
+
+function resolvePublicationYearRange(viewState) {
+  let minYear = normalizeYearBoundary(viewState && viewState.minYear);
+  let maxYear = normalizeYearBoundary(viewState && viewState.maxYear);
+  if (minYear !== null && maxYear !== null && minYear > maxYear) {
+    const temp = minYear;
+    minYear = maxYear;
+    maxYear = temp;
+  }
+  return { minYear, maxYear };
+}
+
+function getPreparedPublications(items, viewState) {
+  const orderedItems = getOrderedPublications(items, viewState.sortMode);
+  const { minYear, maxYear } = resolvePublicationYearRange(viewState);
+
+  return orderedItems.filter((pub) => {
+    if (minYear === null && maxYear === null) return true;
+    const year = parsePublicationYear(pub);
+    if (!year) return false;
+    if (minYear !== null && year < minYear) return false;
+    if (maxYear !== null && year > maxYear) return false;
+    return true;
+  });
+}
+
+function paginateItems(items, page, pageSize) {
+  const safeSize = normalizePositiveInteger(pageSize, 10, 200);
+  const totalPages = Math.max(1, Math.ceil(items.length / safeSize));
+  const parsedPage = parseInt(page, 10);
+  const safePage = Math.min(Math.max(Number.isFinite(parsedPage) ? parsedPage : 1, 1), totalPages);
+  const start = (safePage - 1) * safeSize;
+  return {
+    page: safePage,
+    pageSize: safeSize,
+    totalPages,
+    pagedItems: items.slice(start, start + safeSize)
+  };
+}
+
+function createPublicationListItem(pub, options) {
+  const showGraphAbs = options && options.showGraphAbs !== false;
+  const item = document.createElement("article");
+  item.className = "publication-item";
+  if (pub.ref_key) {
+    item.dataset.pubKey = pub.ref_key;
+  }
+
+  const head = document.createElement("div");
+  head.className = "publication-head";
+
+  const titleLink = document.createElement("div");
+  titleLink.className = "publication-title";
+  titleLink.textContent = pub.title || "Untitled";
+  head.appendChild(titleLink);
+
+  if (pub.year) {
+    const yearBadge = document.createElement("span");
+    yearBadge.className = "publication-year";
+    yearBadge.textContent = pub.year;
+    head.appendChild(yearBadge);
+  }
+
+  item.appendChild(head);
+
+  if (pub.authors) {
+    const authors = document.createElement("div");
+    authors.className = "publication-authors";
+    authors.appendChild(buildAuthorsFragment(pub.authors, publicationState.authorHighlightKeywords));
+    item.appendChild(authors);
+  }
+
+  const venueParts = [];
+  if (pub.journal) venueParts.push(pub.journal);
+  if (pub.volume) venueParts.push(`Vol. ${pub.volume}`);
+  if (pub.page) venueParts.push(`pp. ${pub.page}`);
+  if (venueParts.length) {
+    const venue = document.createElement("div");
+    venue.className = "publication-venue";
+    venue.textContent = venueParts.join(" | ");
+    item.appendChild(venue);
+  }
+
+  if (showGraphAbs && pub.graph_abs) {
+    const graphWrap = document.createElement("button");
+    graphWrap.type = "button";
+    graphWrap.className = "publication-graph-abs";
+    graphWrap.setAttribute("aria-label", `Open graphical abstract for ${pub.title || "publication"}`);
+    const graphImg = document.createElement("img");
+    graphImg.src = pub.graph_abs;
+    graphImg.alt = `${pub.title || "Publication"} graphical abstract`;
+    graphImg.loading = "lazy";
+    graphImg.decoding = "async";
+    graphWrap.appendChild(graphImg);
+    graphWrap.addEventListener("click", () => {
+      openGraphAbsModal(pub.graph_abs, graphImg.alt);
+    });
+    item.appendChild(graphWrap);
+  }
+
+  if (pub.doi) {
+    const doiLine = document.createElement("div");
+    doiLine.className = "publication-doi-line";
+    const doiLabel = document.createElement("span");
+    doiLabel.textContent = "DOI: ";
+    doiLine.appendChild(doiLabel);
+
+    const doiLink = document.createElement("a");
+    doiLink.href = pub.doi_link || buildDoiUrl(pub.doi);
+    doiLink.target = "_blank";
+    doiLink.rel = "noreferrer";
+    doiLink.textContent = pub.doi;
+    doiLine.appendChild(doiLink);
+    item.appendChild(doiLine);
+  }
+
+  return item;
+}
+
+function createPublicationGridCard(pub, options) {
+  const showGraphAbs = options && options.showGraphAbs !== false;
+  const hasGraphAbs = showGraphAbs && Boolean(pub.graph_abs);
+  const item = document.createElement("article");
+  item.className = "publication-grid-item";
+  item.classList.add(hasGraphAbs ? "is-rich" : "is-compact");
+
+  const head = document.createElement("div");
+  head.className = "publication-grid-head";
+
+  const titleLink = document.createElement("div");
+  titleLink.className = "publication-grid-title";
+  titleLink.textContent = pub.title || "Untitled";
+  head.appendChild(titleLink);
+
+  if (pub.year) {
+    const year = document.createElement("span");
+    year.className = "publication-grid-year";
+    year.textContent = pub.year;
+    head.appendChild(year);
+  }
+  item.appendChild(head);
+
+  if (pub.authors) {
+    const authors = document.createElement("div");
+    authors.className = "publication-grid-authors";
+    authors.appendChild(buildAuthorsFragment(pub.authors, publicationState.authorHighlightKeywords));
+    item.appendChild(authors);
+  }
+
+  const venueParts = [];
+  if (pub.journal) venueParts.push(pub.journal);
+  if (pub.volume) venueParts.push(`Vol. ${pub.volume}`);
+  if (pub.page) venueParts.push(`pp. ${pub.page}`);
+  if (venueParts.length) {
+    const venue = document.createElement("div");
+    venue.className = "publication-grid-venue";
+    venue.textContent = venueParts.join(" | ");
+    item.appendChild(venue);
+  }
+
+  if (hasGraphAbs) {
+    const graphWrap = document.createElement("button");
+    graphWrap.type = "button";
+    graphWrap.className = "publication-grid-graph";
+    graphWrap.setAttribute("aria-label", `Open graphical abstract for ${pub.title || "publication"}`);
+    const graphImg = document.createElement("img");
+    graphImg.src = pub.graph_abs;
+    graphImg.alt = `${pub.title || "Publication"} graphical abstract`;
+    graphImg.loading = "lazy";
+    graphImg.decoding = "async";
+    graphWrap.appendChild(graphImg);
+    graphWrap.addEventListener("click", () => {
+      openGraphAbsModal(pub.graph_abs, graphImg.alt);
+    });
+    item.appendChild(graphWrap);
+  }
+
+  return item;
+}
+
+function createPaginationButton(label, onClick, isDisabled, isCurrent) {
+  const button = document.createElement("button");
+  button.type = "button";
+  button.className = "publication-page-btn";
+  if (isCurrent) {
+    button.classList.add("is-current");
+  }
+  button.disabled = Boolean(isDisabled);
+  button.textContent = label;
+  if (!button.disabled && typeof onClick === "function") {
+    button.addEventListener("click", onClick);
+  }
+  return button;
+}
+
+function renderPagination(container, page, totalPages, onNavigate) {
+  if (!container) return;
+  container.innerHTML = "";
+  if (totalPages <= 1) return;
+
+  const wrap = document.createElement("div");
+  wrap.className = "publication-page-wrap";
+
+  wrap.appendChild(createPaginationButton("«", () => onNavigate(1), page <= 1, false));
+  wrap.appendChild(createPaginationButton("‹", () => onNavigate(page - 1), page <= 1, false));
+
+  const pages = [1];
+  const start = Math.max(2, page - 1);
+  const end = Math.min(totalPages - 1, page + 1);
+  for (let p = start; p <= end; p += 1) {
+    pages.push(p);
+  }
+  if (totalPages > 1) {
+    pages.push(totalPages);
+  }
+
+  let last = 0;
+  pages.forEach((p) => {
+    if (p - last > 1) {
+      const ellipsis = document.createElement("span");
+      ellipsis.className = "publication-page-ellipsis";
+      ellipsis.textContent = "...";
+      wrap.appendChild(ellipsis);
+    }
+    wrap.appendChild(createPaginationButton(String(p), () => onNavigate(p), false, p === page));
+    last = p;
+  });
+
+  wrap.appendChild(createPaginationButton("›", () => onNavigate(page + 1), page >= totalPages, false));
+  wrap.appendChild(createPaginationButton("»", () => onNavigate(totalPages), page >= totalPages, false));
+  container.appendChild(wrap);
+}
+
+function updateSortButton(button, sortMode) {
+  if (!button) return;
+  const isYearMode = sortMode === "year";
+  button.textContent = isYearMode ? "Sort by Default" : "Sort by Year";
+  button.setAttribute("aria-pressed", isYearMode ? "true" : "false");
+}
+
+function updateFilterButton(button, viewState) {
+  if (!button) return;
+  const hasFilter = Boolean(cleanText(viewState.minYear) || cleanText(viewState.maxYear));
+  button.setAttribute("aria-pressed", hasFilter ? "true" : "false");
+  button.classList.toggle("is-active", hasFilter);
+}
+
+function applyFilterInputs(viewState, minInput, maxInput) {
+  viewState.minYear = normalizeYearInputString(minInput ? minInput.value : "");
+  viewState.maxYear = normalizeYearInputString(maxInput ? maxInput.value : "");
+  viewState.page = 1;
+}
+
+function resetFilterInputs(viewState, minInput, maxInput) {
+  viewState.minYear = "";
+  viewState.maxYear = "";
+  if (minInput) minInput.value = "";
+  if (maxInput) maxInput.value = "";
+  viewState.page = 1;
+}
+
+function syncFilterInputs(viewState, minInput, maxInput) {
+  if (minInput && document.activeElement !== minInput) {
+    minInput.value = viewState.minYear || "";
+  }
+  if (maxInput && document.activeElement !== maxInput) {
+    maxInput.value = viewState.maxYear || "";
+  }
+}
+
+function updatePublicationViewToggle() {
+  if (!publicationsPageViewToggle) return;
+  const mode = publicationState.page.mode;
+  publicationsPageViewToggle.querySelectorAll("button[data-mode]").forEach((button) => {
+    const isActive = button.dataset.mode === mode;
+    button.classList.toggle("is-active", isActive);
+    button.setAttribute("aria-selected", isActive ? "true" : "false");
+  });
+}
+
+function renderHomePublications() {
+  const list = document.getElementById("publications-list");
+  if (!list) return;
+
+  const filtered = getPreparedPublications(publicationState.items, publicationState.home);
+  const pagination = paginateItems(filtered, publicationState.home.page, publicationState.home.pageSize);
+  publicationState.home.page = pagination.page;
+  list.innerHTML = "";
+
+  if (!filtered.length) {
+    const empty = document.createElement("div");
+    empty.className = "placeholder-item";
+    empty.textContent = "No publications match current filter.";
+    list.appendChild(empty);
+  } else {
+    pagination.pagedItems.forEach((pub) => {
+      list.appendChild(createPublicationListItem(pub, { showGraphAbs: publicationState.home.showGraphAbs }));
+    });
+  }
+
+  renderPagination(publicationsPagination, pagination.page, pagination.totalPages, (nextPage) => {
+    publicationState.home.page = nextPage;
+    renderHomePublications();
+  });
+  updateSortButton(publicationsSortButton, publicationState.home.sortMode);
+  updateFilterButton(publicationsFilterButton, publicationState.home);
+  syncFilterInputs(publicationState.home, publicationsFilterMinYearInput, publicationsFilterMaxYearInput);
+}
+
+function renderPublicationsPage() {
+  if (!publicationsPageView) return;
+  const state = publicationState.page;
+  const filtered = getPreparedPublications(publicationState.items, state);
+  const pageSize = state.mode === "grid" ? state.gridPageSize : state.listPageSize;
+  const showGraphAbs = state.mode === "grid" ? state.gridShowGraphAbs : state.listShowGraphAbs;
+  const pagination = paginateItems(filtered, state.page, pageSize);
+  state.page = pagination.page;
+
+  publicationsPageView.innerHTML = "";
+  if (!filtered.length) {
+    const empty = document.createElement("div");
+    empty.className = "placeholder-item";
+    empty.textContent = "No publications match current filter.";
+    publicationsPageView.appendChild(empty);
+  } else if (state.mode === "grid") {
+    const grid = document.createElement("div");
+    grid.className = "publications-grid";
+    pagination.pagedItems.forEach((pub) => {
+      grid.appendChild(createPublicationGridCard(pub, { showGraphAbs }));
+    });
+    publicationsPageView.appendChild(grid);
+  } else {
+    const list = document.createElement("div");
+    list.className = "placeholder-list";
+    pagination.pagedItems.forEach((pub) => {
+      list.appendChild(createPublicationListItem(pub, { showGraphAbs }));
+    });
+    publicationsPageView.appendChild(list);
+  }
+
+  renderPagination(publicationsPagePagination, pagination.page, pagination.totalPages, (nextPage) => {
+    state.page = nextPage;
+    renderPublicationsPage();
+  });
+  updateSortButton(publicationsPageSortButton, state.sortMode);
+  updateFilterButton(publicationsPageFilterButton, state);
+  syncFilterInputs(state, publicationsPageFilterMinYearInput, publicationsPageFilterMaxYearInput);
+  updatePublicationViewToggle();
+}
+
+function rerenderPublicationViews() {
+  renderHomePublications();
+  renderPublicationsPage();
 }
 
 function isGraphAbsModalOpen() {
@@ -994,111 +1402,6 @@ function closeGraphAbsModal() {
   document.body.classList.remove("modal-open");
 }
 
-function renderPublications(items) {
-  const list = document.getElementById("publications-list");
-  list.innerHTML = "";
-
-  const orderedItems = getOrderedPublications(items, publicationState.sortMode);
-
-  if (!orderedItems.length) {
-    const empty = document.createElement("div");
-    empty.className = "placeholder-item";
-    empty.textContent = "No publications loaded yet.";
-    list.appendChild(empty);
-    return;
-  }
-
-  orderedItems.forEach((pub) => {
-    const item = document.createElement("article");
-    item.className = "publication-item";
-    if (pub.ref_key) {
-      item.dataset.pubKey = pub.ref_key;
-    }
-
-    const head = document.createElement("div");
-    head.className = "publication-head";
-
-    const titleLink = document.createElement(pub.doi_link ? "a" : "div");
-    titleLink.className = "publication-title";
-    const titleText = document.createElement("span");
-    titleText.textContent = pub.title || "Untitled";
-    titleLink.appendChild(titleText);
-    if (pub.doi_link) {
-      titleLink.href = pub.doi_link;
-      titleLink.target = "_blank";
-      titleLink.rel = "noreferrer";
-      const doiIcon = document.createElement("i");
-      doiIcon.className = "publication-title-doi-icon";
-      doiIcon.classList.add("fa-solid", "fa-link");
-      doiIcon.setAttribute("aria-hidden", "true");
-      titleLink.appendChild(doiIcon);
-    }
-    head.appendChild(titleLink);
-
-    if (pub.year) {
-      const yearBadge = document.createElement("span");
-      yearBadge.className = "publication-year";
-      yearBadge.textContent = pub.year;
-      head.appendChild(yearBadge);
-    }
-
-    item.appendChild(head);
-
-    if (pub.authors) {
-      const authors = document.createElement("div");
-      authors.className = "publication-authors";
-      authors.appendChild(buildAuthorsFragment(pub.authors, publicationState.authorHighlightKeywords));
-      item.appendChild(authors);
-    }
-
-    const venueParts = [];
-    if (pub.journal) venueParts.push(pub.journal);
-    if (pub.volume) venueParts.push(`Vol. ${pub.volume}`);
-    if (pub.page) venueParts.push(`pp. ${pub.page}`);
-    if (venueParts.length) {
-      const venue = document.createElement("div");
-      venue.className = "publication-venue";
-      venue.textContent = venueParts.join(" | ");
-      item.appendChild(venue);
-    }
-
-    if (pub.graph_abs) {
-      const graphWrap = document.createElement("button");
-      graphWrap.type = "button";
-      graphWrap.className = "publication-graph-abs";
-      graphWrap.setAttribute("aria-label", `Open graphical abstract for ${pub.title || "publication"}`);
-      const graphImg = document.createElement("img");
-      graphImg.src = pub.graph_abs;
-      graphImg.alt = `${pub.title || "Publication"} graphical abstract`;
-      graphImg.loading = "lazy";
-      graphImg.decoding = "async";
-      graphWrap.appendChild(graphImg);
-      graphWrap.addEventListener("click", () => {
-        openGraphAbsModal(pub.graph_abs, graphImg.alt);
-      });
-      item.appendChild(graphWrap);
-    }
-
-    if (pub.doi) {
-      const doiLine = document.createElement("div");
-      doiLine.className = "publication-doi-line";
-      const doiLabel = document.createElement("span");
-      doiLabel.textContent = "DOI: ";
-      doiLine.appendChild(doiLabel);
-
-      const doiLink = document.createElement("a");
-      doiLink.href = pub.doi_link || buildDoiUrl(pub.doi);
-      doiLink.target = "_blank";
-      doiLink.rel = "noreferrer";
-      doiLink.textContent = pub.doi;
-      doiLine.appendChild(doiLink);
-      item.appendChild(doiLine);
-    }
-
-    list.appendChild(item);
-  });
-}
-
 async function init() {
   document.addEventListener("keydown", handleTerminalKey);
   if (terminalScreen) {
@@ -1107,12 +1410,90 @@ async function init() {
   }
   if (publicationsSortButton) {
     publicationsSortButton.addEventListener("click", () => {
-      publicationState.sortMode = publicationState.sortMode === "year" ? "default" : "year";
-      renderPublications(publicationState.items);
-      updatePublicationsSortButton();
+      publicationState.home.sortMode = publicationState.home.sortMode === "year" ? "default" : "year";
+      publicationState.home.page = 1;
+      renderHomePublications();
     });
-    updatePublicationsSortButton();
   }
+  if (publicationsFilterButton) {
+    publicationsFilterButton.addEventListener("click", () => {
+      if (!publicationsFilterPanel) return;
+      publicationsFilterPanel.hidden = !publicationsFilterPanel.hidden;
+    });
+  }
+  if (publicationsFilterApplyButton) {
+    publicationsFilterApplyButton.addEventListener("click", () => {
+      applyFilterInputs(publicationState.home, publicationsFilterMinYearInput, publicationsFilterMaxYearInput);
+      renderHomePublications();
+    });
+  }
+  if (publicationsFilterResetButton) {
+    publicationsFilterResetButton.addEventListener("click", () => {
+      resetFilterInputs(publicationState.home, publicationsFilterMinYearInput, publicationsFilterMaxYearInput);
+      renderHomePublications();
+    });
+  }
+  if (publicationsPageSortButton) {
+    publicationsPageSortButton.addEventListener("click", () => {
+      publicationState.page.sortMode = publicationState.page.sortMode === "year" ? "default" : "year";
+      publicationState.page.page = 1;
+      renderPublicationsPage();
+    });
+  }
+  if (publicationsPageFilterButton) {
+    publicationsPageFilterButton.addEventListener("click", () => {
+      if (!publicationsPageFilterPanel) return;
+      publicationsPageFilterPanel.hidden = !publicationsPageFilterPanel.hidden;
+    });
+  }
+  if (publicationsPageFilterApplyButton) {
+    publicationsPageFilterApplyButton.addEventListener("click", () => {
+      applyFilterInputs(publicationState.page, publicationsPageFilterMinYearInput, publicationsPageFilterMaxYearInput);
+      renderPublicationsPage();
+    });
+  }
+  if (publicationsPageFilterResetButton) {
+    publicationsPageFilterResetButton.addEventListener("click", () => {
+      resetFilterInputs(publicationState.page, publicationsPageFilterMinYearInput, publicationsPageFilterMaxYearInput);
+      renderPublicationsPage();
+    });
+  }
+  if (publicationsPageViewToggle) {
+    publicationsPageViewToggle.querySelectorAll("button[data-mode]").forEach((button) => {
+      button.addEventListener("click", () => {
+        const mode = button.dataset.mode === "grid" ? "grid" : "list";
+        if (publicationState.page.mode === mode) return;
+        publicationState.page.mode = mode;
+        publicationState.page.page = 1;
+        renderPublicationsPage();
+      });
+    });
+  }
+  const filterInputPairs = [
+    [publicationsFilterMinYearInput, publicationsFilterMaxYearInput, () => {
+      applyFilterInputs(publicationState.home, publicationsFilterMinYearInput, publicationsFilterMaxYearInput);
+      renderHomePublications();
+    }],
+    [publicationsPageFilterMinYearInput, publicationsPageFilterMaxYearInput, () => {
+      applyFilterInputs(publicationState.page, publicationsPageFilterMinYearInput, publicationsPageFilterMaxYearInput);
+      renderPublicationsPage();
+    }]
+  ];
+
+  filterInputPairs.forEach(([minInput, maxInput, onApply]) => {
+    [minInput, maxInput].forEach((input) => {
+      if (!input) return;
+      input.addEventListener("keydown", (event) => {
+        if (event.key === "Enter") {
+          onApply();
+        }
+      });
+    });
+  });
+
+  window.addEventListener("hashchange", () => {
+    rerenderPublicationViews();
+  });
   if (graphAbsModalCloseButton) {
     graphAbsModalCloseButton.addEventListener("click", closeGraphAbsModal);
   }
@@ -1149,10 +1530,9 @@ async function init() {
     const publicationSource = publicationsCatalog || { publications: config.publications || [] };
     publicationState.items = await resolvePublications(publicationSource, settings, (nextItems) => {
       publicationState.items = nextItems;
-      renderPublications(publicationState.items);
+      rerenderPublicationViews();
     });
-    renderPublications(publicationState.items);
-    updatePublicationsSortButton();
+    rerenderPublicationViews();
   } catch (error) {
     console.error(error);
   }

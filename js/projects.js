@@ -484,7 +484,9 @@
     return {
       rightColumn: document.getElementById("right-column"),
       routeNav: document.getElementById("route-nav"),
-      projectsSectionNav: document.getElementById("projects-section-nav"),
+      projectsHomeMoreBtn: document.getElementById("projects-home-more-btn"),
+      publicationsMoreBtn: document.getElementById("publications-more-btn"),
+      publicationsPageHomeBtn: document.getElementById("publications-page-home-btn"),
       projectsHomeLangToggle: document.getElementById("projects-home-lang-toggle"),
       projectsOverviewLangToggle: document.getElementById("projects-overview-lang-toggle"),
       projectsOverviewHomeBtn: document.getElementById("projects-overview-home-btn"),
@@ -492,6 +494,7 @@
       overviewView: document.getElementById("projects-overview-view"),
       defaultStack: document.getElementById("right-default-stack"),
       overviewCard: document.getElementById("projects-overview-card"),
+      publicationsOverviewCard: document.getElementById("publications-overview-card"),
       detailCard: document.getElementById("project-detail-card"),
       detailTitle: document.getElementById("project-detail-title"),
       detailLangToggle: document.getElementById("project-detail-lang-toggle"),
@@ -524,6 +527,7 @@
   function buildHash(route) {
     if (!route || route.view === "home") return "#home";
     if (route.view === "projects") return "#projects";
+    if (route.view === "publications") return "#publications";
     if (route.view === "project" && route.key) return `#projects/${encodeURIComponent(route.key)}`;
     return "#home";
   }
@@ -536,6 +540,7 @@
 
     const parts = raw.split("/").filter(Boolean);
     if (!parts.length) return { view: "home" };
+    if (parts[0] === "publications") return { view: "publications" };
     if (parts[0] !== "projects") return { view: "home" };
     if (parts.length === 1) return { view: "projects" };
     return { view: "project", key: decodeURIComponent(parts[1]) };
@@ -580,6 +585,11 @@
     }
 
     addRouteSeparator(nav);
+    if (route.view === "publications") {
+      nav.appendChild(createRouteItem("Publications", true, null));
+      return;
+    }
+
     const projectsIsCurrent = route.view === "projects";
     nav.appendChild(createRouteItem("Projects", projectsIsCurrent, () => navigateToRoute({ view: "projects" })));
 
@@ -807,11 +817,16 @@
     const isHome = nextRoute.view === "home";
     const isProjects = nextRoute.view === "projects";
     const isProjectDetail = nextRoute.view === "project";
+    const isPublications = nextRoute.view === "publications";
 
     refs.defaultStack.hidden = !isHome;
     refs.defaultStack.style.display = isHome ? "" : "none";
     refs.overviewCard.hidden = !isProjects;
     refs.overviewCard.style.display = isProjects ? "" : "none";
+    if (refs.publicationsOverviewCard) {
+      refs.publicationsOverviewCard.hidden = !isPublications;
+      refs.publicationsOverviewCard.style.display = isPublications ? "" : "none";
+    }
     refs.detailCard.hidden = !isProjectDetail;
     refs.detailCard.style.display = isProjectDetail ? "" : "none";
 
@@ -819,6 +834,7 @@
       refs.rightColumn.classList.toggle("route-home", isHome);
       refs.rightColumn.classList.toggle("route-projects", isProjects);
       refs.rightColumn.classList.toggle("route-project", isProjectDetail);
+      refs.rightColumn.classList.toggle("route-publications", isPublications);
     }
     indexState.currentRoute = nextRoute;
 
@@ -874,6 +890,10 @@
       navigateToRoute({ view: "projects" });
       return;
     }
+    if (payload.route === "publications") {
+      navigateToRoute({ view: "publications" });
+      return;
+    }
     if (payload.route === "project" && payload.key) {
       navigateToRoute({ view: "project", key: cleanText(payload.key) });
     }
@@ -881,7 +901,14 @@
 
   async function initIndexPage(options) {
     const refs = collectIndexRefs();
-    if (!refs.homeView || !refs.overviewView || !refs.defaultStack || !refs.overviewCard || !refs.detailCard) {
+    if (
+      !refs.homeView ||
+      !refs.overviewView ||
+      !refs.defaultStack ||
+      !refs.overviewCard ||
+      !refs.detailCard ||
+      !refs.publicationsOverviewCard
+    ) {
       return;
     }
 
@@ -919,9 +946,19 @@
     createLanguageToggle(refs.detailLangToggle, indexState.lang, setLang);
 
     if (!indexState.initialized) {
-      if (refs.projectsSectionNav) {
-        refs.projectsSectionNav.addEventListener("click", () => {
+      if (refs.projectsHomeMoreBtn) {
+        refs.projectsHomeMoreBtn.addEventListener("click", () => {
           navigateToRoute({ view: "projects" });
+        });
+      }
+      if (refs.publicationsMoreBtn) {
+        refs.publicationsMoreBtn.addEventListener("click", () => {
+          navigateToRoute({ view: "publications" });
+        });
+      }
+      if (refs.publicationsPageHomeBtn) {
+        refs.publicationsPageHomeBtn.addEventListener("click", () => {
+          navigateToRoute({ view: "home" });
         });
       }
       if (refs.detailBackButton) {

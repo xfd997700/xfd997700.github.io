@@ -27,6 +27,17 @@
       "Fanding Xu",
       "\u5f90\u51e1\u4e01"
     ],
+    "home": {
+      "page_size": 4,
+      "show_graph_abs": false
+    },
+    "page": {
+      "default_view": "grid",
+      "list_page_size": 10,
+      "grid_page_size": 9,
+      "list_show_graph_abs": true,
+      "grid_show_graph_abs": true
+    },
     "doi_timeout_ms": 114000,
     "doi_request_interval_ms": 300,
     "doi_stop_after_failures": 5,
