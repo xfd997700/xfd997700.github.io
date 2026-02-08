@@ -13,6 +13,22 @@ const siteBrandTypingState = {
   timer: null,
   holdMs: 2600
 };
+let glassPrewarmNode = null;
+
+function ensureGlassPrewarm() {
+  if (glassPrewarmNode || !document.body) return;
+  const node = document.createElement("div");
+  node.className = "glass-prewarm";
+  node.setAttribute("aria-hidden", "true");
+  document.body.appendChild(node);
+  glassPrewarmNode = node;
+}
+
+function clearGlassPrewarm() {
+  if (!glassPrewarmNode) return;
+  glassPrewarmNode.remove();
+  glassPrewarmNode = null;
+}
 
 function stopSiteBrandTyping() {
   if (siteBrandTypingState.timer) {
@@ -106,8 +122,13 @@ function resetTerminal() {
 function enterMain() {
   if (state.entered) return;
   state.entered = true;
-  terminalScreen.classList.add("hidden");
-  mainContent.classList.add("visible");
+  requestAnimationFrame(() => {
+    mainContent.classList.add("visible");
+    if (terminalScreen) {
+      terminalScreen.classList.add("hidden");
+    }
+    setTimeout(clearGlassPrewarm, 420);
+  });
 }
 
 function wait(ms) {
@@ -617,6 +638,7 @@ function cleanText(value) {
 
 async function init() {
   document.addEventListener("keydown", handleTerminalKey);
+  ensureGlassPrewarm();
   if (terminalScreen) {
     terminalScreen.addEventListener("pointerdown", handleTerminalPointer);
     terminalScreen.addEventListener("touchstart", handleTerminalPointer, { passive: true });

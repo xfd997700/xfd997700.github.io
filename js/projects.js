@@ -486,9 +486,10 @@
     return pages;
   }
 
-  function renderHomeView() {
+  function renderHomeView(options) {
     const { homeView } = indexState.refs;
     if (!homeView) return;
+    const intervalStore = options && Array.isArray(options.intervalStore) ? options.intervalStore : null;
 
     homeView.innerHTML = "";
     if (!indexState.projects.length) {
@@ -530,7 +531,7 @@
           variant: "home",
           lang: indexState.lang,
           imageIntervalMs: indexState.settings.imageCarouselSeconds * 1000,
-          intervalStore: indexState.intervals,
+          intervalStore,
           onOpen: () => navigateToRoute({ view: "project", key: project.key })
         });
         page.appendChild(card);
@@ -1060,6 +1061,14 @@
 
     if (previousView !== nextRoute.view) {
       animateRoutePanel(getRoutePanelByView(refs, nextRoute.view));
+      const touchesProjectsViews =
+        nextRoute.view === "home" ||
+        nextRoute.view === "projects" ||
+        previousView === "home" ||
+        previousView === "projects";
+      if (touchesProjectsViews) {
+        rerenderIndexProjectViews();
+      }
     }
 
     if (nextRoute.view === "project") {
@@ -1087,10 +1096,14 @@
 
   function rerenderIndexProjectViews() {
     clearIntervals(indexState.intervals);
-    renderHomeView();
+    const currentView = indexState.currentRoute && indexState.currentRoute.view ? indexState.currentRoute.view : "home";
+    const enableHomeCarousel = currentView === "home";
+    const enableOverviewCarousel = currentView === "projects";
+
+    renderHomeView({ intervalStore: enableHomeCarousel ? indexState.intervals : null });
     renderOverviewView(indexState.refs.overviewView, {
       lang: indexState.lang,
-      intervalStore: indexState.intervals,
+      intervalStore: enableOverviewCarousel ? indexState.intervals : null,
       onOpen: (project) => navigateToRoute({ view: "project", key: project.key })
     });
 
@@ -1198,6 +1211,13 @@
 
       window.addEventListener("hashchange", () => {
         applyRoute(parseHashRoute(window.location.hash));
+      });
+      document.addEventListener("visibilitychange", () => {
+        if (document.hidden) {
+          clearIntervals(indexState.intervals);
+          return;
+        }
+        rerenderIndexProjectViews();
       });
       window.addEventListener("message", handleIndexMessage);
       window.addEventListener("resize", () => {
