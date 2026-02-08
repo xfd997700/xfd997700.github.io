@@ -25,13 +25,27 @@
     pageViewToggle: document.getElementById("publications-page-view-toggle"),
     modal: document.getElementById("graph-abs-modal"),
     modalImg: document.getElementById("graph-abs-modal-img"),
-    modalClose: document.getElementById("graph-abs-modal-close")
+    modalClose: document.getElementById("graph-abs-modal-close"),
+    detailModal: document.getElementById("publication-detail-modal"),
+    detailModalClose: document.getElementById("publication-detail-modal-close"),
+    detailYear: document.getElementById("publication-detail-year"),
+    detailVenue: document.getElementById("publication-detail-venue"),
+    detailTitle: document.getElementById("publication-detail-title"),
+    detailAuthors: document.getElementById("publication-detail-authors"),
+    detailAbsWrap: document.getElementById("publication-detail-abs-wrap"),
+    detailAbs: document.getElementById("publication-detail-abs"),
+    detailGraphWrap: document.getElementById("publication-detail-graph-wrap"),
+    detailGraphImg: document.getElementById("publication-detail-graph-img"),
+    detailDoiLine: document.getElementById("publication-detail-doi-line"),
+    detailDoiLink: document.getElementById("publication-detail-doi-link")
   };
 
   const state = {
     initialized: false,
     items: [],
     authorKeywords: ["Fanding Xu", "徐凡丁"],
+    cardTitleLinkEnabled: true,
+    detailTitleLinkEnabled: true,
     home: { sortMode: "default", minYear: "", maxYear: "", page: 1, pageSize: 5, showGraphAbs: true },
     page: {
       sortMode: "default",
@@ -201,6 +215,7 @@
       journal: cleanText(pub.journal),
       volume: cleanText(pub.volume),
       page: cleanText(pub.page),
+      abs: cleanText(pub.abs),
       graph_abs: cleanText(pub.graph_abs),
       doi_link: buildDoiUrl(doi)
     };
@@ -305,8 +320,9 @@
     };
   }
 
-  function createPublicationTitle(pub, className) {
-    const doiUrl = pub.doi_link || buildDoiUrl(pub.doi);
+  function createPublicationTitle(pub, className, options) {
+    const enableLink = !(options && options.enableLink === false);
+    const doiUrl = enableLink ? (pub.doi_link || buildDoiUrl(pub.doi)) : "";
     const title = document.createElement(doiUrl ? "a" : "div");
     title.className = className;
     const text = document.createElement("span");
@@ -324,6 +340,34 @@
     return title;
   }
 
+  function getPublicationVenueText(pub) {
+    const venueParts = [];
+    if (pub && pub.journal) venueParts.push(pub.journal);
+    if (pub && pub.volume) venueParts.push(`Vol. ${pub.volume}`);
+    if (pub && pub.page) venueParts.push(`pp. ${pub.page}`);
+    return venueParts.join(" | ");
+  }
+
+  function bindPublicationItemOpen(host, pub) {
+    if (!host || !pub) return;
+    host.classList.add("publication-item-clickable");
+    host.setAttribute("role", "button");
+    host.setAttribute("aria-label", `Open publication details for ${cleanText(pub.title) || "publication"}`);
+    host.tabIndex = 0;
+
+    host.addEventListener("click", (event) => {
+      if (event.target && event.target.closest("a, button")) return;
+      openPublicationDetailModal(pub);
+    });
+
+    host.addEventListener("keydown", (event) => {
+      if (event.key !== "Enter" && event.key !== " ") return;
+      if (event.target && event.target.closest("a, button")) return;
+      event.preventDefault();
+      openPublicationDetailModal(pub);
+    });
+  }
+
   function createPublicationItem(pub, options) {
     const showGraphAbs = options && options.showGraphAbs !== false;
     const item = document.createElement("article");
@@ -331,7 +375,7 @@
     if (pub.ref_key) item.dataset.pubKey = pub.ref_key;
     const head = document.createElement("div");
     head.className = "publication-head";
-    head.appendChild(createPublicationTitle(pub, "publication-title"));
+    head.appendChild(createPublicationTitle(pub, "publication-title", { enableLink: state.cardTitleLinkEnabled }));
     if (pub.year) {
       const yearBadge = document.createElement("span");
       yearBadge.className = "publication-year";
@@ -339,20 +383,18 @@
       head.appendChild(yearBadge);
     }
     item.appendChild(head);
+    bindPublicationItemOpen(item, pub);
     if (pub.authors) {
       const authors = document.createElement("div");
       authors.className = "publication-authors";
       authors.appendChild(buildAuthorsFragment(pub.authors, state.authorKeywords));
       item.appendChild(authors);
     }
-    const venueParts = [];
-    if (pub.journal) venueParts.push(pub.journal);
-    if (pub.volume) venueParts.push(`Vol. ${pub.volume}`);
-    if (pub.page) venueParts.push(`pp. ${pub.page}`);
-    if (venueParts.length) {
+    const venueText = getPublicationVenueText(pub);
+    if (venueText) {
       const venue = document.createElement("div");
       venue.className = "publication-venue";
-      venue.textContent = venueParts.join(" | ");
+      venue.textContent = venueText;
       item.appendChild(venue);
     }
     if (showGraphAbs && pub.graph_abs) {
@@ -366,7 +408,10 @@
       graphImg.loading = "lazy";
       graphImg.decoding = "async";
       graphWrap.appendChild(graphImg);
-      graphWrap.addEventListener("click", () => openGraphAbsModal(pub.graph_abs, graphImg.alt));
+      graphWrap.addEventListener("click", (event) => {
+        event.stopPropagation();
+        openGraphAbsModal(pub.graph_abs, graphImg.alt);
+      });
       item.appendChild(graphWrap);
     }
     if (pub.doi) {
@@ -393,7 +438,7 @@
     item.className = `publication-grid-item ${hasGraphAbs ? "is-rich" : "is-compact"}`;
     const head = document.createElement("div");
     head.className = "publication-grid-head";
-    head.appendChild(createPublicationTitle(pub, "publication-grid-title"));
+    head.appendChild(createPublicationTitle(pub, "publication-grid-title", { enableLink: state.cardTitleLinkEnabled }));
     if (pub.year) {
       const year = document.createElement("span");
       year.className = "publication-grid-year";
@@ -401,20 +446,18 @@
       head.appendChild(year);
     }
     item.appendChild(head);
+    bindPublicationItemOpen(item, pub);
     if (pub.authors) {
       const authors = document.createElement("div");
       authors.className = "publication-grid-authors";
       authors.appendChild(buildAuthorsFragment(pub.authors, state.authorKeywords));
       item.appendChild(authors);
     }
-    const venueParts = [];
-    if (pub.journal) venueParts.push(pub.journal);
-    if (pub.volume) venueParts.push(`Vol. ${pub.volume}`);
-    if (pub.page) venueParts.push(`pp. ${pub.page}`);
-    if (venueParts.length) {
+    const venueText = getPublicationVenueText(pub);
+    if (venueText) {
       const venue = document.createElement("div");
       venue.className = "publication-grid-venue";
-      venue.textContent = venueParts.join(" | ");
+      venue.textContent = venueText;
       item.appendChild(venue);
     }
     if (hasGraphAbs) {
@@ -428,8 +471,25 @@
       graphImg.loading = "lazy";
       graphImg.decoding = "async";
       graphWrap.appendChild(graphImg);
-      graphWrap.addEventListener("click", () => openGraphAbsModal(pub.graph_abs, graphImg.alt));
+      graphWrap.addEventListener("click", (event) => {
+        event.stopPropagation();
+        openGraphAbsModal(pub.graph_abs, graphImg.alt);
+      });
       item.appendChild(graphWrap);
+    }
+    if (pub.doi) {
+      const doiLine = document.createElement("div");
+      doiLine.className = "publication-grid-doi-line";
+      const label = document.createElement("span");
+      label.textContent = "DOI: ";
+      doiLine.appendChild(label);
+      const link = document.createElement("a");
+      link.href = pub.doi_link || buildDoiUrl(pub.doi);
+      link.target = "_blank";
+      link.rel = "noreferrer";
+      link.textContent = pub.doi;
+      doiLine.appendChild(link);
+      item.appendChild(doiLine);
     }
     return item;
   }
@@ -603,12 +663,18 @@
     renderPublicationsPage();
   }
 
+  function syncBodyModalState() {
+    const graphOpen = Boolean(refs.modal && !refs.modal.hidden);
+    const detailOpen = Boolean(refs.detailModal && !refs.detailModal.hidden);
+    document.body.classList.toggle("modal-open", graphOpen || detailOpen);
+  }
+
   function openGraphAbsModal(src, alt) {
     if (!refs.modal || !refs.modalImg || !src) return;
     refs.modalImg.src = src;
     refs.modalImg.alt = alt || "Graphical abstract";
     refs.modal.hidden = false;
-    document.body.classList.add("modal-open");
+    syncBodyModalState();
   }
 
   function closeGraphAbsModal() {
@@ -616,7 +682,79 @@
     refs.modal.hidden = true;
     refs.modalImg.src = "";
     refs.modalImg.alt = "Graphical abstract";
-    document.body.classList.remove("modal-open");
+    syncBodyModalState();
+  }
+
+  function openPublicationDetailModal(pub) {
+    if (!refs.detailModal || !pub) return;
+    const yearText = cleanText(pub.year);
+    const venueText = getPublicationVenueText(pub);
+    const titleText = cleanText(pub.title) || "Untitled";
+    const doiText = cleanText(pub.doi);
+    const doiUrl = cleanText(pub.doi_link) || buildDoiUrl(doiText);
+    const authorsText = cleanText(pub.authors);
+    const absText = cleanText(pub.abs);
+    const graphSrc = cleanText(pub.graph_abs);
+
+    if (refs.detailYear) refs.detailYear.textContent = yearText || "N/A";
+    if (refs.detailVenue) {
+      refs.detailVenue.textContent = venueText || "-";
+      refs.detailVenue.hidden = !venueText;
+    }
+    if (refs.detailTitle) {
+      refs.detailTitle.innerHTML = "";
+      const titleNode = createPublicationTitle(
+        { title: titleText, doi: doiText, doi_link: doiUrl },
+        "publication-detail-title-link",
+        { enableLink: state.detailTitleLinkEnabled }
+      );
+      refs.detailTitle.appendChild(titleNode);
+    }
+    if (refs.detailAuthors) {
+      refs.detailAuthors.innerHTML = "";
+      if (authorsText) {
+        refs.detailAuthors.appendChild(buildAuthorsFragment(authorsText, state.authorKeywords));
+      } else {
+        refs.detailAuthors.textContent = "Unknown authors";
+      }
+    }
+
+    if (refs.detailAbsWrap && refs.detailAbs) {
+      refs.detailAbsWrap.hidden = !absText;
+      refs.detailAbs.textContent = absText;
+    }
+
+    if (refs.detailGraphWrap && refs.detailGraphImg) {
+      const hasGraph = Boolean(graphSrc);
+      refs.detailGraphWrap.hidden = !hasGraph;
+      refs.detailGraphImg.src = hasGraph ? graphSrc : "";
+      refs.detailGraphImg.alt = hasGraph ? `${titleText} graphical abstract` : "Graphical abstract";
+    }
+
+    if (refs.detailDoiLine && refs.detailDoiLink) {
+      const hasDoi = Boolean(doiText && doiUrl);
+      refs.detailDoiLine.hidden = !hasDoi;
+      refs.detailDoiLink.textContent = hasDoi ? doiText : "";
+      refs.detailDoiLink.href = hasDoi ? doiUrl : "";
+    }
+
+    refs.detailModal.hidden = false;
+    syncBodyModalState();
+  }
+
+  function closePublicationDetailModal() {
+    if (!refs.detailModal || refs.detailModal.hidden) return;
+    refs.detailModal.hidden = true;
+    if (refs.detailGraphImg) {
+      refs.detailGraphImg.src = "";
+      refs.detailGraphImg.alt = "Graphical abstract";
+    }
+    if (refs.detailDoiLine) refs.detailDoiLine.hidden = true;
+    if (refs.detailDoiLink) {
+      refs.detailDoiLink.textContent = "";
+      refs.detailDoiLink.href = "";
+    }
+    syncBodyModalState();
   }
 
   function applyPublicationSettings(settings) {
@@ -635,6 +773,10 @@
     if (Array.isArray(pubSettings.author_highlight_keywords)) {
       state.authorKeywords = pubSettings.author_highlight_keywords.map((name) => cleanText(name)).filter(Boolean);
     }
+    state.cardTitleLinkEnabled =
+      pubSettings.card_title_link_enabled === undefined ? true : Boolean(pubSettings.card_title_link_enabled);
+    state.detailTitleLinkEnabled =
+      pubSettings.detail_title_link_enabled === undefined ? true : Boolean(pubSettings.detail_title_link_enabled);
 
     const home = pubSettings.home && typeof pubSettings.home === "object" ? pubSettings.home : {};
     const page = pubSettings.page && typeof pubSettings.page === "object" ? pubSettings.page : {};
@@ -765,8 +907,16 @@
         if (event.target === refs.modal) closeGraphAbsModal();
       });
     }
+    if (refs.detailModalClose) refs.detailModalClose.addEventListener("click", closePublicationDetailModal);
+    if (refs.detailModal) {
+      refs.detailModal.addEventListener("click", (event) => {
+        if (event.target === refs.detailModal) closePublicationDetailModal();
+      });
+    }
     document.addEventListener("keydown", (event) => {
-      if (event.key === "Escape" && refs.modal && !refs.modal.hidden) closeGraphAbsModal();
+      if (event.key !== "Escape") return;
+      if (refs.modal && !refs.modal.hidden) closeGraphAbsModal();
+      if (refs.detailModal && !refs.detailModal.hidden) closePublicationDetailModal();
     });
   }
 

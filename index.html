@@ -221,6 +221,39 @@
       </div>
     </div>
 
+    <div id="publication-detail-modal" class="graph-abs-modal" hidden>
+      <div class="publication-detail-modal-panel glass" role="dialog" aria-modal="true" aria-label="Publication details">
+        <div class="publication-detail-top">
+          <div class="publication-detail-meta">
+            <span class="publication-detail-year">
+              <span id="publication-detail-year">N/A</span>
+            </span>
+            <span class="publication-detail-venue" id="publication-detail-venue"></span>
+          </div>
+          <button
+            id="publication-detail-modal-close"
+            class="graph-abs-modal-close"
+            type="button"
+            aria-label="Close publication details"
+          >
+            <i class="fa-solid fa-xmark"></i>
+          </button>
+        </div>
+        <h3 id="publication-detail-title" class="publication-detail-title">Untitled</h3>
+        <div id="publication-detail-authors" class="publication-detail-authors"></div>
+        <div id="publication-detail-abs-wrap" class="publication-detail-abs-wrap" hidden>
+          <p id="publication-detail-abs" class="publication-detail-abs"></p>
+        </div>
+        <div id="publication-detail-graph-wrap" class="publication-detail-graph-wrap" hidden>
+          <img id="publication-detail-graph-img" src="" alt="Graphical abstract" />
+        </div>
+        <div id="publication-detail-doi-line" class="publication-detail-doi-line" hidden>
+          <span>DOI: </span>
+          <a id="publication-detail-doi-link" href="" target="_blank" rel="noreferrer"></a>
+        </div>
+      </div>
+    </div>
+
     <script src="js/projects.js" defer></script>
     <script src="js/publications.js" defer></script>
     <script src="js/eggs.js" defer></script>

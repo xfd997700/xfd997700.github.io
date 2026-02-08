@@ -574,6 +574,17 @@ body.modal-open {
   contain: layout paint;
 }
 
+.publication-item-clickable,
+.publication-grid-item.publication-item-clickable {
+  cursor: pointer;
+}
+
+.publication-item-clickable:focus-visible,
+.publication-grid-item.publication-item-clickable:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+
 .publication-head {
   position: relative;
   min-height: 26px;
@@ -742,6 +753,22 @@ a.publication-grid-title:hover {
   line-height: 1.45;
 }
 
+.publication-grid-doi-line {
+  margin-top: auto;
+  justify-self: start;
+  text-align: left;
+  font-size: 11px;
+  color: var(--text-muted);
+  line-height: 1.45;
+}
+
+.publication-grid-doi-line a {
+  color: var(--accent);
+  text-decoration: underline;
+  text-underline-offset: 2px;
+  word-break: break-all;
+}
+
 .publication-grid-graph {
   margin-top: 2px;
   border: 1px solid rgba(255, 255, 255, 0.15);
@@ -828,6 +855,122 @@ a.publication-grid-title:hover {
   place-items: center;
   padding: clamp(16px, 4vw, 40px);
   z-index: 40;
+}
+
+.publication-detail-modal-panel {
+  position: relative;
+  width: min(980px, 92vw);
+  max-height: 90vh;
+  overflow: auto;
+  padding: clamp(14px, 2vw, 20px);
+  border-radius: 16px;
+  display: grid;
+  gap: 12px;
+}
+
+.publication-detail-top {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 10px;
+  padding-right: 46px;
+}
+
+.publication-detail-meta {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+  min-width: 0;
+}
+
+.publication-detail-year {
+  border-radius: 999px;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  background: rgba(255, 255, 255, 0.08);
+  color: var(--text-muted);
+  font-size: 12px;
+  line-height: 1;
+  padding: 4px 10px;
+  white-space: nowrap;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.publication-detail-venue {
+  color: var(--text-muted);
+  font-size: 13px;
+  line-height: 1.45;
+}
+
+.publication-detail-title {
+  margin: 0;
+  text-align: center;
+  color: var(--text-primary);
+  font-size: clamp(18px, 2vw, 24px);
+  line-height: 1.4;
+  font-weight: 600;
+}
+
+.publication-detail-title-link {
+  display: inline-block;
+  color: var(--text-primary);
+  text-decoration: none;
+}
+
+a.publication-detail-title-link:hover {
+  color: var(--accent);
+}
+
+.publication-detail-authors {
+  text-align: center;
+  color: var(--text-primary);
+  font-size: 14px;
+  line-height: 1.5;
+}
+
+.publication-detail-abs-wrap {
+  border-top: 1px solid rgba(255, 255, 255, 0.14);
+  padding-top: 10px;
+}
+
+.publication-detail-abs {
+  margin: 0;
+  color: var(--text-muted);
+  font-size: 14px;
+  line-height: 1.7;
+  white-space: pre-wrap;
+}
+
+.publication-detail-graph-wrap {
+  border: 1px solid rgba(255, 255, 255, 0.16);
+  border-radius: 12px;
+  overflow: hidden;
+  background: rgba(255, 255, 255, 0.04);
+}
+
+.publication-detail-graph-wrap img {
+  width: 100%;
+  max-height: 50vh;
+  object-fit: contain;
+  object-position: center;
+  display: block;
+}
+
+.publication-detail-doi-line {
+  justify-self: start;
+  text-align: left;
+  font-size: 12px;
+  color: var(--text-muted);
+  line-height: 1.5;
+}
+
+.publication-detail-doi-line a {
+  color: var(--accent);
+  text-decoration: underline;
+  text-underline-offset: 2px;
+  word-break: break-all;
 }
 
 .graph-abs-modal[hidden] {

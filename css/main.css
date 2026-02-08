@@ -9,6 +9,10 @@
   --card-bg: rgba(255, 255, 255, 0.08);
   --card-border: rgba(255, 255, 255, 0.18);
   --shadow: 0 20px 60px rgba(0, 0, 0, 0.45);
+  --card-hover-bg: rgba(255, 255, 255, 0.1);
+  --card-hover-border: rgba(255, 255, 255, 0.32);
+  --card-hover-shadow: 0 24px 56px rgba(0, 0, 0, 0.42);
+  --card-hover-lift-y: -2px;
   --radius: 18px;
   --glass-blur: 18px;
   --font-body: "Space Grotesk", "Segoe UI", sans-serif;
@@ -82,6 +86,23 @@ main {
 
 .card {
   padding: 28px;
+}
+
+.card,
+.project-card,
+.publication-item,
+.publication-grid-item {
+  transition: transform 0.2s ease, border-color 0.2s ease, background 0.2s ease, box-shadow 0.2s ease;
+}
+
+.card:hover,
+.project-card:hover,
+.publication-item:hover,
+.publication-grid-item:hover {
+  transform: translateY(var(--card-hover-lift-y));
+  border-color: var(--card-hover-border);
+  background: var(--card-hover-bg);
+  box-shadow: var(--card-hover-shadow);
 }
 
 .card h2 {
