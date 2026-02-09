@@ -55,7 +55,7 @@
     "card_title_link_enabled": false,
     "detail_title_link_enabled": true,
     "home": {
-      "page_size": 4,
+      "page_size": 5,
       "show_graph_abs": false
     },
     "page": {
