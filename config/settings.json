@@ -10,7 +10,8 @@
     "hold_ms": 2600
   },
   "ui": {
-    "top_action_button_height_px": 32
+    "top_action_button_height_px": 32,
+    "base_card_hover_enabled": false
   },
   "eggs": {
     "display_seconds": 3,

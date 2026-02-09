@@ -225,19 +225,19 @@
 
     const fragment = document.createDocumentFragment();
     servers.forEach((server) => {
-      const item = document.createElement("article");
-      item.className = "openserver-item";
+      const isClickable = Boolean(server.link);
+      const item = isClickable ? document.createElement("a") : document.createElement("article");
+      item.className = isClickable ? "openserver-item openserver-item-link" : "openserver-item";
+      if (isClickable) {
+        item.href = server.link;
+        item.target = "_blank";
+        item.rel = "noreferrer";
+        item.setAttribute("aria-label", `Open ${server.name}`);
+      }
 
       if (server.logo) {
-        const logoShell = server.link ? document.createElement("a") : document.createElement("div");
+        const logoShell = document.createElement("div");
         logoShell.className = "openserver-logo-box";
-        if (server.link) {
-          logoShell.classList.add("openserver-logo-box-link");
-          logoShell.href = server.link;
-          logoShell.target = "_blank";
-          logoShell.rel = "noreferrer";
-          logoShell.setAttribute("aria-label", `Open ${server.name}`);
-        }
         const logo = document.createElement("img");
         logo.className = "openserver-logo";
         logo.src = server.logo;
@@ -251,22 +251,11 @@
       const textWrap = document.createElement("div");
       textWrap.className = "openserver-text";
 
-      const nameNode = server.link ? document.createElement("a") : document.createElement("div");
-      nameNode.className = server.link ? "openserver-name openserver-name-link" : "openserver-name";
-      if (server.link) {
-        nameNode.href = server.link;
-        nameNode.target = "_blank";
-        nameNode.rel = "noreferrer";
-      }
+      const nameNode = document.createElement("div");
+      nameNode.className = "openserver-name";
       const nameText = document.createElement("span");
       nameText.textContent = server.name;
       nameNode.appendChild(nameText);
-      if (server.link) {
-        const icon = document.createElement("i");
-        icon.className = "fa-solid fa-link publication-title-doi-icon";
-        icon.setAttribute("aria-hidden", "true");
-        nameNode.appendChild(icon);
-      }
       textWrap.appendChild(nameNode);
 
       if (server.intro) {

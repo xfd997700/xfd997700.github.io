@@ -592,6 +592,24 @@ a[href]:not([class]):focus-visible {
   grid-template-columns: auto 1fr;
   align-items: center;
   gap: 10px;
+  text-decoration: none;
+  color: var(--text-primary);
+  transition: transform 0.2s ease, border-color 0.2s ease, background-color 0.2s ease;
+}
+
+.openserver-item-link {
+  cursor: pointer;
+}
+
+.openserver-item-link:hover {
+  transform: translateY(-1px);
+  border-color: rgba(255, 255, 255, 0.32);
+  background: rgba(255, 255, 255, 0.1);
+}
+
+.openserver-item-link:focus-visible {
+  outline: 2px solid rgba(148, 163, 184, 0.9);
+  outline-offset: 2px;
 }
 
 .openserver-logo {
@@ -613,16 +631,6 @@ a[href]:not([class]):focus-visible {
   display: block;
 }
 
-.openserver-logo-box-link {
-  cursor: pointer;
-  transition: transform 0.2s ease, border-color 0.2s ease;
-}
-
-.openserver-logo-box-link:hover {
-  transform: translateY(-1px);
-  border-color: rgba(255, 255, 255, 0.32);
-}
-
 .openserver-text {
   min-width: 0;
   display: grid;
@@ -632,17 +640,6 @@ a[href]:not([class]):focus-visible {
 .openserver-name {
   line-height: 1.35;
   font-weight: 600;
-}
-
-.openserver-name-link {
-  display: inline-flex;
-  align-items: center;
-  color: var(--text-primary);
-  text-decoration: none;
-}
-
-.openserver-name-link:hover {
-  color: var(--accent);
 }
 
 .openserver-intro {

@@ -233,6 +233,19 @@ function normalizePositiveInteger(value, fallback, maxValue) {
   return Math.min(parsed, maxValue || parsed);
 }
 
+function normalizeBoolean(value, fallback) {
+  if (typeof value === "boolean") return value;
+  if (typeof value === "number") {
+    if (value === 1) return true;
+    if (value === 0) return false;
+    return fallback;
+  }
+  const normalized = String(value || "").trim().toLowerCase();
+  if (["true", "1", "yes", "on", "enabled"].includes(normalized)) return true;
+  if (["false", "0", "no", "off", "disabled"].includes(normalized)) return false;
+  return fallback;
+}
+
 function toCssUrl(url) {
   return `url("${String(url).replace(/"/g, "\\\"")}")`;
 }
@@ -246,6 +259,7 @@ function applySettings(settings) {
   const news = settings && settings.news ? settings.news : {};
   const openserver = settings && settings.openserver ? settings.openserver : {};
   const ui = settings && settings.ui ? settings.ui : {};
+  const baseCardHoverEnabled = normalizeBoolean(ui.base_card_hover_enabled, true);
 
   if (background.blur_px !== undefined) {
     const blurPx = normalizeNonNegativeNumber(background.blur_px, 0);
@@ -299,6 +313,18 @@ function applySettings(settings) {
   if (ui.top_action_button_height_px !== undefined) {
     const height = Math.max(24, normalizeNonNegativeNumber(ui.top_action_button_height_px, 32));
     rootStyle.setProperty("--top-action-btn-height", `${height}px`);
+  }
+
+  if (baseCardHoverEnabled) {
+    rootStyle.setProperty("--base-card-hover-lift-y", "var(--card-hover-lift-y)");
+    rootStyle.setProperty("--base-card-hover-border", "var(--card-hover-border)");
+    rootStyle.setProperty("--base-card-hover-bg", "var(--card-hover-bg)");
+    rootStyle.setProperty("--base-card-hover-shadow", "var(--card-hover-shadow)");
+  } else {
+    rootStyle.setProperty("--base-card-hover-lift-y", "0px");
+    rootStyle.setProperty("--base-card-hover-border", "var(--card-border)");
+    rootStyle.setProperty("--base-card-hover-bg", "var(--card-bg)");
+    rootStyle.setProperty("--base-card-hover-shadow", "var(--shadow)");
   }
 
   if (banner.hold_ms !== undefined) {

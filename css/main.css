@@ -13,6 +13,10 @@
   --card-hover-border: rgba(255, 255, 255, 0.32);
   --card-hover-shadow: 0 24px 56px rgba(0, 0, 0, 0.42);
   --card-hover-lift-y: -2px;
+  --base-card-hover-bg: var(--card-hover-bg);
+  --base-card-hover-border: var(--card-hover-border);
+  --base-card-hover-shadow: var(--card-hover-shadow);
+  --base-card-hover-lift-y: var(--card-hover-lift-y);
   --radius: 18px;
   --glass-blur: 18px;
   --font-body: "Space Grotesk", "Segoe UI", sans-serif;
@@ -103,6 +107,13 @@ main {
   border-color: var(--card-hover-border);
   background: var(--card-hover-bg);
   box-shadow: var(--card-hover-shadow);
+}
+
+.card:hover {
+  transform: translateY(var(--base-card-hover-lift-y));
+  border-color: var(--base-card-hover-border);
+  background: var(--base-card-hover-bg);
+  box-shadow: var(--base-card-hover-shadow);
 }
 
 .card h2 {
