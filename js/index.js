@@ -347,9 +347,17 @@ function renderProfile(info, banners) {
     github: "fa-brands fa-github",
     bilibili: "fa-brands fa-bilibili",
     google_scholar: "fa-solid fa-graduation-cap",
-    csdn: "fa-solid fa-pen-nib",
+    csdn: {
+      type: "image",
+      src: "https://cdn.simpleicons.org/csdn/FC5531",
+      fallbackClass: "fa-solid fa-link"
+    },
     orcid: "fa-brands fa-orcid",
-    huggingface: "fa-solid fa-robot"
+    huggingface: {
+      type: "image",
+      src: "https://cdn.simpleicons.org/huggingface/FFD21E",
+      fallbackClass: "fa-solid fa-link"
+    }
   };
 
   Object.entries(links).forEach(([key, meta]) => {
@@ -360,9 +368,27 @@ function renderProfile(info, banners) {
     anchor.href = meta.url;
     anchor.target = "_blank";
     anchor.rel = "noreferrer";
-    const icon = document.createElement("i");
-    icon.className = iconMap[key] || "fa-solid fa-link";
-    anchor.appendChild(icon);
+    const iconMeta = iconMap[key];
+    if (iconMeta && typeof iconMeta === "object" && iconMeta.type === "image" && iconMeta.src) {
+      const iconImg = document.createElement("img");
+      iconImg.className = "icon-btn-icon";
+      iconImg.src = iconMeta.src;
+      iconImg.alt = "";
+      iconImg.setAttribute("aria-hidden", "true");
+      iconImg.loading = "lazy";
+      iconImg.decoding = "async";
+      iconImg.addEventListener("error", () => {
+        const fallbackIcon = document.createElement("i");
+        fallbackIcon.className = iconMeta.fallbackClass || "fa-solid fa-link";
+        anchor.insertBefore(fallbackIcon, anchor.firstChild || null);
+        iconImg.remove();
+      });
+      anchor.appendChild(iconImg);
+    } else {
+      const icon = document.createElement("i");
+      icon.className = typeof iconMeta === "string" ? iconMeta : "fa-solid fa-link";
+      anchor.appendChild(icon);
+    }
     const label = document.createElement("span");
     label.textContent = meta.label || key;
     anchor.appendChild(label);
