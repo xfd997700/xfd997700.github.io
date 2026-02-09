@@ -1,0 +1,26 @@
+[
+  {
+    "year": 2025,
+    "month": 10,
+    "day": 15,
+    "short_en": "🎉 Molecular representation learning model MolUNet++ has been published in Acta Physico-Chimica Sinica.",
+    "short_zh": "🎉 小分子表示学习模型 MolUNet++ 已发表在物理化学学报.",
+    "link": ""
+  },
+  {
+    "year": 2025,
+    "month": 7,
+    "day": 6,
+    "short_en": "UniBioMap: The unified biomedical knowledge graph platform is now online!",
+    "short_zh": "UniBioMap 综合生物医学知识图谱平台现已上线！",
+    "link": "https://zhanggroup.org/UniBioMap/"
+  },
+  {
+    "year": 2025,
+    "month": 6,
+    "day": 28,
+    "short_en": "The brand-new GLASS 2.0 website was officially launched, featuring updated datasets, a redesigned user interface, and specially curated classification and regression datasets for AI study!",
+    "short_zh": "全新 GLASS 2.0 网站正式上线，提供更新的数据集、重新设计的用户界面，以及为 AI 研究精心策划的分类和回归数据集！",
+    "link": "https://zhanggroup.org/GLASS/"
+  }
+]

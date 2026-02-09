@@ -170,6 +170,12 @@ main {
   color: #f3ffe0;
 }
 
+.icon-btn--huggingface {
+  background: rgba(255, 193, 7, 0.3);
+  border-color: rgba(255, 193, 7, 0.62);
+  color: #fff7d6;
+}
+
 .icon-btn--github:hover {
   background: rgba(36, 41, 46, 0.68);
   border-color: rgba(110, 118, 129, 0.78);
@@ -193,6 +199,11 @@ main {
 .icon-btn--orcid:hover {
   background: rgba(166, 206, 57, 0.46);
   border-color: rgba(166, 206, 57, 0.82);
+}
+
+.icon-btn--huggingface:hover {
+  background: rgba(255, 193, 7, 0.46);
+  border-color: rgba(255, 193, 7, 0.82);
 }
 
 .section-title {

@@ -22,6 +22,16 @@
     "logo_height_px": 26,
     "logo_max_width_px": 88
   },
+  "news": {
+    "default_show_count": 5,
+    "default_lang": "zh",
+    "item_min_height_px": 64
+  },
+  "openserver": {
+    "columns": 2,
+    "logo_height_px": 30,
+    "logo_max_width_px": 100
+  },
   "projects": {
     "home_card_width_px": 290,
     "home_card_height_px": 320,

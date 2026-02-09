@@ -227,6 +227,12 @@ function normalizeNonNegativeNumber(value, fallback) {
   return n;
 }
 
+function normalizePositiveInteger(value, fallback, maxValue) {
+  const parsed = parseInt(value, 10);
+  if (!Number.isFinite(parsed) || parsed <= 0) return fallback;
+  return Math.min(parsed, maxValue || parsed);
+}
+
 function toCssUrl(url) {
   return `url("${String(url).replace(/"/g, "\\\"")}")`;
 }
@@ -237,6 +243,8 @@ function applySettings(settings) {
   const banner = settings && settings.banner ? settings.banner : {};
   const glass = settings && settings.glass ? settings.glass : {};
   const career = settings && settings.career ? settings.career : {};
+  const news = settings && settings.news ? settings.news : {};
+  const openserver = settings && settings.openserver ? settings.openserver : {};
   const ui = settings && settings.ui ? settings.ui : {};
 
   if (background.blur_px !== undefined) {
@@ -261,6 +269,31 @@ function applySettings(settings) {
   if (career.logo_max_width_px !== undefined) {
     const width = Math.max(20, normalizeNonNegativeNumber(career.logo_max_width_px, 88));
     rootStyle.setProperty("--career-logo-max-width", `${width}px`);
+  }
+
+  if (news.default_show_count !== undefined) {
+    const count = normalizePositiveInteger(news.default_show_count, 5, 100);
+    rootStyle.setProperty("--news-visible-count", String(count));
+  }
+
+  if (news.item_min_height_px !== undefined) {
+    const height = Math.max(48, normalizeNonNegativeNumber(news.item_min_height_px, 64));
+    rootStyle.setProperty("--news-item-min-height", `${height}px`);
+  }
+
+  if (openserver.logo_height_px !== undefined) {
+    const height = Math.max(12, normalizeNonNegativeNumber(openserver.logo_height_px, 22));
+    rootStyle.setProperty("--openserver-logo-height", `${height}px`);
+  }
+
+  if (openserver.logo_max_width_px !== undefined) {
+    const width = Math.max(20, normalizeNonNegativeNumber(openserver.logo_max_width_px, 88));
+    rootStyle.setProperty("--openserver-logo-max-width", `${width}px`);
+  }
+
+  if (openserver.columns !== undefined) {
+    const columns = normalizePositiveInteger(openserver.columns, 2, 6);
+    rootStyle.setProperty("--openserver-columns", String(columns));
   }
 
   if (ui.top_action_button_height_px !== undefined) {
@@ -315,7 +348,8 @@ function renderProfile(info, banners) {
     bilibili: "fa-brands fa-bilibili",
     google_scholar: "fa-solid fa-graduation-cap",
     csdn: "fa-solid fa-pen-nib",
-    orcid: "fa-brands fa-orcid"
+    orcid: "fa-brands fa-orcid",
+    huggingface: "fa-solid fa-robot"
   };
 
   Object.entries(links).forEach(([key, meta]) => {
@@ -685,6 +719,16 @@ async function init() {
     applyBackground(config);
     renderProfile(config.personal_info, config.banner || config.site_brand);
     renderCareer(config.career);
+    if (window.InfoFeature && typeof window.InfoFeature.initIndexPage === "function") {
+      try {
+        await window.InfoFeature.initIndexPage({
+          settings,
+          fallbackCatalog: { openserver: config.openserver || {} }
+        });
+      } catch (infoError) {
+        console.error("Failed to initialize info module.", infoError);
+      }
+    }
     renderFooter(config.foot || config.footer);
     if (window.ProjectFeature && typeof window.ProjectFeature.initIndexPage === "function") {
       try {

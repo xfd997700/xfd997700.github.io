@@ -35,6 +35,10 @@
       "orcid": {
         "label": "ORCID",
         "url": "https://orcid.org/0000-0001-7220-8693"
+      },
+      "huggingface": {
+        "label": "Hugging Face",
+        "url": "https://huggingface.co/EZ4Fanta"
       }
     },
     "tags": [
@@ -96,6 +100,26 @@
       "group_link": ""
     }
   ],
+  "openserver": {
+    "unibiomap": {
+      "name": "UniBioMap",
+      "logo": "imgs/openserver/unibiomap.jpg",
+      "link": "https://zhanggroup.org/UniBioMap/",
+      "intro": "UniBioMap is a comprehensive knowledge graph platform for biomedical data analysis and integration."
+    },
+    "glass2": {
+      "name": "GLASS 2.0",
+      "logo": "imgs/openserver/glass2.png",
+      "link": "https://zhanggroup.org/GLASS/",
+      "intro": "GLASS 2.0 is a significantly extended database of experimentally validated GPCR–ligand interactions."
+    },
+    "bindana": {
+      "name": "BindAna",
+      "logo": "imgs/openserver/bindana.png",
+      "link": "https://huggingface.co/spaces/EZ4Fanta/bindana",
+      "intro": "Analyze predicted interaction PDB and visualize binding modes."
+    }
+  },
   "publications": [],
   "projects": []
 }
