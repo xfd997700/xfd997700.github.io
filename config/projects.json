@@ -14,13 +14,13 @@
     "related_publications": []
   },
   "projects": {
-    "mol_motif": {
+    "xfd2025multimodal": {
       "title_en": "Multimodal Knowledge Graph–Enhanced Drug–Target Interaction Prediction for Effect-Oriented Drug Discovery",
       "title_zh": "多模态知识图谱增强的药物-靶标互作预测用于从效应出发的药物发现",
       "authors_en": "Fanding Xu, Jiangang Long, Deyu Meng, Zhiwei Yang",
-      "authors_zh": "徐凡丁,龙建纲,孟德宇,杨志伟",
-      "year": "2024-2025",
-      "amount": "CNY 30,000",
+      "authors_zh": "徐凡丁，龙建纲，孟德宇，杨志伟",
+      "year": "2024.1-2025.12",
+      "amount": "¥ 30,000",
       "abs_en": "This project integrates atomic-scale structural evidence with network-scale systems knowledge for drug discovery. We develop MolUNet++ to automatically identify task-relevant chemical fragments and quantify their contributions, improving predictive performance and chemical interpretability. We also build UniBioMap by integrating multi-source databases and calibrating/expanding high-confidence relations, enabling synergistic modeling of structural evidence and biomedical knowledge.",
       "abs_zh": "本项目融合结构与系统两尺度药物发现：提出MolUNet++自动识别关键化学片段并量化贡献，提升预测与可解释性；构建UniBioMap整合多源数据库并校准/扩展高置信关系，支撑结构证据与知识协同建模。",
       "funding_en": "The Fundamental Research Funds for the Central Universities",
@@ -29,6 +29,27 @@
       "imgs": [
         "imgs/publications/molunet.png",
         "imgs/publications/unibiomap.png"
+      ],
+      "related_publications": [
+        "xufanding2024mespool",
+        "xufanding2025molunet"
+      ]
+    },
+    "shile2025antiaging": {
+      "title_en": "Research on AI-Based Novel Technologies for Screening and Identifying Anti-Aging Molecules",
+      "title_zh": "基于人工智能的新型抗衰老分子筛选与鉴定技术研究",
+      "authors_en": "Le Shi, Peng Zhao, Sirui Wu, Fanding Xu, Peng Yang, Lizhuo Wang, Yuzhe Xiao",
+      "authors_zh": "时乐，赵鹏，武思睿，徐凡丁，杨鹏，王力卓，肖御喆",
+      "year": "2025.4-2025.12",
+      "amount": "¥ 500,000",
+      "abs_en": "This study targets aldehyde accumulation–driven aging and cardiovascular risk by building an AI–experiment closed-loop pipeline to discover ALDH/ALDH2 agonists. It integrates KGE and GNNs for cold-start, high-throughput virtual screening, and validates hits via chromatography/SPR, cellular and animal aging models, and multi-omics to elucidate mechanisms, enabling wet–dry co-innovation in anti-aging drug discovery.",
+      "abs_zh": "本研究围绕醛类累积致衰老与心血管风险，构建AI-实验闭环筛选ALDH/ALDH2激动剂。融合KGE与GNN实现冷启动下高通量虚拟筛选，并以色谱/SPR及细胞动物衰老模型和多组学验证机制，推动AI干湿协同抗衰药物发现。",
+      "funding_en": "The Frontier Exploration Research Fund of Xi'an Jiaotong University - China Mobile Communications Group Co.,Ltd. Joint Institute",
+      "funding_zh": "西安交大-中国移动前沿探索研究项目",
+      "funding_no": "XJTU-CMCC-QY202508005",
+      "imgs": [
+        "imgs/projects/shile2025antiaging/background.jpeg",
+        "imgs/projects/shile2025antiaging/pipeline.jpeg"
       ],
       "related_publications": [
         "xufanding2024mespool",
