@@ -29,6 +29,12 @@
     intervals: [],
     homePageIndex: 0,
     settings: { ...DEFAULT_PROJECT_SETTINGS },
+    features: {
+      projectsEnabled: true,
+      publicationsEnabled: true
+    },
+    detailBackRoute: { view: "projects" },
+    pendingDetailBackRoute: null,
     refs: null,
     currentRoute: { view: "home" },
     resizeTimer: null
@@ -49,6 +55,25 @@
     const parsed = parseInt(value, 10);
     if (!Number.isFinite(parsed) || parsed <= 0) return fallback;
     return Math.min(parsed, maxValue || parsed);
+  }
+
+  function normalizeBoolean(value, fallback) {
+    if (typeof value === "boolean") return value;
+    if (typeof value === "number") {
+      if (value === 1) return true;
+      if (value === 0) return false;
+      return fallback;
+    }
+    const normalized = cleanText(value).toLowerCase();
+    if (["true", "1", "yes", "on", "enabled"].includes(normalized)) return true;
+    if (["false", "0", "no", "off", "disabled"].includes(normalized)) return false;
+    return fallback;
+  }
+
+  function setElementVisibility(node, isVisible) {
+    if (!node) return;
+    node.hidden = !isVisible;
+    node.style.display = isVisible ? "" : "none";
   }
 
   function getBasePrefix() {
@@ -621,7 +646,7 @@
           lang: indexState.lang,
           imageIntervalMs: indexState.settings.imageCarouselSeconds * 1000,
           intervalStore,
-          onOpen: () => navigateToRoute({ view: "project", key: project.key })
+          onOpen: () => navigateToRoute({ view: "project", key: project.key }, { backRoute: { view: "home" } })
         });
         page.appendChild(card);
       });
@@ -721,6 +746,8 @@
       projectsHomeLangToggle: document.getElementById("projects-home-lang-toggle"),
       projectsOverviewLangToggle: document.getElementById("projects-overview-lang-toggle"),
       projectsOverviewHomeBtn: document.getElementById("projects-overview-home-btn"),
+      projectsCard: document.getElementById("projects-card"),
+      publicationsCard: document.getElementById("publications-card"),
       homeView: document.getElementById("projects-home-view"),
       overviewView: document.getElementById("projects-overview-view"),
       defaultStack: document.getElementById("right-default-stack"),
@@ -792,6 +819,46 @@
     rootStyle.setProperty("--top-action-btn-height", `${next.topActionButtonHeight}px`);
   }
 
+  function getEnabledFeatureFlags(settings) {
+    const projectSettings = settings && settings.projects ? settings.projects : {};
+    const publicationSettings = settings && settings.publications ? settings.publications : {};
+    return {
+      projectsEnabled: normalizeBoolean(projectSettings.enable, true),
+      publicationsEnabled: normalizeBoolean(publicationSettings.enable, true)
+    };
+  }
+
+  function normalizeRouteForEnabledFeatures(route) {
+    const next = route || { view: "home" };
+    const { projectsEnabled, publicationsEnabled } = indexState.features;
+
+    if (next.view === "home") return next;
+    if (next.view === "projects") {
+      return projectsEnabled ? next : { view: publicationsEnabled ? "publications" : "home" };
+    }
+    if (next.view === "project") {
+      return projectsEnabled ? next : { view: publicationsEnabled ? "publications" : "home" };
+    }
+    if (next.view === "publications") {
+      return publicationsEnabled ? next : { view: projectsEnabled ? "projects" : "home" };
+    }
+    return { view: "home" };
+  }
+
+  function getDefaultDetailBackRoute(previousView) {
+    if (previousView === "home") return { view: "home" };
+    if (previousView === "projects") return { view: "projects" };
+    if (previousView === "publications") return { view: "publications" };
+    return { view: "projects" };
+  }
+
+  function getDetailBackHoverLabel(route) {
+    const view = route && route.view ? route.view : "projects";
+    if (view === "home") return "Back to Home | 返回主页";
+    if (view === "publications") return "Back to Publications | 返回Publications";
+    return "Back to Projects | 返回项目";
+  }
+
   function buildHash(route) {
     if (!route || route.view === "home") return "#home";
     if (route.view === "projects") return "#projects";
@@ -857,6 +924,7 @@
     const nav = indexState.refs.routeNav;
     if (!nav) return;
     nav.innerHTML = "";
+    const { projectsEnabled, publicationsEnabled } = indexState.features;
 
     const homeIsCurrent = route.view === "home";
     nav.appendChild(createRouteItem("Home", homeIsCurrent, () => navigateToRoute({ view: "home" })));
@@ -865,12 +933,18 @@
       return;
     }
 
-    addRouteSeparator(nav);
     if (route.view === "publications") {
+      if (!publicationsEnabled) return;
+      addRouteSeparator(nav);
       nav.appendChild(createRouteItem("Publications", true, null));
       return;
     }
 
+    if (!projectsEnabled) {
+      return;
+    }
+
+    addRouteSeparator(nav);
     const projectsIsCurrent = route.view === "projects";
     nav.appendChild(createRouteItem("Projects", projectsIsCurrent, () => navigateToRoute({ view: "projects" })));
 
@@ -1122,20 +1196,34 @@
   }
 
   function applyRoute(route) {
-    const validRoute = route || { view: "home" };
+    const validRoute = normalizeRouteForEnabledFeatures(route || { view: "home" });
     const refs = indexState.refs;
-    if (!refs) return;
+    if (!refs) return validRoute;
+    const { projectsEnabled, publicationsEnabled } = indexState.features;
 
     let nextRoute = validRoute;
     if (validRoute.view === "project" && !indexState.projectMap.has(validRoute.key)) {
-      nextRoute = { view: "projects" };
+      if (projectsEnabled) {
+        nextRoute = { view: "projects" };
+      } else if (publicationsEnabled) {
+        nextRoute = { view: "publications" };
+      } else {
+        nextRoute = { view: "home" };
+      }
     }
 
     const previousView = indexState.currentRoute && indexState.currentRoute.view ? indexState.currentRoute.view : "home";
     const isHome = nextRoute.view === "home";
-    const isProjects = nextRoute.view === "projects";
-    const isProjectDetail = nextRoute.view === "project";
-    const isPublications = nextRoute.view === "publications";
+    const isProjects = projectsEnabled && nextRoute.view === "projects";
+    const isProjectDetail = projectsEnabled && nextRoute.view === "project";
+    const isPublications = publicationsEnabled && nextRoute.view === "publications";
+
+    if (isProjectDetail && previousView !== "project") {
+      const preferredBackRoute = indexState.pendingDetailBackRoute;
+      const fallbackBackRoute = getDefaultDetailBackRoute(previousView);
+      indexState.detailBackRoute = normalizeRouteForEnabledFeatures(preferredBackRoute || fallbackBackRoute);
+    }
+    indexState.pendingDetailBackRoute = null;
 
     refs.defaultStack.hidden = !isHome;
     refs.defaultStack.style.display = isHome ? "" : "none";
@@ -1147,6 +1235,12 @@
     }
     refs.detailCard.hidden = !isProjectDetail;
     refs.detailCard.style.display = isProjectDetail ? "" : "none";
+    if (refs.detailBackButton) {
+      const nextBackRoute = normalizeRouteForEnabledFeatures(indexState.detailBackRoute || { view: "projects" });
+      refs.detailBackButton.textContent = "Back | 返回";
+      refs.detailBackButton.classList.add("publications-state-btn");
+      refs.detailBackButton.setAttribute("data-hover-label", getDetailBackHoverLabel(nextBackRoute));
+    }
 
     if (refs.rightColumn) {
       refs.rightColumn.classList.toggle("route-home", isHome);
@@ -1173,16 +1267,23 @@
     }
 
     renderRouteNav(nextRoute);
+    return nextRoute;
   }
 
   function navigateToRoute(route, options) {
     const replaceState = options && options.replaceState;
-    const hash = buildHash(route);
-
-    applyRoute(route);
+    if (route && route.view === "project") {
+      const preferredBackRoute =
+        options && options.backRoute
+          ? options.backRoute
+          : getDefaultDetailBackRoute(indexState.currentRoute && indexState.currentRoute.view);
+      indexState.pendingDetailBackRoute = preferredBackRoute;
+    }
+    const appliedRoute = applyRoute(route);
+    const hash = buildHash(appliedRoute);
 
     if (replaceState) {
-      replaceHash(route);
+      replaceHash(appliedRoute);
       return;
     }
 
@@ -1193,18 +1294,24 @@
 
   function rerenderIndexProjectViews() {
     clearIntervals(indexState.intervals);
+    const { projectsEnabled } = indexState.features;
     const currentView = indexState.currentRoute && indexState.currentRoute.view ? indexState.currentRoute.view : "home";
-    const enableHomeCarousel = currentView === "home";
-    const enableOverviewCarousel = currentView === "projects";
+    const enableHomeCarousel = projectsEnabled && currentView === "home";
+    const enableOverviewCarousel = projectsEnabled && currentView === "projects";
 
-    renderHomeView({ intervalStore: enableHomeCarousel ? indexState.intervals : null });
-    renderOverviewView(indexState.refs.overviewView, {
-      lang: indexState.lang,
-      intervalStore: enableOverviewCarousel ? indexState.intervals : null,
-      onOpen: (project) => navigateToRoute({ view: "project", key: project.key })
-    });
+    if (projectsEnabled) {
+      renderHomeView({ intervalStore: enableHomeCarousel ? indexState.intervals : null });
+      renderOverviewView(indexState.refs.overviewView, {
+        lang: indexState.lang,
+        intervalStore: enableOverviewCarousel ? indexState.intervals : null,
+        onOpen: (project) => navigateToRoute({ view: "project", key: project.key }, { backRoute: { view: "projects" } })
+      });
+    } else {
+      if (indexState.refs.homeView) indexState.refs.homeView.innerHTML = "";
+      if (indexState.refs.overviewView) indexState.refs.overviewView.innerHTML = "";
+    }
 
-    if (indexState.currentRoute.view === "project") {
+    if (projectsEnabled && indexState.currentRoute.view === "project") {
       renderProjectDetail(indexState.projectMap.get(indexState.currentRoute.key));
     }
     renderRouteNav(indexState.currentRoute);
@@ -1248,6 +1355,17 @@
 
     const settings = options && options.settings ? options.settings : {};
     applyProjectSettings(settings);
+    indexState.features = getEnabledFeatureFlags(settings);
+    const { projectsEnabled, publicationsEnabled } = indexState.features;
+    indexState.detailBackRoute = normalizeRouteForEnabledFeatures(indexState.detailBackRoute || { view: "projects" });
+    indexState.pendingDetailBackRoute = null;
+
+    setElementVisibility(refs.projectsCard, projectsEnabled);
+    setElementVisibility(refs.publicationsCard, publicationsEnabled);
+    setElementVisibility(refs.overviewCard, false);
+    setElementVisibility(refs.detailCard, false);
+    setElementVisibility(refs.publicationsOverviewCard, false);
+    setElementVisibility(refs.rightColumn, projectsEnabled || publicationsEnabled);
 
     const [catalog, publicationCatalog] = await Promise.all([
       loadProjectsCatalog(""),
@@ -1267,17 +1385,25 @@
     function setLang(nextLang) {
       if (nextLang === indexState.lang) return;
       indexState.lang = nextLang;
-      createLanguageToggle(refs.projectsHomeLangToggle, indexState.lang, setLang);
-      createLanguageToggle(refs.projectsOverviewLangToggle, indexState.lang, setLang);
-      createLanguageToggle(refs.detailLangToggle, indexState.lang, setLang);
+      if (projectsEnabled) {
+        createLanguageToggle(refs.projectsHomeLangToggle, indexState.lang, setLang);
+        createLanguageToggle(refs.projectsOverviewLangToggle, indexState.lang, setLang);
+        createLanguageToggle(refs.detailLangToggle, indexState.lang, setLang);
+      }
       const detailContent = refs.detailFrameWrap && refs.detailFrameWrap.querySelector(".project-detail-content");
       applyProjectContentLanguage(detailContent, indexState.lang);
       rerenderIndexProjectViews();
     }
 
-    createLanguageToggle(refs.projectsHomeLangToggle, indexState.lang, setLang);
-    createLanguageToggle(refs.projectsOverviewLangToggle, indexState.lang, setLang);
-    createLanguageToggle(refs.detailLangToggle, indexState.lang, setLang);
+    if (projectsEnabled) {
+      createLanguageToggle(refs.projectsHomeLangToggle, indexState.lang, setLang);
+      createLanguageToggle(refs.projectsOverviewLangToggle, indexState.lang, setLang);
+      createLanguageToggle(refs.detailLangToggle, indexState.lang, setLang);
+    } else {
+      if (refs.projectsHomeLangToggle) refs.projectsHomeLangToggle.innerHTML = "";
+      if (refs.projectsOverviewLangToggle) refs.projectsOverviewLangToggle.innerHTML = "";
+      if (refs.detailLangToggle) refs.detailLangToggle.innerHTML = "";
+    }
 
     if (!indexState.initialized) {
       if (refs.projectsHomeMoreBtn) {
@@ -1297,7 +1423,8 @@
       }
       if (refs.detailBackButton) {
         refs.detailBackButton.addEventListener("click", () => {
-          navigateToRoute({ view: "projects" });
+          const backRoute = normalizeRouteForEnabledFeatures(indexState.detailBackRoute || { view: "projects" });
+          navigateToRoute(backRoute);
         });
       }
       if (refs.projectsOverviewHomeBtn) {
@@ -1307,7 +1434,11 @@
       }
 
       window.addEventListener("hashchange", () => {
-        applyRoute(parseHashRoute(window.location.hash));
+        const parsed = parseHashRoute(window.location.hash);
+        const applied = applyRoute(parsed);
+        if (buildHash(parsed) !== buildHash(applied)) {
+          replaceHash(applied);
+        }
       });
       document.addEventListener("visibilitychange", () => {
         if (document.hidden) {
@@ -1327,9 +1458,9 @@
 
     rerenderIndexProjectViews();
     const initialRoute = parseHashRoute(window.location.hash);
-    applyRoute(initialRoute);
-    if (!window.location.hash) {
-      replaceHash(initialRoute);
+    const appliedInitialRoute = applyRoute(initialRoute);
+    if (!window.location.hash || buildHash(initialRoute) !== buildHash(appliedInitialRoute)) {
+      replaceHash(appliedInitialRoute);
     }
     indexState.initialized = true;
   }

@@ -23,10 +23,30 @@
     return n;
   }
 
+  function normalizeBoolean(value, fallback) {
+    if (typeof value === "boolean") return value;
+    if (typeof value === "number") {
+      if (value === 1) return true;
+      if (value === 0) return false;
+      return fallback;
+    }
+    const normalized = cleanText(value).toLowerCase();
+    if (["true", "1", "yes", "on", "enabled"].includes(normalized)) return true;
+    if (["false", "0", "no", "off", "disabled"].includes(normalized)) return false;
+    return fallback;
+  }
+
   function normalizeLang(value, fallback) {
     const lang = cleanText(value).toLowerCase();
     if (lang === "en" || lang === "zh") return lang;
     return fallback;
+  }
+
+  function setCardVisibility(cardId, isVisible) {
+    const card = document.getElementById(cardId);
+    if (!card) return;
+    card.hidden = !isVisible;
+    card.style.display = isVisible ? "" : "none";
   }
 
   function normalizeNewsLink(value) {
@@ -291,15 +311,30 @@
     const settings = (options && options.settings) || {};
     const fallbackCatalog = (options && options.fallbackCatalog) || {};
     const newsSettings = settings && settings.news ? settings.news : {};
+    const openServerSettings = settings && settings.openserver ? settings.openserver : {};
+    const newsEnabled = normalizeBoolean(newsSettings.enable, true);
+    const openServerEnabled = normalizeBoolean(openServerSettings.enable, true);
     let lang = normalizeLang(newsSettings.default_lang, DEFAULT_INFO_SETTINGS.newsDefaultLang);
     applyInfoSettings(settings);
 
-    const [newsRaw] = await Promise.all([loadNewsCatalog()]);
-    const newsEntries = normalizeNewsEntries(newsRaw);
-    const openServers = normalizeOpenServerEntries(fallbackCatalog.openserver || {});
+    setCardVisibility("news-card", newsEnabled);
+    setCardVisibility("openserver-card", openServerEnabled);
+
+    let newsEntries = [];
+    if (newsEnabled) {
+      const newsRaw = await loadNewsCatalog();
+      newsEntries = normalizeNewsEntries(newsRaw);
+    }
+    const openServers = openServerEnabled ? normalizeOpenServerEntries(fallbackCatalog.openserver || {}) : [];
 
     const toggleHost = document.getElementById("news-lang-toggle");
+    if (toggleHost) {
+      toggleHost.innerHTML = "";
+      toggleHost.hidden = !newsEnabled;
+    }
+
     function setLang(nextLang) {
+      if (!newsEnabled) return;
       const normalized = normalizeLang(nextLang, lang);
       if (normalized === lang) return;
       lang = normalized;
@@ -307,9 +342,20 @@
       renderNews(newsEntries, lang);
     }
 
-    createLanguageToggle(toggleHost, lang, setLang);
-    renderNews(newsEntries, lang);
-    renderOpenServers(openServers);
+    if (newsEnabled) {
+      createLanguageToggle(toggleHost, lang, setLang);
+      renderNews(newsEntries, lang);
+    } else {
+      const newsList = document.getElementById("news-list");
+      if (newsList) newsList.innerHTML = "";
+    }
+
+    if (openServerEnabled) {
+      renderOpenServers(openServers);
+    } else {
+      const openServerList = document.getElementById("openserver-list");
+      if (openServerList) openServerList.innerHTML = "";
+    }
   }
 
   window.InfoFeature = {

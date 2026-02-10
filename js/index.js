@@ -246,6 +246,18 @@ function normalizeBoolean(value, fallback) {
   return fallback;
 }
 
+function isSectionEnabled(settings, sectionKey) {
+  const section = settings && settings[sectionKey] && typeof settings[sectionKey] === "object" ? settings[sectionKey] : {};
+  return normalizeBoolean(section.enable, true);
+}
+
+function setElementVisibilityById(elementId, isVisible) {
+  const node = document.getElementById(elementId);
+  if (!node) return;
+  node.hidden = !isVisible;
+  node.style.display = isVisible ? "" : "none";
+}
+
 function toCssUrl(url) {
   return `url("${String(url).replace(/"/g, "\\\"")}")`;
 }
@@ -769,13 +781,29 @@ async function init() {
 
   try {
     const [config, settings] = await Promise.all([loadConfig(), loadSettings()]);
+    const sectionVisibility = {
+      career: isSectionEnabled(settings, "career"),
+      openserver: isSectionEnabled(settings, "openserver"),
+      news: isSectionEnabled(settings, "news"),
+      projects: isSectionEnabled(settings, "projects"),
+      publications: isSectionEnabled(settings, "publications")
+    };
+
     applySettings(settings);
     if (window.EggFeature && typeof window.EggFeature.applySettings === "function") {
       window.EggFeature.applySettings(settings);
     }
     applyBackground(config);
+    setElementVisibilityById("career-card", sectionVisibility.career);
+    setElementVisibilityById("openserver-card", sectionVisibility.openserver);
+    setElementVisibilityById("news-card", sectionVisibility.news);
+    setElementVisibilityById("projects-card", sectionVisibility.projects);
+    setElementVisibilityById("publications-card", sectionVisibility.publications);
+    setElementVisibilityById("right-column", sectionVisibility.projects || sectionVisibility.publications);
     renderProfile(config.personal_info, config.banner || config.site_brand);
-    renderCareer(config.career);
+    if (sectionVisibility.career) {
+      renderCareer(config.career);
+    }
     if (window.InfoFeature && typeof window.InfoFeature.initIndexPage === "function") {
       try {
         await window.InfoFeature.initIndexPage({
@@ -787,14 +815,22 @@ async function init() {
       }
     }
     renderFooter(config.foot || config.footer);
-    if (window.ProjectFeature && typeof window.ProjectFeature.initIndexPage === "function") {
+    if (
+      (sectionVisibility.projects || sectionVisibility.publications) &&
+      window.ProjectFeature &&
+      typeof window.ProjectFeature.initIndexPage === "function"
+    ) {
       try {
         await window.ProjectFeature.initIndexPage({ settings });
       } catch (projectError) {
         console.error("Failed to initialize projects module.", projectError);
       }
     }
-    if (window.PublicationFeature && typeof window.PublicationFeature.initIndexPage === "function") {
+    if (
+      sectionVisibility.publications &&
+      window.PublicationFeature &&
+      typeof window.PublicationFeature.initIndexPage === "function"
+    ) {
       try {
         await window.PublicationFeature.initIndexPage({
           settings,

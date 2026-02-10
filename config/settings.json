@@ -20,20 +20,24 @@
     "grid_max_width_px": 1200
   },
   "career": {
+    "enable": true,
     "logo_height_px": 26,
     "logo_max_width_px": 88
   },
   "news": {
+    "enable": false,
     "default_show_count": 5,
     "default_lang": "zh",
     "item_min_height_px": 64
   },
   "openserver": {
+    "enable": true,
     "columns": 2,
     "logo_height_px": 30,
     "logo_max_width_px": 100
   },
   "projects": {
+    "enable": true,
     "home_card_width_px": 290,
     "home_card_height_px": 320,
     "overview_card_width_px": 300,
@@ -48,6 +52,7 @@
     "breadcrumb_title_max_chars_zh": 28
   },
   "publications": {
+    "enable": true,
     "resolve_doi_enabled": false,
     "author_highlight_keywords": [
       "Fanding Xu",
