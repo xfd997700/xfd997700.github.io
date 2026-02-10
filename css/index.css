@@ -247,12 +247,14 @@ a[href]:not([class]):focus-visible {
   line-height: 1;
 }
 
-.publications-state-btn {
+.publications-state-btn,
+.profile-map-link[data-hover-label] {
   position: relative;
   overflow: visible;
 }
 
-.publications-state-btn::after {
+.publications-state-btn::after,
+.profile-map-link[data-hover-label]::after {
   content: attr(data-hover-label);
   position: absolute;
   left: 50%;
@@ -274,7 +276,9 @@ a[href]:not([class]):focus-visible {
 }
 
 .publications-state-btn:hover::after,
-.publications-state-btn:focus-visible::after {
+.publications-state-btn:focus-visible::after,
+.profile-map-link[data-hover-label]:hover::after,
+.profile-map-link[data-hover-label]:focus-visible::after {
   opacity: 1;
   transform: translate(-50%, 0);
 }

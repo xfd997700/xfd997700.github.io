@@ -475,7 +475,7 @@ function renderProfile(info, banners) {
     }
   }
 
-  function renderMapLink(target, url, label, provider, providerClassName) {
+  function renderMapLink(target, url, label, provider, providerClassName, hoverLabel) {
     const href = cleanText(url);
     if (!href) return;
 
@@ -488,7 +488,10 @@ function renderProfile(info, banners) {
     link.target = "_blank";
     link.rel = "noreferrer";
     link.setAttribute("aria-label", label);
-    link.title = label;
+    const hoverText = cleanText(hoverLabel);
+    if (hoverText) {
+      link.setAttribute("data-hover-label", hoverText);
+    }
 
     const icon = document.createElement("img");
     icon.className = "profile-map-icon";
@@ -541,14 +544,16 @@ function renderProfile(info, banners) {
           baiduUrl,
           `Open Baidu Map for ${addressText}`,
           "baidu",
-          "profile-map-link--baidu"
+          "profile-map-link--baidu",
+          "百度地图"
         );
         renderMapLink(
           mapLinks,
           googleUrl,
           `Open Google Map for ${addressText}`,
           "google",
-          "profile-map-link--google"
+          "profile-map-link--google",
+          "Google Map"
         );
         li.appendChild(mapLinks);
       }
