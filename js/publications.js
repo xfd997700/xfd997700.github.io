@@ -151,17 +151,54 @@
       .join(", ");
   }
 
+  function normalizeDatePart(value, min, max) {
+    const parsed = parseInt(cleanText(value), 10);
+    if (!Number.isFinite(parsed) || parsed < min || parsed > max) return null;
+    return parsed;
+  }
+
+  function formatDatePart(part) {
+    return String(part).padStart(2, "0");
+  }
+
+  function getPublicationDateText(pub) {
+    const yearText = cleanText(pub && pub.year);
+    if (!yearText) return "";
+    const month = normalizeDatePart(pub && pub.month, 1, 12);
+    const day = normalizeDatePart(pub && pub.day, 1, 31);
+    if (month === null || day === null) return yearText;
+    const match = yearText.match(/\d{4}/);
+    const year = match ? match[0] : yearText;
+    return `${year}.${formatDatePart(month)}.${formatDatePart(day)}`;
+  }
+
+  function normalizeSortMode(sortMode) {
+    if (sortMode === "time_desc" || sortMode === "time_asc" || sortMode === "default") return sortMode;
+    return sortMode === "year" ? "time_desc" : "default";
+  }
+
+  function getNextSortMode(sortMode) {
+    const normalized = normalizeSortMode(sortMode);
+    if (normalized === "default") return "time_desc";
+    if (normalized === "time_desc") return "time_asc";
+    return "default";
+  }
+
   function parseCrossrefMessage(message) {
     if (!message || typeof message !== "object") return null;
     const title = cleanText(Array.isArray(message.title) ? message.title[0] : message.title);
     const journal = cleanText(
       Array.isArray(message["container-title"]) ? message["container-title"][0] : message["container-title"]
     );
-    const year = cleanText(
+    const issuedParts =
       message.issued &&
-        Array.isArray(message.issued["date-parts"]) &&
-        Array.isArray(message.issued["date-parts"][0])
-        ? message.issued["date-parts"][0][0]
+      Array.isArray(message.issued["date-parts"]) &&
+      Array.isArray(message.issued["date-parts"][0])
+        ? message.issued["date-parts"][0]
+        : [];
+    const year = cleanText(
+      Array.isArray(issuedParts) && issuedParts.length
+        ? issuedParts[0]
         : ""
     );
     return {
@@ -169,6 +206,8 @@
       title,
       authors: formatAuthorList(message.author),
       year,
+      month: normalizeDatePart(Array.isArray(issuedParts) ? issuedParts[1] : null, 1, 12),
+      day: normalizeDatePart(Array.isArray(issuedParts) ? issuedParts[2] : null, 1, 31),
       journal,
       volume: cleanText(message.volume),
       page: cleanText(message.page)
@@ -212,6 +251,8 @@
       title,
       authors: formatAuthorList(pub.authors),
       year: cleanText(pub.year),
+      month: normalizeDatePart(pub.month, 1, 12),
+      day: normalizeDatePart(pub.day, 1, 31),
       journal: cleanText(pub.journal),
       volume: cleanText(pub.volume),
       page: cleanText(pub.page),
@@ -256,6 +297,8 @@
           title: result.data.title || resolved[i].title,
           authors: result.data.authors || resolved[i].authors,
           year: result.data.year || resolved[i].year,
+          month: result.data.month || resolved[i].month,
+          day: result.data.day || resolved[i].day,
           journal: result.data.journal || resolved[i].journal,
           volume: result.data.volume || resolved[i].volume,
           page: result.data.page || resolved[i].page
@@ -279,6 +322,14 @@
     return match ? parseInt(match[0], 10) : 0;
   }
 
+  function parsePublicationSortStamp(pub) {
+    const year = parsePublicationYear(pub);
+    if (!year) return null;
+    const month = normalizeDatePart(pub && pub.month, 1, 12) || 0;
+    const day = normalizeDatePart(pub && pub.day, 1, 31) || 0;
+    return year * 10000 + month * 100 + day;
+  }
+
   function getPreparedPublications(items, viewState) {
     const minRaw = parseInt(String(viewState.minYear || "").trim(), 10);
     const maxRaw = parseInt(String(viewState.maxYear || "").trim(), 10);
@@ -290,13 +341,18 @@
       maxYear = t;
     }
 
-    const ordered = viewState.sortMode === "year"
-      ? items.map((item, index) => ({ item, index })).sort((a, b) => {
-        const ay = parsePublicationYear(a.item);
-        const by = parsePublicationYear(b.item);
-        return by === ay ? a.index - b.index : by - ay;
-      }).map((entry) => entry.item)
-      : items;
+    const sortMode = normalizeSortMode(viewState.sortMode);
+    const ordered = sortMode === "default"
+      ? items
+      : items.map((item, index) => ({ item, index })).sort((a, b) => {
+        const at = parsePublicationSortStamp(a.item);
+        const bt = parsePublicationSortStamp(b.item);
+        if (at === null && bt === null) return a.index - b.index;
+        if (at === null) return 1;
+        if (bt === null) return -1;
+        const diff = sortMode === "time_desc" ? bt - at : at - bt;
+        return diff === 0 ? a.index - b.index : diff;
+      }).map((entry) => entry.item);
 
     return ordered.filter((pub) => {
       if (minYear === null && maxYear === null) return true;
@@ -370,16 +426,17 @@
 
   function createPublicationItem(pub, options) {
     const showGraphAbs = options && options.showGraphAbs !== false;
+    const dateText = getPublicationDateText(pub);
     const item = document.createElement("article");
     item.className = "publication-item";
     if (pub.ref_key) item.dataset.pubKey = pub.ref_key;
     const head = document.createElement("div");
     head.className = "publication-head";
     head.appendChild(createPublicationTitle(pub, "publication-title", { enableLink: state.cardTitleLinkEnabled }));
-    if (pub.year) {
+    if (dateText) {
       const yearBadge = document.createElement("span");
       yearBadge.className = "publication-year";
-      yearBadge.textContent = pub.year;
+      yearBadge.textContent = dateText;
       head.appendChild(yearBadge);
     }
     item.appendChild(head);
@@ -434,15 +491,16 @@
   function createPublicationGridItem(pub, options) {
     const showGraphAbs = options && options.showGraphAbs !== false;
     const hasGraphAbs = showGraphAbs && Boolean(pub.graph_abs);
+    const dateText = getPublicationDateText(pub);
     const item = document.createElement("article");
     item.className = `publication-grid-item ${hasGraphAbs ? "is-rich" : "is-compact"}`;
     const head = document.createElement("div");
     head.className = "publication-grid-head";
     head.appendChild(createPublicationTitle(pub, "publication-grid-title", { enableLink: state.cardTitleLinkEnabled }));
-    if (pub.year) {
+    if (dateText) {
       const year = document.createElement("span");
       year.className = "publication-grid-year";
-      year.textContent = pub.year;
+      year.textContent = dateText;
       head.appendChild(year);
     }
     item.appendChild(head);
@@ -533,18 +591,49 @@
     container.appendChild(wrap);
   }
 
-  function updateSortButton(button, sortMode) {
+  function setStateButtonLabel(button, label) {
     if (!button) return;
-    const isYearMode = sortMode === "year";
-    button.textContent = isYearMode ? "Sort by Default" : "Sort by Year";
-    button.setAttribute("aria-pressed", isYearMode ? "true" : "false");
+    button.setAttribute("aria-label", label);
+    button.setAttribute("data-hover-label", label);
   }
 
-  function updateFilterButton(button, viewState) {
+  function updateSortButton(button, sortMode) {
     if (!button) return;
-    const active = Boolean(cleanText(viewState.minYear) || cleanText(viewState.maxYear));
+    const mode = normalizeSortMode(sortMode);
+    const isDesc = mode === "time_desc";
+    const isAsc = mode === "time_asc";
+    const isActive = isDesc || isAsc;
+    const label = isDesc
+      ? "Sort newest to oldest | \u65f6\u95f4\u4ece\u65b0\u5230\u65e7"
+      : isAsc
+        ? "Sort oldest to newest | \u65f6\u95f4\u4ece\u65e7\u5230\u65b0"
+        : "Sort by time | \u6309\u65f6\u95f4\u6392\u5e8f";
+    button.setAttribute("aria-pressed", isActive ? "true" : "false");
+    button.classList.toggle("is-active", isActive);
+    button.classList.toggle("is-sort-desc", isDesc);
+    button.classList.toggle("is-sort-asc", isAsc);
+    setStateButtonLabel(button, label);
+
+    const icon = button.querySelector("i");
+    if (icon) {
+      icon.classList.remove("fa-sort", "fa-arrow-down-wide-short", "fa-arrow-up-wide-short");
+      icon.classList.add(isDesc ? "fa-arrow-down-wide-short" : isAsc ? "fa-arrow-up-wide-short" : "fa-sort");
+    }
+  }
+
+  function updateFilterButton(button, filterPanel) {
+    if (!button) return;
+    const active = Boolean(filterPanel && !filterPanel.hidden);
     button.setAttribute("aria-pressed", active ? "true" : "false");
     button.classList.toggle("is-active", active);
+    button.classList.toggle("is-filter-active", active);
+    button.classList.remove("is-sort-desc", "is-sort-asc");
+    setStateButtonLabel(
+      button,
+      active
+        ? "Filter active | \u5e74\u4efd\u7b5b\u9009\u5df2\u542f\u7528"
+        : "Filter by year | \u6309\u5e74\u4efd\u7b5b\u9009"
+    );
   }
 
   function updateGraphAbsButton(button, isShown) {
@@ -554,9 +643,10 @@
       ? "Hide graphical abstracts | 隐藏图形摘要"
       : "Show graphical abstracts | 显示图形摘要";
     button.setAttribute("aria-pressed", shown ? "true" : "false");
-    button.setAttribute("title", title);
-    button.setAttribute("aria-label", title);
+    setStateButtonLabel(button, title);
     button.classList.toggle("is-active", shown);
+    button.classList.remove("is-filter-active");
+    button.classList.remove("is-sort-desc", "is-sort-asc");
 
     const icon = button.querySelector("i");
     if (icon) {
@@ -631,7 +721,7 @@
     });
     updateSortButton(refs.homeSortBtn, state.home.sortMode);
     updateGraphAbsButton(refs.homeGraphAbsBtn, state.home.showGraphAbs);
-    updateFilterButton(refs.homeFilterBtn, state.home);
+    updateFilterButton(refs.homeFilterBtn, refs.homeFilterPanel);
     syncFilterInputs(state.home, refs.homeMinInput, refs.homeMaxInput);
   }
 
@@ -669,7 +759,7 @@
       refs.pageGraphAbsBtn,
       pageState.mode === "grid" ? pageState.gridShowGraphAbs : pageState.listShowGraphAbs
     );
-    updateFilterButton(refs.pageFilterBtn, pageState);
+    updateFilterButton(refs.pageFilterBtn, refs.pageFilterPanel);
     syncFilterInputs(pageState, refs.pageMinInput, refs.pageMaxInput);
     updateViewToggle();
   }
@@ -703,7 +793,7 @@
 
   function openPublicationDetailModal(pub) {
     if (!refs.detailModal || !pub) return;
-    const yearText = cleanText(pub.year);
+    const yearText = getPublicationDateText(pub);
     const venueText = getPublicationVenueText(pub);
     const titleText = cleanText(pub.title) || "Untitled";
     const doiText = cleanText(pub.doi);
@@ -833,7 +923,7 @@
   function bindEvents() {
     if (refs.homeSortBtn) {
       refs.homeSortBtn.addEventListener("click", () => {
-        state.home.sortMode = state.home.sortMode === "year" ? "default" : "year";
+        state.home.sortMode = getNextSortMode(state.home.sortMode);
         state.home.page = 1;
         renderHomePublications();
       });
@@ -848,6 +938,7 @@
       refs.homeFilterBtn.addEventListener("click", () => {
         if (!refs.homeFilterPanel) return;
         refs.homeFilterPanel.hidden = !refs.homeFilterPanel.hidden;
+        updateFilterButton(refs.homeFilterBtn, refs.homeFilterPanel);
       });
     }
     if (refs.homeApplyBtn) refs.homeApplyBtn.addEventListener("click", () => {
@@ -860,7 +951,7 @@
     });
 
     if (refs.pageSortBtn) refs.pageSortBtn.addEventListener("click", () => {
-      state.page.sortMode = state.page.sortMode === "year" ? "default" : "year";
+      state.page.sortMode = getNextSortMode(state.page.sortMode);
       state.page.page = 1;
       renderPublicationsPage();
     });
@@ -877,6 +968,7 @@
     if (refs.pageFilterBtn) refs.pageFilterBtn.addEventListener("click", () => {
       if (!refs.pageFilterPanel) return;
       refs.pageFilterPanel.hidden = !refs.pageFilterPanel.hidden;
+      updateFilterButton(refs.pageFilterBtn, refs.pageFilterPanel);
     });
     if (refs.pageApplyBtn) refs.pageApplyBtn.addEventListener("click", () => {
       applyFilterInputs(state.page, refs.pageMinInput, refs.pageMaxInput);
@@ -960,3 +1052,4 @@
     rerenderIndexPage: rerenderPublicationViews
   };
 })();
+

@@ -192,6 +192,8 @@
 | `title` | string | 标题 |
 | `authors` | string | 作者字符串 |
 | `year` | string | 年份（可含文本，但建议含四位年份） |
+| `month` | string/number | 月份（可空，1-12） |
+| `day` | string/number | 日期（可空，1-31） |
 | `journal` | string | 期刊/会议名 |
 | `volume` | string | 卷号 |
 | `page` | string | 页码或文章号 |
@@ -201,6 +203,7 @@
 说明：
 - DOI 会被规范化成可跳转链接。
 - 若 `settings.publications.resolve_doi_enabled=true`，会尝试在线补全/覆盖部分元信息（标题、作者等）。
+- 当 `month` 和 `day` 都存在且有效时，页面日期显示为 `YYYY.MM.DD`；否则仅显示 `year`。
 
 ---
 
