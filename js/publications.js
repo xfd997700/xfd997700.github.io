@@ -251,16 +251,31 @@
     return /[.!?]$/.test(value) ? value : `${value}.`;
   }
 
+  function normalizePublicationType(type) {
+    return cleanText(type).toLowerCase() === "inproceedings" ? "inproceedings" : "article";
+  }
+
+  function isConferencePublication(pub) {
+    return normalizePublicationType(pub && pub.type) === "inproceedings";
+  }
+
   function buildGbtCitation(pub) {
+    const conference = isConferencePublication(pub);
     const authors = splitAuthorNames(pub && pub.authors).map(formatAuthorGbt).filter(Boolean);
     const authorText = authors.length > 3 ? `${authors.slice(0, 3).join(", ")}, et al` : authors.join(", ");
     const safeAuthors = authorText || "Unknown Author";
     const titleText = cleanText(pub && pub.title) || "Untitled";
-    const journal = cleanText(pub && pub.journal) || "Unknown Journal";
+    const venue = cleanText(pub && pub.journal) || (conference ? "Unknown Conference" : "Unknown Journal");
     const year = cleanText(pub && pub.year);
     const volume = cleanText(pub && pub.volume);
     const issue = cleanText(pub && pub.issue);
     const page = cleanText(pub && pub.page);
+    if (conference) {
+      let source = `//${venue}`;
+      if (year) source += `, ${year}`;
+      if (page) source += `: ${page}`;
+      return `${safeAuthors}. ${titleText}[C]. ${ensureTerminalPeriod(source)}`;
+    }
     const meta = [];
     if (year) meta.push(year);
     if (volume) {
@@ -268,23 +283,30 @@
     } else if (issue) {
       meta.push(`(${issue})`);
     }
-    let source = journal;
+    let source = venue;
     if (meta.length) source += `, ${meta.join(", ")}`;
     if (page) source += `${meta.length ? ": " : ", "}${page}`;
     return `${safeAuthors}. ${titleText}[J]. ${ensureTerminalPeriod(source)}`;
   }
 
   function buildMlaCitation(pub) {
+    const conference = isConferencePublication(pub);
     const authors = splitAuthorNames(pub && pub.authors);
     const firstAuthor = authors.length ? formatAuthorMla(authors[0]) : "";
     const safeAuthors = authors.length > 1 ? `${firstAuthor}, et al` : firstAuthor || "Unknown Author";
     const titleText = cleanText(pub && pub.title) || "Untitled";
-    const journal = cleanText(pub && pub.journal) || "Unknown Journal";
+    const venue = cleanText(pub && pub.journal) || (conference ? "Unknown Conference" : "Unknown Journal");
     const year = cleanText(pub && pub.year);
     const volume = cleanText(pub && pub.volume);
     const issue = cleanText(pub && pub.issue);
     const page = cleanText(pub && pub.page);
-    let source = journal;
+    if (conference) {
+      let source = `Proceedings of ${venue}`;
+      if (year) source += `, ${year}`;
+      if (page) source += `, pp. ${page}`;
+      return `${safeAuthors}. "${ensureTerminalPeriod(titleText)}" ${ensureTerminalPeriod(source)}`;
+    }
+    let source = venue;
     if (volume) source += `, vol. ${volume}`;
     if (issue) source += `, no. ${issue}`;
     if (year) source += ` (${year})`;
@@ -293,6 +315,7 @@
   }
 
   function buildApaCitation(pub) {
+    const conference = isConferencePublication(pub);
     const authors = splitAuthorNames(pub && pub.authors).map(formatAuthorApa).filter(Boolean);
     const safeAuthors = authors.length
       ? (authors.length === 1
@@ -303,11 +326,16 @@
       : "Unknown Author";
     const titleText = cleanText(pub && pub.title) || "Untitled";
     const year = cleanText(pub && pub.year) || "n.d.";
-    const journal = cleanText(pub && pub.journal) || "Unknown Journal";
+    const venue = cleanText(pub && pub.journal) || (conference ? "Unknown Conference" : "Unknown Journal");
     const volume = cleanText(pub && pub.volume);
     const issue = cleanText(pub && pub.issue);
     const page = cleanText(pub && pub.page);
-    let source = journal;
+    if (conference) {
+      let source = `In ${venue}`;
+      if (page) source += ` (pp. ${page})`;
+      return `${safeAuthors} (${year}). ${ensureTerminalPeriod(titleText)} ${ensureTerminalPeriod(source)}`;
+    }
+    let source = venue;
     if (volume) source += `, ${volume}${issue ? `(${issue})` : ""}`;
     else if (issue) source += ` (${issue})`;
     if (page) source += `, ${page}`;
@@ -329,10 +357,11 @@
   }
 
   function buildBibtexCitation(pub) {
+    const conference = isConferencePublication(pub);
     const fields = [];
     const authorList = splitAuthorNames(pub && pub.authors).join(" and ");
     const title = cleanText(pub && pub.title);
-    const journal = cleanText(pub && pub.journal);
+    const venue = cleanText(pub && pub.journal);
     const year = cleanText(pub && pub.year);
     const volume = cleanText(pub && pub.volume);
     const issue = cleanText(pub && pub.issue);
@@ -341,7 +370,7 @@
 
     if (title) fields.push(["title", title]);
     if (authorList) fields.push(["author", authorList]);
-    if (journal) fields.push(["journal", journal]);
+    if (venue) fields.push([conference ? "booktitle" : "journal", venue]);
     if (year) fields.push(["year", year]);
     if (volume) fields.push(["volume", volume]);
     if (issue) fields.push(["number", issue]);
@@ -349,7 +378,7 @@
     if (doi) fields.push(["doi", doi]);
 
     const lines = fields.map(([key, value]) => `  ${key} = {${escapeBibtexField(value)}}`);
-    return `@article{${buildBibtexKey(pub)},\n${lines.join(",\n")}\n}`;
+    return `@${conference ? "inproceedings" : "article"}{${buildBibtexKey(pub)},\n${lines.join(",\n")}\n}`;
   }
 
   function getCitationBlocks(pub) {
@@ -657,6 +686,7 @@
       year: cleanText(pub.year),
       month: normalizeDatePart(pub.month, 1, 12),
       day: normalizeDatePart(pub.day, 1, 31),
+      type: normalizePublicationType(pub.type),
       journal: cleanText(pub.journal),
       volume: cleanText(pub.volume),
       issue: cleanText(pub.issue),

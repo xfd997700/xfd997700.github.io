@@ -189,6 +189,7 @@
 | 字段 | 类型 | 说明 |
 |---|---|---|
 | `doi` | string | DOI（支持裸 DOI 或 `https://doi.org/...`） |
+| `type` | string | 文献类型：`article`（默认）或 `inproceedings`（会议） |
 | `title` | string | 标题 |
 | `authors` | string | 作者字符串 |
 | `year` | string | 年份（可含文本，但建议含四位年份） |
@@ -202,6 +203,7 @@
 
 说明：
 - DOI 会被规范化成可跳转链接。
+- `type` 缺省时按 `article` 处理；仅当显式设置为 `inproceedings` 时按会议论文处理（含 Cite/BibTeX 格式）。
 - 若 `settings.publications.resolve_doi_enabled=true`，会尝试在线补全/覆盖部分元信息（标题、作者等）。
 - 当 `month` 和 `day` 都存在且有效时，页面日期显示为 `YYYY.MM.DD`；否则仅显示 `year`。
 

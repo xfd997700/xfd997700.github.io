@@ -1,6 +1,7 @@
 ﻿{
   "template": {
     "doi": "",
+    "type": "article",
     "title": "",
     "authors": "",
     "year": "",
@@ -54,6 +55,7 @@
       "abs": "Non-convex penalties are widely used in sparse representation models and fields such as compressed sensing, because they can efficiently recover signals with a high sparsity level compared with the well-known l1-norm. However, few classic penalties have been selected in most applications without exploring the performance of other non-convex penalties. Therefore, the objective of this study is to provide a comparative and comprehensive study on non-convex penalties. We first collected nine representative non-convex penalties and then applied two optimization frameworks: the difference of convex function algorithm (DCA) and iterative shrinkage/thresholding algorithm (ISTA) to solve the optimization problems associated with the nine non-convex penalties. The performances of the nine penalties and two algorithms were systematically compared and analyzed experimentally. We hope that these results that concern non-convex penalty selection in sparse representation models can be used as a general reference for research."
     },
     "zhengxinzhe2025pring": {
+      "type": "inproceedings",
       "doi": "10.48550/arXiv.2507.05101",
       "title": "Pring: Rethinking protein-protein interaction prediction from pairs to graphs",
       "authors": "Xinzhe Zheng, Hao Du, Fanding Xu, Jinzhe Li, Zhiyuan Liu, Wenkang Wang, Tao Chen, Wanli Ouyang, Stan Z Li, Yan Lu, Nanqing Dong, Yang Zhang",
