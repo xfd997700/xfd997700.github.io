@@ -36,8 +36,7 @@
     detailAbs: document.getElementById("publication-detail-abs"),
     detailGraphWrap: document.getElementById("publication-detail-graph-wrap"),
     detailGraphImg: document.getElementById("publication-detail-graph-img"),
-    detailDoiLine: document.getElementById("publication-detail-doi-line"),
-    detailDoiLink: document.getElementById("publication-detail-doi-link")
+    detailDoiLine: document.getElementById("publication-detail-doi-line")
   };
 
   const state = {
@@ -60,6 +59,13 @@
       listShowGraphAbs: true,
       gridShowGraphAbs: false
     }
+  };
+
+  const citeUi = {
+    popup: null,
+    body: null,
+    activeButton: null,
+    activeIdentity: ""
   };
 
   function cleanText(value) {
@@ -172,6 +178,403 @@
     return `${year}.${formatDatePart(month)}.${formatDatePart(day)}`;
   }
 
+  function splitAuthorNames(authorsText) {
+    return cleanText(authorsText)
+      .split(/[;,，；]/)
+      .map((name) => cleanText(name))
+      .filter(Boolean);
+  }
+
+  function hasCjkCharacters(value) {
+    return /[\u3400-\u9fff]/.test(cleanText(value));
+  }
+
+  function parsePersonName(rawName) {
+    const name = cleanText(rawName);
+    if (!name) return null;
+    const compact = name.replace(/\s+/g, "");
+    if (hasCjkCharacters(compact)) {
+      return { family: name, given: "", cjk: true };
+    }
+    if (name.includes(",")) {
+      const parts = name.split(",");
+      return {
+        family: cleanText(parts[0]),
+        given: cleanText(parts.slice(1).join(" ")),
+        cjk: false
+      };
+    }
+    const tokens = name.split(/\s+/).filter(Boolean);
+    if (!tokens.length) return null;
+    const family = cleanText(tokens[tokens.length - 1]);
+    const given = cleanText(tokens.slice(0, -1).join(" "));
+    return { family, given, cjk: false };
+  }
+
+  function getGivenInitials(givenName, withDots) {
+    const parts = cleanText(givenName).split(/[\s-]+/).filter(Boolean);
+    if (!parts.length) return "";
+    return parts
+      .map((part) => {
+        const initial = part.charAt(0).toUpperCase();
+        return withDots ? `${initial}.` : initial;
+      })
+      .join(" ");
+  }
+
+  function formatAuthorGbt(rawName) {
+    const person = parsePersonName(rawName);
+    if (!person) return "";
+    if (person.cjk) return person.family;
+    const initials = getGivenInitials(person.given, false);
+    return cleanText(`${person.family} ${initials}`);
+  }
+
+  function formatAuthorMla(rawName) {
+    const person = parsePersonName(rawName);
+    if (!person) return "";
+    if (person.cjk || !person.given) return person.family;
+    return `${person.family}, ${person.given}`;
+  }
+
+  function formatAuthorApa(rawName) {
+    const person = parsePersonName(rawName);
+    if (!person) return "";
+    if (person.cjk) return person.family;
+    const initials = getGivenInitials(person.given, true);
+    return initials ? `${person.family}, ${initials}` : person.family;
+  }
+
+  function ensureTerminalPeriod(text) {
+    const value = cleanText(text);
+    if (!value) return "";
+    return /[.!?]$/.test(value) ? value : `${value}.`;
+  }
+
+  function buildGbtCitation(pub) {
+    const authors = splitAuthorNames(pub && pub.authors).map(formatAuthorGbt).filter(Boolean);
+    const authorText = authors.length > 3 ? `${authors.slice(0, 3).join(", ")}, et al` : authors.join(", ");
+    const safeAuthors = authorText || "Unknown Author";
+    const titleText = cleanText(pub && pub.title) || "Untitled";
+    const journal = cleanText(pub && pub.journal) || "Unknown Journal";
+    const year = cleanText(pub && pub.year);
+    const volume = cleanText(pub && pub.volume);
+    const issue = cleanText(pub && pub.issue);
+    const page = cleanText(pub && pub.page);
+    const meta = [];
+    if (year) meta.push(year);
+    if (volume) {
+      meta.push(issue ? `${volume}(${issue})` : volume);
+    } else if (issue) {
+      meta.push(`(${issue})`);
+    }
+    let source = journal;
+    if (meta.length) source += `, ${meta.join(", ")}`;
+    if (page) source += `${meta.length ? ": " : ", "}${page}`;
+    return `${safeAuthors}. ${titleText}[J]. ${ensureTerminalPeriod(source)}`;
+  }
+
+  function buildMlaCitation(pub) {
+    const authors = splitAuthorNames(pub && pub.authors);
+    const firstAuthor = authors.length ? formatAuthorMla(authors[0]) : "";
+    const safeAuthors = authors.length > 1 ? `${firstAuthor}, et al` : firstAuthor || "Unknown Author";
+    const titleText = cleanText(pub && pub.title) || "Untitled";
+    const journal = cleanText(pub && pub.journal) || "Unknown Journal";
+    const year = cleanText(pub && pub.year);
+    const volume = cleanText(pub && pub.volume);
+    const issue = cleanText(pub && pub.issue);
+    const page = cleanText(pub && pub.page);
+    let source = journal;
+    if (volume) source += `, vol. ${volume}`;
+    if (issue) source += `, no. ${issue}`;
+    if (year) source += ` (${year})`;
+    if (page) source += `: ${page}`;
+    return `${safeAuthors}. "${ensureTerminalPeriod(titleText)}" ${ensureTerminalPeriod(source)}`;
+  }
+
+  function buildApaCitation(pub) {
+    const authors = splitAuthorNames(pub && pub.authors).map(formatAuthorApa).filter(Boolean);
+    const safeAuthors = authors.length
+      ? (authors.length === 1
+        ? authors[0]
+        : authors.length === 2
+          ? `${authors[0]} & ${authors[1]}`
+          : `${authors.slice(0, -1).join(", ")}, & ${authors[authors.length - 1]}`)
+      : "Unknown Author";
+    const titleText = cleanText(pub && pub.title) || "Untitled";
+    const year = cleanText(pub && pub.year) || "n.d.";
+    const journal = cleanText(pub && pub.journal) || "Unknown Journal";
+    const volume = cleanText(pub && pub.volume);
+    const issue = cleanText(pub && pub.issue);
+    const page = cleanText(pub && pub.page);
+    let source = journal;
+    if (volume) source += `, ${volume}${issue ? `(${issue})` : ""}`;
+    else if (issue) source += ` (${issue})`;
+    if (page) source += `, ${page}`;
+    return `${safeAuthors} (${year}). ${ensureTerminalPeriod(titleText)} ${ensureTerminalPeriod(source)}`;
+  }
+
+  function escapeBibtexField(value) {
+    return cleanText(value).replace(/[{}]/g, "\\$&");
+  }
+
+  function buildBibtexKey(pub) {
+    const refKey = cleanText(pub && pub.ref_key).replace(/[^\w-]+/g, "");
+    if (refKey) return refKey;
+    const firstAuthor = splitAuthorNames(pub && pub.authors)[0] || "pub";
+    const parsed = parsePersonName(firstAuthor);
+    const family = cleanText(parsed && parsed.family).replace(/[^\w-]+/g, "").toLowerCase() || "pub";
+    const year = (cleanText(pub && pub.year).match(/\d{4}/) || ["nd"])[0];
+    return `${family}${year}`;
+  }
+
+  function buildBibtexCitation(pub) {
+    const fields = [];
+    const authorList = splitAuthorNames(pub && pub.authors).join(" and ");
+    const title = cleanText(pub && pub.title);
+    const journal = cleanText(pub && pub.journal);
+    const year = cleanText(pub && pub.year);
+    const volume = cleanText(pub && pub.volume);
+    const issue = cleanText(pub && pub.issue);
+    const page = cleanText(pub && pub.page);
+    const doi = cleanText(pub && pub.doi);
+
+    if (title) fields.push(["title", title]);
+    if (authorList) fields.push(["author", authorList]);
+    if (journal) fields.push(["journal", journal]);
+    if (year) fields.push(["year", year]);
+    if (volume) fields.push(["volume", volume]);
+    if (issue) fields.push(["number", issue]);
+    if (page) fields.push(["pages", page]);
+    if (doi) fields.push(["doi", doi]);
+
+    const lines = fields.map(([key, value]) => `  ${key} = {${escapeBibtexField(value)}}`);
+    return `@article{${buildBibtexKey(pub)},\n${lines.join(",\n")}\n}`;
+  }
+
+  function getCitationBlocks(pub) {
+    return [
+      { key: "gbt", label: "GB/T 7714", text: buildGbtCitation(pub), bibtex: false },
+      { key: "mla", label: "MLA", text: buildMlaCitation(pub), bibtex: false },
+      { key: "apa", label: "APA", text: buildApaCitation(pub), bibtex: false },
+      { key: "bibtex", label: "BibTeX", text: buildBibtexCitation(pub), bibtex: true }
+    ];
+  }
+
+  async function copyTextToClipboard(text) {
+    const content = String(text || "");
+    if (!content) return false;
+    if (navigator.clipboard && typeof navigator.clipboard.writeText === "function") {
+      try {
+        await navigator.clipboard.writeText(content);
+        return true;
+      } catch (error) {
+        // Fallback below.
+      }
+    }
+    const area = document.createElement("textarea");
+    area.value = content;
+    area.setAttribute("readonly", "readonly");
+    area.style.position = "fixed";
+    area.style.top = "-9999px";
+    area.style.opacity = "0";
+    document.body.appendChild(area);
+    area.focus();
+    area.select();
+    let success = false;
+    try {
+      success = document.execCommand("copy");
+    } catch (error) {
+      success = false;
+    }
+    document.body.removeChild(area);
+    return success;
+  }
+
+  function markCopyButtonState(button, copied) {
+    if (!button) return;
+    if (button._copyStateTimer) {
+      clearTimeout(button._copyStateTimer);
+      button._copyStateTimer = null;
+    }
+    button.classList.toggle("is-copied", Boolean(copied));
+    button.classList.toggle("is-copy-failed", copied === false);
+    button.setAttribute("aria-label", copied ? "Copied" : copied === false ? "Copy failed" : "Copy citation");
+    button._copyStateTimer = setTimeout(() => {
+      button.classList.remove("is-copied", "is-copy-failed");
+      button.setAttribute("aria-label", "Copy citation");
+      button._copyStateTimer = null;
+    }, 1200);
+  }
+
+  function ensureCitationPopup() {
+    if (citeUi.popup && citeUi.body) return citeUi.popup;
+    const popup = document.createElement("div");
+    popup.id = "publication-cite-popup";
+    popup.className = "publication-cite-popup";
+    popup.hidden = true;
+    popup.setAttribute("role", "dialog");
+    popup.setAttribute("aria-modal", "false");
+    popup.setAttribute("aria-label", "Citation formats");
+    const body = document.createElement("div");
+    body.className = "publication-cite-popup-body";
+    popup.appendChild(body);
+    document.body.appendChild(popup);
+    citeUi.popup = popup;
+    citeUi.body = body;
+    return popup;
+  }
+
+  function getPublicationIdentity(pub) {
+    return cleanText(pub && pub.ref_key) || cleanText(pub && pub.doi) || cleanText(pub && pub.title) || "";
+  }
+
+  function closeCitationPopup() {
+    if (!citeUi.popup || citeUi.popup.hidden) return;
+    citeUi.popup.hidden = true;
+    citeUi.popup.style.left = "";
+    citeUi.popup.style.top = "";
+    if (citeUi.activeButton) {
+      citeUi.activeButton.classList.remove("is-open");
+      citeUi.activeButton.setAttribute("aria-expanded", "false");
+    }
+    citeUi.activeButton = null;
+    citeUi.activeIdentity = "";
+  }
+
+  function positionCitationPopup(anchorButton) {
+    if (!citeUi.popup || citeUi.popup.hidden || !anchorButton) return;
+    const popup = citeUi.popup;
+    const rect = anchorButton.getBoundingClientRect();
+    const gap = 8;
+    const padding = 10;
+    const width = popup.offsetWidth;
+    const height = popup.offsetHeight;
+    const maxLeft = Math.max(padding, window.innerWidth - width - padding);
+    const left = Math.max(padding, Math.min(rect.left, maxLeft));
+    const availableBelow = Math.max(0, window.innerHeight - rect.bottom - gap - padding);
+    const availableAbove = Math.max(0, rect.top - gap - padding);
+    let top = rect.bottom + gap;
+    if (availableBelow < height && availableAbove > availableBelow) {
+      top = rect.top - height - gap;
+    }
+    if (top < padding) top = padding;
+    if (top + height > window.innerHeight - padding) {
+      top = Math.max(padding, window.innerHeight - height - padding);
+    }
+    popup.style.left = `${Math.round(left)}px`;
+    popup.style.top = `${Math.round(top)}px`;
+  }
+
+  function renderCitationPopup(pub) {
+    const popup = ensureCitationPopup();
+    if (!citeUi.body) return popup;
+    citeUi.body.innerHTML = "";
+    getCitationBlocks(pub).forEach((block) => {
+      const item = document.createElement("section");
+      item.className = "publication-cite-item";
+      const head = document.createElement("div");
+      head.className = "publication-cite-item-head";
+      const label = document.createElement("strong");
+      label.className = "publication-cite-item-label";
+      label.textContent = block.label;
+      head.appendChild(label);
+      const copyBtn = document.createElement("button");
+      copyBtn.type = "button";
+      copyBtn.className = "publication-inline-icon-btn publication-copy-btn";
+      copyBtn.setAttribute("aria-label", "Copy citation");
+      copyBtn.setAttribute("title", "Copy");
+      copyBtn.innerHTML = '<i class="fa-regular fa-copy" aria-hidden="true"></i>';
+      copyBtn.addEventListener("click", async (event) => {
+        event.preventDefault();
+        event.stopPropagation();
+        const copied = await copyTextToClipboard(block.text);
+        markCopyButtonState(copyBtn, copied);
+      });
+      head.appendChild(copyBtn);
+      item.appendChild(head);
+      const text = document.createElement(block.bibtex ? "pre" : "div");
+      text.className = `publication-cite-item-text${block.bibtex ? " is-bibtex" : ""}`;
+      text.textContent = block.text;
+      item.appendChild(text);
+      citeUi.body.appendChild(item);
+    });
+    return popup;
+  }
+
+  function openCitationPopup(anchorButton, pub) {
+    if (!anchorButton || !pub) return;
+    const popup = renderCitationPopup(pub);
+    popup.hidden = false;
+    if (citeUi.activeButton && citeUi.activeButton !== anchorButton) {
+      citeUi.activeButton.classList.remove("is-open");
+      citeUi.activeButton.setAttribute("aria-expanded", "false");
+    }
+    citeUi.activeButton = anchorButton;
+    citeUi.activeIdentity = getPublicationIdentity(pub);
+    anchorButton.classList.add("is-open");
+    anchorButton.setAttribute("aria-expanded", "true");
+    positionCitationPopup(anchorButton);
+  }
+
+  function toggleCitationPopup(anchorButton, pub) {
+    const identity = getPublicationIdentity(pub);
+    if (
+      citeUi.popup &&
+      !citeUi.popup.hidden &&
+      citeUi.activeIdentity &&
+      citeUi.activeIdentity === identity
+    ) {
+      closeCitationPopup();
+      return;
+    }
+    openCitationPopup(anchorButton, pub);
+  }
+
+  function createCiteButton(pub) {
+    const button = document.createElement("button");
+    button.type = "button";
+    button.className = "publication-inline-icon-btn publication-cite-btn";
+    button.setAttribute("aria-label", "Cite | 引用");
+    button.setAttribute("data-hover-label", "Cite | 引用");
+    button.setAttribute("aria-expanded", "false");
+    button.innerHTML = '<i class="fa-solid fa-quote-left" aria-hidden="true"></i>';
+    button.addEventListener("click", (event) => {
+      event.preventDefault();
+      event.stopPropagation();
+      toggleCitationPopup(button, pub);
+    });
+    return button;
+  }
+
+  function fillPublicationDoiLine(container, pub) {
+    if (!container) return false;
+    const doiText = cleanText(pub && pub.doi);
+    const doiUrl = cleanText(pub && pub.doi_link) || buildDoiUrl(doiText);
+    if (!doiText || !doiUrl) {
+      container.innerHTML = "";
+      return false;
+    }
+    container.innerHTML = "";
+    container.appendChild(createCiteButton(pub));
+    const label = document.createElement("span");
+    label.textContent = "DOI: ";
+    container.appendChild(label);
+    const link = document.createElement("a");
+    link.href = doiUrl;
+    link.target = "_blank";
+    link.rel = "noreferrer";
+    link.textContent = doiText;
+    container.appendChild(link);
+    return true;
+  }
+
+  function createPublicationDoiLine(pub, className) {
+    const line = document.createElement("div");
+    line.className = className;
+    return fillPublicationDoiLine(line, pub) ? line : null;
+  }
+
   function normalizeSortMode(sortMode) {
     if (sortMode === "time_desc" || sortMode === "time_asc" || sortMode === "default") return sortMode;
     return sortMode === "year" ? "time_desc" : "default";
@@ -210,6 +613,7 @@
       day: normalizeDatePart(Array.isArray(issuedParts) ? issuedParts[2] : null, 1, 31),
       journal,
       volume: cleanText(message.volume),
+      issue: cleanText(message.issue),
       page: cleanText(message.page)
     };
   }
@@ -255,6 +659,7 @@
       day: normalizeDatePart(pub.day, 1, 31),
       journal: cleanText(pub.journal),
       volume: cleanText(pub.volume),
+      issue: cleanText(pub.issue),
       page: cleanText(pub.page),
       abs: cleanText(pub.abs),
       graph_abs: cleanText(pub.graph_abs),
@@ -301,6 +706,7 @@
           day: result.data.day || resolved[i].day,
           journal: result.data.journal || resolved[i].journal,
           volume: result.data.volume || resolved[i].volume,
+          issue: result.data.issue || resolved[i].issue,
           page: result.data.page || resolved[i].page
         };
         failures = 0;
@@ -399,7 +805,11 @@
   function getPublicationVenueText(pub) {
     const venueParts = [];
     if (pub && pub.journal) venueParts.push(pub.journal);
-    if (pub && pub.volume) venueParts.push(`Vol. ${pub.volume}`);
+    if (pub && pub.volume) {
+      venueParts.push(pub.issue ? `Vol. ${pub.volume} (${pub.issue})` : `Vol. ${pub.volume}`);
+    } else if (pub && pub.issue) {
+      venueParts.push(`Issue ${pub.issue}`);
+    }
     if (pub && pub.page) venueParts.push(`pp. ${pub.page}`);
     return venueParts.join(" | ");
   }
@@ -471,20 +881,8 @@
       });
       item.appendChild(graphWrap);
     }
-    if (pub.doi) {
-      const doiLine = document.createElement("div");
-      doiLine.className = "publication-doi-line";
-      const label = document.createElement("span");
-      label.textContent = "DOI: ";
-      doiLine.appendChild(label);
-      const link = document.createElement("a");
-      link.href = pub.doi_link || buildDoiUrl(pub.doi);
-      link.target = "_blank";
-      link.rel = "noreferrer";
-      link.textContent = pub.doi;
-      doiLine.appendChild(link);
-      item.appendChild(doiLine);
-    }
+    const doiLine = createPublicationDoiLine(pub, "publication-doi-line");
+    if (doiLine) item.appendChild(doiLine);
     return item;
   }
 
@@ -535,20 +933,8 @@
       });
       item.appendChild(graphWrap);
     }
-    if (pub.doi) {
-      const doiLine = document.createElement("div");
-      doiLine.className = "publication-grid-doi-line";
-      const label = document.createElement("span");
-      label.textContent = "DOI: ";
-      doiLine.appendChild(label);
-      const link = document.createElement("a");
-      link.href = pub.doi_link || buildDoiUrl(pub.doi);
-      link.target = "_blank";
-      link.rel = "noreferrer";
-      link.textContent = pub.doi;
-      doiLine.appendChild(link);
-      item.appendChild(doiLine);
-    }
+    const doiLine = createPublicationDoiLine(pub, "publication-grid-doi-line");
+    if (doiLine) item.appendChild(doiLine);
     return item;
   }
 
@@ -765,6 +1151,7 @@
   }
 
   function rerenderPublicationViews() {
+    closeCitationPopup();
     renderHomePublications();
     renderPublicationsPage();
   }
@@ -837,11 +1224,14 @@
       refs.detailGraphImg.alt = hasGraph ? `${titleText} graphical abstract` : "Graphical abstract";
     }
 
-    if (refs.detailDoiLine && refs.detailDoiLink) {
-      const hasDoi = Boolean(doiText && doiUrl);
+    if (refs.detailDoiLine) {
+      const hasDoi = fillPublicationDoiLine(refs.detailDoiLine, {
+        ...pub,
+        title: titleText,
+        doi: doiText,
+        doi_link: doiUrl
+      });
       refs.detailDoiLine.hidden = !hasDoi;
-      refs.detailDoiLink.textContent = hasDoi ? doiText : "";
-      refs.detailDoiLink.href = hasDoi ? doiUrl : "";
     }
 
     refs.detailModal.hidden = false;
@@ -856,10 +1246,10 @@
       refs.detailGraphImg.alt = "Graphical abstract";
     }
     if (refs.detailDoiLine) refs.detailDoiLine.hidden = true;
-    if (refs.detailDoiLink) {
-      refs.detailDoiLink.textContent = "";
-      refs.detailDoiLink.href = "";
+    if (refs.detailDoiLine) {
+      refs.detailDoiLine.innerHTML = "";
     }
+    closeCitationPopup();
     syncBodyModalState();
   }
 
@@ -1023,9 +1413,19 @@
     }
     document.addEventListener("keydown", (event) => {
       if (event.key !== "Escape") return;
+      closeCitationPopup();
       if (refs.modal && !refs.modal.hidden) closeGraphAbsModal();
       if (refs.detailModal && !refs.detailModal.hidden) closePublicationDetailModal();
     });
+    document.addEventListener("click", (event) => {
+      if (!citeUi.popup || citeUi.popup.hidden) return;
+      const target = event.target;
+      if (target && target.closest("#publication-cite-popup")) return;
+      if (target && target.closest(".publication-cite-btn")) return;
+      closeCitationPopup();
+    });
+    window.addEventListener("resize", closeCitationPopup);
+    window.addEventListener("scroll", closeCitationPopup, true);
   }
 
   async function initIndexPage(options) {
