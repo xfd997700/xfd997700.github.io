@@ -24,6 +24,7 @@
       "day": "1",
       "journal": "Briefings in Bioinformatics",
       "volume": "25",
+      "issue": "1",
       "page": "bbad423",
       "graph_abs": "imgs/publications/mespool.png",
       "abs": "Identifying task-relevant structures is important for molecular property prediction. In a graph neural network (GNN), graph pooling can group nodes and hierarchically represent the molecular graph. However, previous pooling methods either drop out node information or lose the connection of the original graph; therefore, it is difficult to identify continuous subtructures. Importantly, they lacked interpretability on molecular graphs. To this end, we proposed a novel Molecular Edge Shrinkage Pooling (MESPool) method, which is based on edges (or chemical bonds). MESPool preserves crucial edges and shrinks others inside the functional groups and is able to search for key structures without breaking the original connection. We compared MESPool with various well-known pooling methods on different benchmarks and showed that MESPool outperforms the previous methods. Furthermore, we explained the rationality of MESPool on some datasets, including a COVID-19 drug dataset."
@@ -37,6 +38,7 @@
       "day": "4",
       "journal": "Acta Physico-Chimica Sinica",
       "volume": "",
+      "issue": "",
       "page": "100209",
       "graph_abs": "imgs/publications/molunet.png",
       "abs": "Molecular representation learning is a critical task in AI-driven drug development. While graph neural networks (GNNs) have demonstrated strong performance and gained widespread adoption in this field, efficiently extracting and explicitly analyzing functional groups remains a challenge. To address this issue, we propose MolUNet++, a novel model that employs Molecular Edge Shrinkage Pooling (MESPool) for hierarchical substructure extraction, utilizes a Nested UNet framework for multi-granularity feature integration, and incorporates a substructure masking explainer for quantitative fragment analysis. We evaluated MolUNet++ on tasks including molecular property prediction, drug-drug interaction (DDI) prediction, and drug-target interaction (DTI) prediction. Experimental results demonstrate that MolUNet++ not only outperforms traditional GNN models in predictive performance but also exhibits explicit, intuitive, and chemically logical interpretability. This capability provides valuable insights and tools for researchers in drug design and optimization."
@@ -63,8 +65,8 @@
       "month": "7",
       "day": "7",
       "journal": "NeurIPS 2025",
-      "volume": "Poster",
-      "page": "",
+      "volume": "",
+      "page": "Poster",
       "graph_abs": "imgs/publications/pring.png",
       "abs": "Deep learning-based computational methods have achieved promising results in predicting protein-protein interactions (PPIs). However, existing benchmarks predominantly focus on isolated pairwise evaluations, overlooking a model's capability to reconstruct biologically meaningful PPI networks, which is crucial for biology research. To address this gap, we introduce PRING, the first comprehensive benchmark that evaluates protein-protein interaction prediction from a graph-level perspective. PRING curates a high-quality, multi-species PPI network dataset comprising 21,484 proteins and 186,818 interactions, with well-designed strategies to address both data redundancy and leakage. Building on this golden-standard dataset, we establish two complementary evaluation paradigms: (1) topology-oriented tasks, which assess intra and cross-species PPI network construction, and (2) function-oriented tasks, including protein complex pathway prediction, GO module analysis, and essential protein justification. These evaluations not only reflect the model's capability to understand the network topology but also facilitate protein function annotation, biological module detection, and even disease mechanism analysis. Extensive experiments on four representative model categories, consisting of sequence similarity-based, naive sequence-based, protein language model-based, and structure-based approaches, demonstrate that current PPI models have potential limitations in recovering both structural and functional properties of PPI networks, highlighting the gap in supporting real-world biological applications. We believe PRING provides a reliable platform to guide the development of more effective PPI prediction models for the community. "
     },
@@ -77,6 +79,7 @@
       "day": "9",
       "journal": "Journal of Pharmaceutical Analysis",
       "volume": "",
+      "issue": "",
       "page": "",
       "graph_abs": "imgs/publications/wanglizhuo2025discovery.jpg",
       "abs": "Mitochondria play a central role in cellular metabolism, and their dysfunction is implicated in a range of neurodegenerative, metabolic, and cardiovascular diseases. Current artificial intelligence (AI) approaches in mitochondrial drug discovery are often restricted to narrow mechanistic contexts, such as mitophagy, and are limited by sparse and heterogeneous bioactivity data. To address these challenges, we developed a generalized, target-agnostic machine learning strategy to identify diverse mitochondrial modulators. By integrating bioactivity data across address mitochondrial proteins and applying advanced preprocessing and modeling techniques, we constructed a highly predictive classification model. This model successfully identified novel modulators from a large chemical library, underscoring the potential of computational methods in phenotypic drug discovery for complex biological systems. Our target-aggregated machine learning framework supports broad drug activity profiling across mitochondrial mechanisms, improves screening efficiency, and enriches high-confidence hits from extensive libraries while preserving structural novelty. "
@@ -90,6 +93,7 @@
       "day": "27",
       "journal": "ACS Applied Materials & Interfaces",
       "volume": "16",
+      "issue": "10",
       "page": "13234-13246",
       "graph_abs": "imgs/publications/suwu2024screening.webp",
       "abs": "Carnitine palmitoyltransferase 1A (CPT1A), which resides on the mitochondrial outer membrane, serves as the rate-limiting enzyme of fatty acid β-oxidation. Identifying the compounds targeting CPT1A warrants a promising candidate for modulating lipid metabolism. In this study, we developed a CPT1A-overexpressed mitochondrial membrane chromatography (MMC) to screen the compounds with affinity for CPT1A. Cells overexpressing CPT1A were cultured, and subsequently, their mitochondrial membrane was isolated and immobilized on amino-silica gel cross-linked by glutaraldehyde. After packing the mitochondrial membrane column, retention components of MMC were performed with LC/MS, whose analytic peaks provided structural information on compounds that might interact with mitochondrial membrane proteins. With the newly developed MMC–LC/MS approach, several Chinese traditional medicine extracts, such as Scutellariae Radix and Polygoni Cuspidati Rhizoma et Radix (PCRR), were analyzed. Five noteworthy compounds, baicalin, baicalein, wogonoside, wogonin, and resveratrol, were identified as enhancers of CPT1A enzyme activity, with resveratrol being a new agonist for CPT1A. The study suggests that MMC serves as a reliable screening system for efficiently identifying modulators targeting CPT1A from complex extracts."
@@ -103,6 +107,7 @@
       "day": "24",
       "journal": "Analytical Chemistry",
       "volume": "96",
+      "issue": "26",
       "page": "10851-10859",
       "graph_abs": "imgs/publications/suwu2024twin.webp",
       "abs": "Mitochondrial Membrane Chromatography (MMC) is a bioaffinity chromatography technique developed to study the interaction between target proteins embedded in the mitochondrial membrane and their ligand compounds. However, the MMC stationary phases (MMSP) prepared by chemical immobilization are prone to nonspecific binding in candidate agent screening inevitably. To address these challenges, Twin Strep-Tag/Strep Tactin was employed to establish a specific affinity system in the present study. We prepared a carnitine palmitoyltransferase 1A (CPT1A) MMSP by specifically linking Strep-tactin-modified silica gel with the Twin Strep-Tag on the CPT1A-oriented mitochondrial membrane. This Twin Strep-Tag/Strep Tactin modified CPT1A/MMC method exhibited remarkably better retention behavior, longer stationary phase lifespan, and higher screening specificity compared with previous MMC systems with glutaraldehyde immobilization. We adopted the CPT1A-specific MMC system in screening CPT1A ligands from traditional Chinese medicines, and successfully identified novel candidate ligands: ononin, isoliquiritigenin, and aloe-emodin, from Glycyrrhiza uralensis Fisch and Senna tora (L.) Roxb extracts. Biological assessments illustrated that the compounds screened promote CPT1A enzyme activity without affecting CPT1A protein expression, as well as effectively reduce the lipid droplets and triglyceride levels in the high fat induction HepG2 cells. The results suggest that we have developed an MMC system, which is promising for studying the bioaffinity of mitochondrial membrane proteins to candidate compounds. This system provides a platform for a key step in mitochondrial medicine discovery, especially for bioactive molecule screening from complex herbal extracts."
@@ -116,6 +121,7 @@
       "day": "25",
       "journal": "International Journal of Molecular Sciences",
       "volume": "25",
+      "issue": "9",
       "page": "4662",
       "graph_abs": "imgs/publications/yeqiushi2024comutations.png",
       "abs": "Since the onset of the coronavirus disease 2019 (COVID-19) pandemic, SARS-CoV-2 variants capable of breakthrough infections have attracted global attention. These variants have significant mutations in the receptor-binding domain (RBD) of the spike protein and the membrane (M) protein, which may imply an enhanced ability to evade immune responses. In this study, an examination of co-mutations within the spike RBD and their potential correlation with mutations in the M protein was conducted. The EVmutation method was utilized to analyze the distribution of the mutations to elucidate the relationship between the mutations in the spike RBD and the alterations in the M protein. Additionally, the Sequence-to-Sequence Transformer Model (S2STM) was employed to establish mapping between the amino acid sequences of the spike RBD and M proteins, offering a novel and efficient approach for streamlined sequence analysis and the exploration of their interrelationship. Certain mutations in the spike RBD, G339D-S373P-S375F and Q493R-Q498R-Y505, are associated with a heightened propensity for inducing mutations at specific sites within the M protein, especially sites 3 and 19/63. These results shed light on the concept of mutational synergy between the spike RBD and M proteins, illuminating a potential mechanism that could be driving the evolution of SARS-CoV-2."
@@ -155,6 +161,7 @@
       "day": "5",
       "journal": "生物化学与生物物理进展",
       "volume": "52",
+      "issue": "8",
       "page": "1972",
       "graph_abs": "",
       "abs": "人工智能技术在生物学领域的应用在近几年取得了突飞猛进的发展,其中最显著的成果为蛋白质结构预测和设计,该成果于2024年荣获诺贝尔化学奖.可以预见,对蛋白质各类物理和化学属性的精准预测将是蛋白质预测领域下一阶段的重要发展方向.蛋白质热力学稳定性在深入了解生命活动机制,药物研发,疾病诊断和治疗,以及生物技术产业中酶制剂的生产,生物传感器研发以及蛋白质药物制备等方面均具有重要意义.借助人工智能技术进行蛋白质热力学稳定性的精准预测将大幅提升蛋白质相关的科学研究能力和产业发展效率.本文综述了蛋白质热力学稳定性预测技术的发展历程,梳理了从生物实验测定方法,传统能量函数计算方法到现代机器学习预测方法.重点讨论了基于机器学习的预测模型,尤其是深度神经网络,图神经网络和注意力机制等前沿算法在蛋白质热力学稳定性预测中的突破.深入讨论了突变稳定性预测的核心挑战,如数据集质量与数量不平衡,模型过拟合及蛋白质动态性的建模等难题.旨在为研究人员提供一个全面的参考框架,助力突变蛋白质热力学稳定性预测技术的发展."
@@ -168,6 +175,7 @@
       "day": "",
       "journal": "中国生物医学工程学报",
       "volume": "40",
+      "issue": "3",
       "page": "380-384",
       "graph_abs": "",
       "abs": "拷贝数变异(CNV)是基因组变异的一种非平衡结构变异,与癌症等许多复杂疾病相关.目前,基于隐马尔可夫模型(HMM)的CNV检测算法已经成为基因检测研究中的一大热点,但是对于这些基于HMM的CNV检测工具并没有进行过系统的比较,导致在应用时选择困难.选取5种具有代表性的基于HMM的CNV检测工具:ExomeDepth、ExomeCopy、XHMM、ADTex和CANOES,分别使用仿真和真实的全外显子组测序数据进行检测,选择真阳性率(TPR)、假发现率(FDR)、运行时间等作为评价指标,对不同覆盖深度、CNV密度等情况下算法的性能进行评估.结果 表明:随着覆盖深度的增加,5种工具的TPR上升、FDR下降;CNV密度的变化也会影响CNV检测工具的TPR.此外,ExomeDepth对于真实数据的检测精度明显高于其他算法,是无特殊需求时的首选算法.在相同条件下,ExomeCopy运行速度最快,XHMM速度最慢.根据实验结果,对不同应用场景推荐合适的CNV检测算法,可帮助研究人员根据自身项目情况选择合适的CNV检测工具,也有助于在临床上的应用."
