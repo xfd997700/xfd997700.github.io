@@ -252,7 +252,8 @@ function startNextTerminalAsciiWave(now) {
   terminalAsciiState.waveMinProj = minProj;
   terminalAsciiState.waveMaxProj = maxProj;
   terminalAsciiState.waveWidthPx = waveWidthPx;
-  terminalAsciiState.waveCenterProj = minProj - waveWidthPx;
+  const spawnFactor = terminalAsciiState.waveIntervalMs <= 0 ? 0.78 : 1;
+  terminalAsciiState.waveCenterProj = minProj - waveWidthPx * spawnFactor;
   terminalAsciiState.isWaveActive = true;
   terminalAsciiState.lastWaveStepTs = now;
 }
@@ -273,8 +274,12 @@ function advanceTerminalAsciiWave(now) {
 
   terminalAsciiState.waveCenterProj += deltaMs * terminalAsciiState.waveSpeedPxPerMs;
   if (terminalAsciiState.waveCenterProj > terminalAsciiState.waveMaxProj + terminalAsciiState.waveWidthPx) {
-    terminalAsciiState.isWaveActive = false;
-    terminalAsciiState.nextWaveStartTs = now + terminalAsciiState.waveIntervalMs;
+    if (terminalAsciiState.waveIntervalMs <= 0) {
+      startNextTerminalAsciiWave(now);
+    } else {
+      terminalAsciiState.isWaveActive = false;
+      terminalAsciiState.nextWaveStartTs = now + terminalAsciiState.waveIntervalMs;
+    }
   }
 }
 
@@ -289,7 +294,10 @@ function applyTerminalAsciiSettings(config) {
 
   terminalAsciiState.waveWidthRatio = clampNumber(widthRatioRaw, 0.04, 0.55);
   terminalAsciiState.waveSpeedPxPerMs = clampNumber(speedPxPerSRaw, 20, 2400) / 1000;
-  terminalAsciiState.waveIntervalMs = clampNumber(intervalMsRaw, 200, 30000);
+  terminalAsciiState.waveIntervalMs = clampNumber(intervalMsRaw, 0, 30000);
+  if (!terminalAsciiState.isWaveActive && terminalAsciiState.waveIntervalMs <= 0) {
+    terminalAsciiState.nextWaveStartTs = 0;
+  }
 }
 
 function renderTerminalAsciiWaveFrame(now) {
