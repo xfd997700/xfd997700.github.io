@@ -13,6 +13,12 @@
     "top_action_button_height_px": 32,
     "base_card_hover_enabled": false
   },
+  "terminal": {
+    "ascii_animation_enable": true,
+    "ascii_wave_width_ratio": 0.22,
+    "ascii_wave_speed_px_per_s": 320,
+    "ascii_wave_interval_ms": 0
+  },
   "eggs": {
     "display_seconds": 3,
     "image_height_px": 800,
